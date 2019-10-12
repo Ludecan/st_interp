@@ -34,13 +34,12 @@ if (is.null(script.dir.lecturaDatos)) { script.dir.lecturaDatos <- ''
 
 source(paste(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r', sep=''))
 instant_pkgs(pkgs = c('Rcpp', 'stringi', 'lubridate', 'jsonlite'))
-source(paste(script.dir.lecturaDatos, '../StringUtils/stringUtils.r', sep=''))
 
 leerEstaciones <- function(pathArchivoEstaciones, columnaId=1, fileEncoding = '', sep=',') {
   estaciones <- read.table(pathArchivoEstaciones, header=T, sep=sep, dec='.', stringsAsFactors=F, fileEncoding = fileEncoding)
   # Saco los espacios a los nombres de estaciones y agrego una X a las que empiezan con números porque dificultan el trabajo con los dataframes
   if (columnaId > 0) {
-    estaciones[,columnaId] <- gsub(" ", ".", trim(estaciones[,columnaId]))
+    estaciones[,columnaId] <- gsub(" ", ".", trimws(estaciones[,columnaId]))
     i <- which(substr(estaciones[,columnaId], 1, 1) %in% as.character(0:9))
     if (length(i) > 0) estaciones[i,columnaId] <- paste('X', estaciones[i,columnaId], sep='')
     rownames(estaciones) <- estaciones[,columnaId]
@@ -81,7 +80,7 @@ leerSeriesArchivoUnico <- function(pathArchivoDatos, nFilasEstaciones=10, filaId
   estaciones <- read.table(pathArchivoDatos, header=F, sep=sep, dec=dec, na.strings=na.strings, nrows=nFilasEstaciones, skip=skip, stringsAsFactors=F, fileEncoding = fileEncoding, row.names = 1)
   estaciones <- as.data.frame(t(estaciones), stringsAsFactors=F, sep=sep)
   for (i in 1:ncol(estaciones)) {
-    trimEstacionesI <- trim(estaciones[,i])
+    trimEstacionesI <- trimws(estaciones[,i])
     upperTrimEstacionesI <- toupper(trimEstacionesI)
     
     aux <- type.convert(upperTrimEstacionesI, na.strings=na.strings, as.is=T, dec=dec)
@@ -89,7 +88,7 @@ leerSeriesArchivoUnico <- function(pathArchivoDatos, nFilasEstaciones=10, filaId
     } else { estaciones[,i] <- type.convert(trimEstacionesI, na.strings=na.strings, as.is=T, dec=dec) }
   }
 
-  estaciones[,filaId] <- gsub(" ", ".", trim(estaciones[,filaId]))
+  estaciones[,filaId] <- gsub(" ", ".", trimws(estaciones[,filaId]))
   i <- which(substr(estaciones[,filaId], 1, 1) %in% as.character(0:9))
   if (length(i) > 0) estaciones[i,filaId] <- paste('X', estaciones[i,filaId], sep='')
   rownames(estaciones) <- estaciones[,filaId]
