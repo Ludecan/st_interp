@@ -563,7 +563,7 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
           source(paste(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r', sep=''))
           
           if (usarAFVGLS) {
-            variogramas <- afvGLS(formula=interpolacion$formulaString, input_data=interpolacion$observations, cutoff = params$cutoff, 
+            variogramas <- afvGLS(formula=interpolacion$formulaString, input_data=interpolacion$observations, cutoff = params$cutoff,
                                   model=params$modelosVariograma, verbose=params$verbose, useNugget=params$usarNugget)
           }
           

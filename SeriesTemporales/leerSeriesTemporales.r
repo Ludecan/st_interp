@@ -33,15 +33,45 @@ if (is.null(script.dir.lecturaDatos)) { script.dir.lecturaDatos <- ''
 } else { script.dir.lecturaDatos <- paste(dirname(script.dir.lecturaDatos), '/', sep='') }
 
 source(paste(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r', sep=''))
-instant_pkgs(pkgs = c('Rcpp', 'stringi', 'lubridate', 'jsonlite'))
+instant_pkgs(pkgs = c('Rcpp', 'stringi', 'lubridate', 'jsonlite', 'xlsx'))
+
+setIdsEstaciones <- function(dfEstaciones, colId=1) {
+  dfEstaciones[, colId] <- gsub(" ", ".", trimws(dfEstaciones[, colId]))
+  i <- which(substr(dfEstaciones[, colId], 1, 1) %in% as.character(0:9))
+  if (length(i) > 0) dfEstaciones[i, colId] <- paste('X', dfEstaciones[i, colId], sep='')
+  rownames(dfEstaciones) <- dfEstaciones[, colId]
+  return(dfEstaciones)
+}
+
+limpiarDatos <- function(dfDatos, dfEstaciones, colIdEstaciones=-1L, header=T, overrideHeader=F,
+                         formatoFechas='YmdHMS', truncated=5, tzFechas='UTC') {
+  fechas <- parse_date_time(as.character(dfDatos[, 1]), orders = formatoFechas, tz=tzFechas, 
+                            truncated = truncated)
+  iFechasValidas <- !is.na(fechas)
+  fechas <- fechas[iFechasValidas]
+  dfDatos <- data.matrix(dfDatos[iFechasValidas, -1])
+  
+  if (is.numeric(colIdEstaciones) && colIdEstaciones <= 0) { idsEstaciones <- row.names(dfEstaciones)
+  } else { idsEstaciones <- make.names(dfEstaciones[,colIdEstaciones]) }
+  if (overrideHeader) colnames(dfDatos) <- idsEstaciones 
+  
+  if (header && !is.null(dfEstaciones)) {
+    ies <- na.omit(match(idsEstaciones, colnames(dfDatos)))
+    datos <- matrix(data = NA_real_, nrow = nrow(dfDatos), ncol = nrow(dfEstaciones))
+    datos[, ies] <- dfDatos[,ies]
+  } else datos <- dfDatos
+  
+  rownames(datos) <- as.character(fechas)
+  if (!is.null(dfEstaciones)) colnames(datos) <- idsEstaciones
+  
+  return (list(fechas=fechas, datos=datos))
+}
 
 leerEstaciones <- function(pathArchivoEstaciones, columnaId=1, fileEncoding = '', sep=',') {
   estaciones <- read.table(pathArchivoEstaciones, header=T, sep=sep, dec='.', stringsAsFactors=F, fileEncoding = fileEncoding)
   # Saco los espacios a los nombres de estaciones y agrego una X a las que empiezan con números porque dificultan el trabajo con los dataframes
   if (columnaId > 0) {
-    estaciones[,columnaId] <- gsub(" ", ".", trimws(estaciones[,columnaId]))
-    i <- which(substr(estaciones[,columnaId], 1, 1) %in% as.character(0:9))
-    if (length(i) > 0) estaciones[i,columnaId] <- paste('X', estaciones[i,columnaId], sep='')
+    estaciones[,columnaId] <- limpiarIdsEstaciones(estaciones[,columnaId])
     rownames(estaciones) <- estaciones[,columnaId]
   }
   
@@ -49,27 +79,10 @@ leerEstaciones <- function(pathArchivoEstaciones, columnaId=1, fileEncoding = ''
 }
 
 leerDatos <- function(pathArchivoDatos, dfEstaciones, skip=0L, formatoFechas='YmdHMS', truncated=5, tzFechas='UTC', header=T, sep=',', dec='.', na.strings='-9999', fileEncoding = '', colIdEstaciones=-1L) {
-  datosAux <- read.table(pathArchivoDatos, header=header, sep=sep, skip=skip, dec=dec, stringsAsFactors=F, na.strings=na.strings, fileEncoding = fileEncoding)
-  
-  fechas <- parse_date_time(datosAux[, 1], orders = formatoFechas, tz=tzFechas, truncated = truncated)
-  iFechasValidas <- !is.na(fechas)
-  fechas <- fechas[iFechasValidas]
-  datosAux <- data.matrix(datosAux[iFechasValidas, -1])
-
-  if (is.numeric(colIdEstaciones) && colIdEstaciones <= 0) { idsEstaciones <- row.names(dfEstaciones)
-  } else { idsEstaciones <- make.names(dfEstaciones[,colIdEstaciones]) }
-    
-  if (header && !is.null(dfEstaciones)) {
-    ies <- na.omit(match(idsEstaciones, colnames(datosAux)))
-    datos <- matrix(data = NA_real_, nrow = nrow(datosAux), ncol = nrow(dfEstaciones))
-    datos[, ies] <- datosAux[,ies]
-  } else datos <- datosAux
-  
-  rownames(datos) <- as.character(fechas)
-  if (!is.null(dfEstaciones)) colnames(datos) <- idsEstaciones
-  head(datos)
-  
-  return (list(fechas=fechas, datos=datos))
+  dfDatos <- read.table(pathArchivoDatos, header=header, sep=sep, skip=skip, dec=dec, stringsAsFactors=F, na.strings=na.strings, fileEncoding = fileEncoding)
+  return (limpiarDatos(dfDatos = dfDatos, dfEstaciones = dfEstaciones, 
+                       colIdEstaciones = colIdEstaciones, header = header, 
+                       formatoFechas = formatoFechas, truncated = truncated, tzFechas = tzFechas))
 }
 
 grabarDatos <- function(pathArchivoDatos, fechas, datos, sep='\t', dec='.', na='-9999', append=F, col.names=T, formatoFechas='%Y-%m-%d') {
@@ -87,15 +100,29 @@ leerSeriesArchivoUnico <- function(pathArchivoDatos, nFilasEstaciones=10, filaId
     if (is.logical(aux)) { estaciones[,i] <- aux
     } else { estaciones[,i] <- type.convert(trimEstacionesI, na.strings=na.strings, as.is=T, dec=dec) }
   }
-
-  estaciones[,filaId] <- gsub(" ", ".", trimws(estaciones[,filaId]))
-  i <- which(substr(estaciones[,filaId], 1, 1) %in% as.character(0:9))
-  if (length(i) > 0) estaciones[i,filaId] <- paste('X', estaciones[i,filaId], sep='')
-  rownames(estaciones) <- estaciones[,filaId]
   
+  estaciones <- setIdsEstaciones(estaciones, filaId)
+
   datos <- leerDatos(pathArchivoDatos, dfEstaciones=estaciones, skip=skip+nFilasEstaciones, formatoFechas=formatoFechas, truncated = truncated, tzFechas=tzFechas, header=headerDatos, sep=sep, dec=dec, na.strings=na.strings, fileEncoding = fileEncoding)
   colnames(datos$datos) <- rownames(estaciones)
   return(list(estaciones=estaciones, fechas=datos$fechas, datos=datos$datos))
+}
+
+leerSeriesXLSX <- function(pathArchivoDatos, hojaEstaciones='InfoPluvios', headerEstaciones=T,
+                           colsEstaciones=1:4, colId=2, hojaDatos='Medidas', formatoFechas='YmdHMS',
+                           truncated=5, tzFechas='UTC', headerDatos=T, fileEncoding = '') {
+  pathArchivoDatos <- localFile
+  dfEstaciones <- read.xlsx(file = pathArchivoDatos, sheetName = hojaEstaciones, 
+                            colIndex = colsEstaciones, header = headerEstaciones, 
+                            encoding = fileEncoding)
+  dfEstaciones <- setIdsEstaciones(dfEstaciones, colId = colId)
+
+  dfDatos <- read.xlsx(file = pathArchivoDatos, sheetName = hojaDatos, header = headerDatos, 
+                       encoding = fileEncoding)
+  dfDatos <- limpiarDatos(dfDatos = dfDatos, dfEstaciones = dfEstaciones, colIdEstaciones = colId, 
+                          header = headerDatos, overrideHeader = headerDatos, 
+                          formatoFechas = formatoFechas, truncated = truncated, tzFechas = tzFechas)
+  return(list(estaciones=dfEstaciones, fechas=dfDatos$fechas, datos=dfDatos$datos))
 }
 
 grabarSeriesArchivoUnico <- function(pathArchivoDatos, estaciones, fechas, datos, sep='\t', dec='.', na='-9999',

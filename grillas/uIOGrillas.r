@@ -57,7 +57,7 @@ guardarGrillaGDAL <- function(nombreArchivo, grilla) {
   writeGDAL(grilla, nombreArchivo, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
 }
 
-leerGrillaGDAL <- function(nombreArchivo, grilla) {
+leerGrillaGDAL <- function(nombreArchivo) {
   # el tipo de archivo queda determinado por nombreArchivo, p.ej: si es .tif lee un geotiff
   return (readGDAL(nombreArchivo, silent = T))
 }

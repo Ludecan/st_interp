@@ -307,7 +307,7 @@ getExperimentalVariogram <- function(formula, input_data, verbose = FALSE, GLS.m
 
 isInvalidVariogram <- function(v, minPsill = 1E-3, minRange = 0.05) {
   return((is.null(v) |
-   any(v$model != 'Nug' & ((v$psill < minPsill) | (v$range <= minRange))) |
+   any(!v$model %in% c('Nug', "Pow")  & ((v$psill < minPsill) | (v$range <= minRange))) |
    any(v$model == 'Nug' & v$psill < 0) |
    any(v$model == 'Pow' & v$range > 2)))
 }
@@ -446,6 +446,7 @@ getModelVariogram <- function(experimental_variogram, formula, input_data = NULL
       }
     }
     
+    
     if (!is.null(bestFit)) {
       vgm_list[[counter]] = bestFit
       SSerr_list = c(SSerr_list, attr(bestFit, "SSErr"))
@@ -467,14 +468,18 @@ getModelVariogram <- function(experimental_variogram, formula, input_data = NULL
   }
   
   if(verbose) {
-    cat("Selected:\n")
-    print(vgm_list[[which.min(SSerr_list)]])
-    cat("\nTested models, best first:\n")
-    tested = data.frame("Tested models" = sapply(vgm_list, function(x) as.character(x[2,1])),
-                        kappa = sapply(vgm_list, function(x) as.character(x[2,4])),
-                        "SSerror" = SSerr_list)
-    tested = tested[order(tested$SSerror),]
-    print(tested)
+    if (length(SSerr_list) > 0) {
+      cat("Selected:\n")
+      print(vgm_list[[which.min(SSerr_list)]])
+      cat("\nTested models, best first:\n")
+      tested = data.frame("Tested models" = sapply(vgm_list, function(x) as.character(x[2,1])),
+                          kappa = sapply(vgm_list, function(x) as.character(x[2,4])),
+                          "SSerror" = SSerr_list)
+      tested = tested[order(tested$SSerror),]
+      print(tested)      
+    } else {
+      cat("No variogram fit produced a valid model!")
+    }
   }
   
   #ordenSSErr <- sort(SSerr_list, index.return=T)
@@ -1111,7 +1116,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   limites <- getBoundariesPVariogramaEmpiricoV8(fml=formula, observaciones=input_data, cutoff=cutoff)
   if (useNugget) { fixNugget <- NA
   } else { fixNugget <- 0 }
-  
+
   for (i in 1:length(model)) {
     if (verbose) print(paste(i, ': ', model[[i]], sep=''))
     vgIni <- afvmod(formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, miscFitOptions=list(orig.behavior=F), 
