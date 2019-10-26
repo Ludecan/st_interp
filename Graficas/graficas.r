@@ -22,16 +22,6 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-iFrame <- sys.nframe()
-if (iFrame >= 3) { script.dir.graficas <- sys.frame(iFrame - 3)$ofile 
-} else { script.dir.graficas <- NULL }
-while ((is.null(script.dir.graficas) || is.na(regexpr('graficas.r', script.dir.graficas, fixed=T)[1])) && iFrame >= 0) {
-  script.dir.graficas <- sys.frame(iFrame)$ofile
-  iFrame <- iFrame - 1
-}
-if (is.null(script.dir.graficas)) { script.dir.graficas <- ''
-} else { script.dir.graficas <- paste(dirname(script.dir.graficas), '/', sep='') }
-
 set1 <- c('#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999')
 colores64 <- c('#000000','#00FF00','#0000FF','#FF0000','#01FFFE','#FFA6FE','#FFDB66','#006401','#010067','#95003A',
                '#007DB5','#FF00F6','#FFEEE8','#774D00','#90FB92','#0076FF','#D5FF00','#FF937E','#6A826C','#FF029D',
@@ -70,8 +60,8 @@ colores269 <- c('#000000','#FFFF00','#1CE6FF','#FF34FF','#FF4A46',
                 '#D83D66','#2F5D9B','#6C5E46','#D25B88','#5B656C','#00B57F','#545C46','#866097','#365D25','#252F99',
                 '#00CCFF','#674E60','#FC009C','#92896B')
 
-source(paste(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r', sep=''))
-#instant_pkgs(c("sp", "RColorBrewer", "rgeos", "maptools", "rgdal", "proj4", "scales", "ggplot2"))
+script.dir.graficas <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
+source(paste(script.dir.graficas, '/../instalarPaquetes/instant_pkgs.r', sep=''))
 instant_pkgs(c("colorspace", "ggplot2", "Cairo", 'reshape'))
 
 crearXYLims <- function(xMin, xMax, yMin, yMax, expand=0) {

@@ -22,26 +22,16 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-# Busca en el stack el path relativo a getwd() del script para poder hacer los source correctamente
-# Intenta con el frame actual - 3 primero que es donde estaba siempre cuando se hizo el programa
-iFrame <- sys.nframe()
-if (iFrame >= 3) { script.dir.GetMODISEx <- sys.frame(iFrame - 3)$ofile 
-} else { script.dir.GetMODISEx <- NULL }
-while ((is.null(script.dir.GetMODISEx) || is.na(regexpr('mapearEx.r', script.dir.GetMODISEx, fixed=T)[1])) && iFrame >= 0) {
-  script.dir.GetMODISEx <- sys.frame(iFrame)$ofile
-  iFrame <- iFrame - 1
-}
-if (is.null(script.dir.GetMODISEx)) { script.dir.GetMODISEx <- ''
-} else { script.dir.GetMODISEx <- paste(dirname(script.dir.GetMODISEx), '/', sep='') }
+script.dir.GetMODISEx <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
 
 # check for uninstalled dependencies, install them and load them
-source(paste(script.dir.GetMODISEx, '../parsearParams/parsearParamsUtils.r', sep=''))
-source(paste(script.dir.GetMODISEx, '../instalarPaquetes/instant_pkgs.r', sep=''))
-source(paste(script.dir.GetMODISEx, '../PathUtils/pathUtils.r', sep=''))
-source(paste(script.dir.GetMODISEx, '../cacheFunciones/cacheFunciones.r', sep=''))
-source(paste(script.dir.GetMODISEx, '../tryUtils/tryUtils.r', sep=''))
+source(paste(script.dir.GetMODISEx, '/../parsearParams/parsearParamsUtils.r', sep=''))
+source(paste(script.dir.GetMODISEx, '/../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste(script.dir.GetMODISEx, '/../PathUtils/pathUtils.r', sep=''))
+source(paste(script.dir.GetMODISEx, '/../cacheFunciones/cacheFunciones.r', sep=''))
+source(paste(script.dir.GetMODISEx, '/../tryUtils/tryUtils.r', sep=''))
 instant_pkgs(c("digest", "sp", "rgdal", "raster", "RCurl", "lubridate", 'doParallel', 'rts'))
-# source(paste(script.dir.GetMODISEx, 'ModisDownload.r', sep=''))
+#source(paste(script.dir.GetMODISEx, '/ModisDownload.r', sep=''))
 #shpGrillaMODISSinusoidalV5 <- readOGR('modis_sinusoidal', 'modis_sinusoidal_grid_world')
 #plot(shpGrillaMODISSinusoidalV5)  
 #shpGrillaMODISSinusoidalV5

@@ -22,20 +22,10 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-# Busca en el stack el path relativo a getwd() del script para poder hacer los source correctamente
-# Intenta con el frame actual - 3 primero que es donde estaba siempre cuando se hizo el programa
-iFrame <- sys.nframe()
-if (iFrame >= 3) { script.dir.qcTests <- sys.frame(iFrame - 3)$ofile 
-} else { script.dir.qcTests <- NULL }
-while ((is.null(script.dir.qcTests) || is.na(regexpr('qcTests.r', script.dir.qcTests, fixed=T)[1])) && iFrame >= 0) {
-  script.dir.qcTests <- sys.frame(iFrame)$ofile
-  iFrame <- iFrame - 1
-}
-if (is.null(script.dir.qcTests)) { script.dir.qcTests <- ''
-} else { script.dir.qcTests <- paste(dirname(script.dir.qcTests), '/', sep='') }
+script.dir.qcTests <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
 
-source(paste(script.dir.qcTests, '../instalarPaquetes/instant_pkgs.r', sep=''))
-source(paste(script.dir.qcTests, '../interpolar/interpolarEx.r', sep=''))
+source(paste(script.dir.qcTests, '/../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste(script.dir.qcTests, '/../interpolar/interpolarEx.r', sep=''))
 instant_pkgs(c('sp', 'robustbase'))
 
 # Códigos para los distintos tipos de outliers detectables por los métodos
@@ -378,7 +368,7 @@ deteccionGradienteEnMatrizDeObservaciones <- function(coordsObservaciones, fecha
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl = cl, expr = source(paste(script.dir.qcTests, 'qcTests.r', sep='')))
+    clusterEvalQ(cl = cl, expr = source(paste(script.dir.qcTests, '/qcTests.r', sep='')))
     
     # structure(vapply(m, y, numeric(1)), dim=dim(m))
     hayGradiente <- parSapply(cl, X = 1:length(valoresObservaciones), FUN = deteccionGradienteEnMatrizDeObservacionesI, 
@@ -459,8 +449,8 @@ mapearResultadosDeteccionOutliers <- function(test, carpetaSalida=NULL, coordsOb
       clusterExport(cl, varlist = c('script.dir.qcTests'))
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       clusterEvalQ(cl = cl, expr = { 
-        source(paste(script.dir.qcTests, 'qcTests.r', sep='')) 
-        source(paste(script.dir.qcTests, '../interpolar/mapearEx.r', sep='')) 
+        source(paste(script.dir.qcTests, '/qcTests.r', sep='')) 
+        source(paste(script.dir.qcTests, '/../interpolar/mapearEx.r', sep='')) 
       })
       parLapplyLB(cl = cl, seq.int(from = 1, to = nrow(test), by = 1), fun = mapearResultadosDeteccionOutliersI, test=test, carpetaSalida=carpetaSalida, 
                   coordsObservaciones=coordsObservaciones, valoresObservaciones=valoresObservaciones, shpBase=shpBase, xyLims=xyLims, tamaniosPuntos=tamaniosPuntos)
@@ -540,8 +530,8 @@ mapearResultadosDeteccionOutliersV2 <- function(test, carpetaSalida=NULL, coords
       clusterExport(cl, varlist = c('script.dir.qcTests'))
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       clusterEvalQ(cl = cl, expr = { 
-        source(paste(script.dir.qcTests, 'qcTests.r', sep='')) 
-        source(paste(script.dir.qcTests, '../interpolar/mapearEx.r', sep='')) 
+        source(paste(script.dir.qcTests, '/qcTests.r', sep='')) 
+        source(paste(script.dir.qcTests, '/../interpolar/mapearEx.r', sep='')) 
       })
       parLapplyLB(cl = cl, seq_along(fechas), fun = mapearResultadosDeteccionOutliersV2I, fechas=fechas, test=test, carpetaSalida=carpetaSalida, 
                   coordsObservaciones=coordsObservaciones, valoresObservaciones=valoresObservaciones, shpBase=shpBase, xyLims=xyLims, 
@@ -847,7 +837,7 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl = cl, expr = source(paste(script.dir.qcTests, 'qcTests.r', sep='')))
+    clusterEvalQ(cl = cl, expr = source(paste(script.dir.qcTests, '/qcTests.r', sep='')))
     test <- parLapplyLB(cl = cl, X=iColumnasATestear, fun = spatialRegressionTestI, 
                         ies=ies, itsATestear=itsATestear, coordsObservaciones=coordsObservaciones, 
                         fechasObservaciones=fechasObservaciones, dfValoresObservaciones=dfValoresObservaciones, 
@@ -1176,7 +1166,7 @@ testEspacialPrecipitacion <- function(coordsObservaciones, fechasObservaciones, 
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl = cl, expr = source(paste(script.dir.qcTests, 'qcTests.r', sep='')))
+    clusterEvalQ(cl = cl, expr = source(paste(script.dir.qcTests, '/qcTests.r', sep='')))
     test <- parLapplyLB(cl = cl, X=iColumnasATestear, fun = testEspacialPrecipitacionIV2, 
                         iesVecinos=iesVecinos, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
                         dfValoresObservaciones=dfValoresObservaciones, iNoNAs=iNoNAs,

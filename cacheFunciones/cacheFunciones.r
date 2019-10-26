@@ -22,19 +22,8 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-# Busca en el stack el path relativo a getwd() del script para poder hacer los source correctamente
-# Intenta con el frame actual - 3 primero que es donde estaba siempre cuando se hizo el programa
-iFrame <- sys.nframe()
-if (iFrame >= 3) { script.dir.cacheFunciones <- sys.frame(iFrame - 3)$ofile 
-} else { script.dir.cacheFunciones <- NULL }
-while ((is.null(script.dir.cacheFunciones) || is.na(regexpr('mapearEx.r', script.dir.cacheFunciones, fixed=T)[1])) && iFrame >= 0) {
-  script.dir.cacheFunciones <- sys.frame(iFrame)$ofile
-  iFrame <- iFrame - 1
-}
-if (is.null(script.dir.cacheFunciones)) { script.dir.cacheFunciones <- ''
-} else { script.dir.cacheFunciones <- paste(dirname(script.dir.cacheFunciones), '/', sep='') }
-
-source(paste(script.dir.cacheFunciones, '../instalarPaquetes/instant_pkgs.r', sep=''))
+script.dir.cacheFunciones <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
+source(paste(script.dir.cacheFunciones, '/../instalarPaquetes/instant_pkgs.r', sep=''))
 instant_pkgs(c('digest'))
 
 getPathCache <- function(objParametros, dirEjecucion='', prefijoNombreArchivoCache='') {
