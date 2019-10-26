@@ -873,7 +873,11 @@ mapearGrillaGGPlot <- function(grilla, shpBase=NULL, escala=NULL, nomArchResulta
       coordsObsSobreShpBase <- coordsObsSobreShpBase[iMuestras,]
     }
     coordsPuntos <- coordinates(coordsObsSobreShpBase)
-    dfPuntos <- data.frame(x=coordsPuntos[, 1], y=coordsPuntos[, 2], value=round(coordsObsSobreShpBase@data[, zColObs], 1))
+    if (is.numeric(coordsObsSobreShpBase@data[, zColObs])) {
+      dfPuntos <- data.frame(x=coordsPuntos[, 1], y=coordsPuntos[, 2], value=round(coordsObsSobreShpBase@data[, zColObs], 1))
+    } else {
+      dfPuntos <- data.frame(x=coordsPuntos[, 1], y=coordsPuntos[, 2], value=coordsObsSobreShpBase@data[, zColObs])
+    }
     tamaniosPuntos = 1
     p <- p + geom_point(data=dfPuntos, aes(x=x, y=y), colour='black', size=tamaniosPuntos) + 
          geom_text_repel(data=dfPuntos, aes(label=value), size=tamanioFuentePuntos, colour='black')

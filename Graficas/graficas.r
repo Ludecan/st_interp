@@ -244,3 +244,63 @@ boxplot_GGPlot <- function(clases, y, titulo='', tituloEjeX='', tituloEjeY='', d
   if (!is.null(nomArchSalida)) guardarGrafico(p, nomArchSalida, DPI, widthPx=widthPx, heightPx=heightPx)
   return (p)
 }
+
+graficoCorrVsDistancia <- function(dist, corr, clasesEstaciones=rep(1, nrow(corr)), 
+                                   nomArchSalida=NULL) {
+  upperTri <- upper.tri(dist, diag=T)
+  
+  df <- data.frame(x=dist[upperTri], y=corr[upperTri])
+  formulaModelo <- y~Matern(d=x, range=range, smoothness=smoothness)
+  modeloMatern <- nls(formulaModelo, data=df, start=list(smoothness=0.3, range=400))
+  params <- coef(modeloMatern)
+  smoothness <- params[1]
+  range <- params[2]
+  formulaModeloAjustada <- as.formula(formulaModelo, env = new.env(range, smoothness))
+  
+  clasesUnique <- unique(clasesEstaciones)
+  if (length(clasesUnique) > 1) {
+    colores <- colores64
+    colorMap <- expand.grid(clasesUnique, clasesUnique)
+    colorMap$color <- NA
+    colorMap$label <- NA
+    
+    nCruces <- 0
+    nClases <- length(clasesUnique)
+    
+    iClase <- 3
+    jClase <- iClase + 1
+    for (iClase in seq_along(clasesUnique)) {
+      claseI <- clasesUnique[iClase]
+      idx <- colorMap$Var1 == claseI & colorMap$Var2 == claseI
+      colorMap[idx, 'color'] <- colores[iClase]
+      colorMap[idx, 'label'] <- claseI
+      
+      for (jClase in seq.int(from = iClase+1, by=1, length.out = nClases - (iClase))) {
+        claseJ <- clasesUnique[jClase]
+        
+        idx <- (colorMap$Var1 == claseI & colorMap$Var2 == claseJ) | 
+          (colorMap$Var1 == claseJ & colorMap$Var2 == claseI)
+        colorMap[idx, 'color'] <- colores[nClases + nCruces]
+        colorMap[idx, 'label'] <- paste(claseI, ',', claseJ, sep='')
+        nCruces <- nCruces + 1
+      }
+    }
+    coloresPuntos <- matrix('red', nrow=nrow(corr), ncol=ncol(corr))
+    for (i in seq_len(nrow(colorMap))) {
+      coloresPuntos[clasesEstaciones == colorMap[i, 1], clasesEstaciones == colorMap[i, 2]] <- colorMap[i, 3]
+    }
+    coloresPuntos <- coloresPuntos[upperTri]    
+  } else {
+    coloresPuntos <- 'red'
+  }
+  
+  xyLimsScatterPlot <- crearXYLims(yMin=achicarToNDigitos(min(corr[upperTri], na.rm=T), 2), yMax=1,
+                                   xMin=0, xMax=agrandarToNDigitos(max(dist[upperTri]), 1))
+  
+  # TODO: agregar labels de los puntos. Idea interesante acá:
+  # https://stackoverflow.com/questions/52009545/r-ggplot-for-hover-text
+  return(scatterPlot(x=dist[upperTri], y=corr[upperTri], lineaRegresion=T, intervalosConfianza=F, 
+                     formulaRegresion=formulaModeloAjustada, xyLims=xyLimsScatterPlot,
+                     coloresPuntos = coloresPuntos, tituloEjeX='Distancia[km]',
+                     tituloEjeY='Correlación',dibujar = F, nomArchSalida = nomArchSalida))
+}

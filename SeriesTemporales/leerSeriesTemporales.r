@@ -36,9 +36,7 @@ source(paste(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r', sep=
 instant_pkgs(pkgs = c('Rcpp', 'stringi', 'lubridate', 'jsonlite', 'xlsx'))
 
 setIdsEstaciones <- function(dfEstaciones, colId=1) {
-  dfEstaciones[, colId] <- gsub(" ", ".", trimws(dfEstaciones[, colId]))
-  i <- which(substr(dfEstaciones[, colId], 1, 1) %in% as.character(0:9))
-  if (length(i) > 0) dfEstaciones[i, colId] <- paste('X', dfEstaciones[i, colId], sep='')
+  dfEstaciones[, colId] <- make.names(trimws(dfEstaciones[, colId]))
   rownames(dfEstaciones) <- dfEstaciones[, colId]
   return(dfEstaciones)
 }
@@ -111,7 +109,6 @@ leerSeriesArchivoUnico <- function(pathArchivoDatos, nFilasEstaciones=10, filaId
 leerSeriesXLSX <- function(pathArchivoDatos, hojaEstaciones='InfoPluvios', headerEstaciones=T,
                            colsEstaciones=1:4, colId=2, hojaDatos='Medidas', formatoFechas='YmdHMS',
                            truncated=5, tzFechas='UTC', headerDatos=T, fileEncoding = '') {
-  pathArchivoDatos <- localFile
   dfEstaciones <- read.xlsx(file = pathArchivoDatos, sheetName = hojaEstaciones, 
                             colIndex = colsEstaciones, header = headerEstaciones, 
                             encoding = fileEncoding)

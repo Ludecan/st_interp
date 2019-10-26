@@ -1055,7 +1055,7 @@ testEspacialPrecipitacionIV2 <- function(i, iesVecinos, coordsObservaciones, fec
                                          iNoNAs, itsATestear, ispMax, ispObs, isdMin, isdObs, isdEstMin, fInf, fSup, 
                                          amplitudMin, maxDist, minNCuadrantes, minNVecinosPorCuadrante, datosProtegidos, 
                                          verbose) {
-  # i <- 277
+  # i <- 1
   # iFecha <- 31
   # i <- which(colnames(dfValoresObservaciones) == 'Colonia.Rivera')
   # i <- which(colnames(dfValoresObservaciones) == 'Río.Branco')
@@ -1171,7 +1171,6 @@ testEspacialPrecipitacion <- function(coordsObservaciones, fechasObservaciones, 
   iNoNAs <- !is.na(dfValoresObservaciones)
   
   if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones))
-  
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
@@ -1185,7 +1184,7 @@ testEspacialPrecipitacion <- function(coordsObservaciones, fechasObservaciones, 
                         minNVecinosPorCuadrante=minNVecinosPorCuadrante, datosProtegidos=datosProtegidos, verbose=verbose)
     stopCluster(cl)
   } else {
-    test <- lapply(X=iColumnasATestear, FUN = testEspacialPrecipitacionIV2, 
+    test <- lapply(X=iColumnasATestear, FUN = testEspacialPrecipitacionIV2,
                    iesVecinos=iesVecinos, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
                    dfValoresObservaciones=dfValoresObservaciones, iNoNAs=iNoNAs,
                    itsATestear=itsATestear, ispMax=ispMax, ispObs=ispObs, isdMin=isdMin, isdObs=isdObs, isdEstMin=isdEstMin, 

@@ -44,7 +44,6 @@ source(paste(script.dir.interpolarEx, 'funcionesAuxiliares.r', sep=''))
 source(paste(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r', sep=''))
 source(paste(script.dir.interpolarEx, '../Agregacion/agregacion.r', sep=''))
 
-
 instant_pkgs(pkgs = c('unmarked', 'VGAM'), silent = TRUE, doCargarPaquetes=FALSE)
 instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'raster', 
                       'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 'rms',

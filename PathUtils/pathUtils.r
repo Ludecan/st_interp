@@ -9,6 +9,7 @@ if (is.null(script.dir.PathUtils)) { script.dir.PathUtils <- ''
 } else { script.dir.PathUtils <- paste(dirname(script.dir.PathUtils), '/', sep='') }
 
 # source(paste(script.dir.PathUtils, '../instalarPaquetes/instant_pkgs.r', sep=''))
+
 # instant_pkgs("tools")
 # funciones útiles que ya vienen en R
 # basename, dirname, dir.create
