@@ -22,7 +22,17 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-script.dir.getBoundariesPVariogramaEmpirico <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
+# Busca en el stack el path relativo a getwd() del script para poder hacer los source correctamente
+# Intenta con el frame actual - 3 primero que es donde estaba siempre cuando se hizo el programa
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.getBoundariesPVariogramaEmpirico <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.getBoundariesPVariogramaEmpirico <- NULL }
+while ((is.null(script.dir.getBoundariesPVariogramaEmpirico) || is.na(regexpr('getBoundariesPVariogramaEmpirico.r', script.dir.getBoundariesPVariogramaEmpirico, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.getBoundariesPVariogramaEmpirico <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.getBoundariesPVariogramaEmpirico)) { script.dir.getBoundariesPVariogramaEmpirico <- ''
+} else { script.dir.getBoundariesPVariogramaEmpirico <- paste(dirname(script.dir.getBoundariesPVariogramaEmpirico), '/', sep='') }
 
 getProporcionDeLaDiagonalValida <- function(nObservaciones) {
   if (nObservaciones <= 8) { return(1)
@@ -36,7 +46,7 @@ getProporcionDeLaDiagonalValida <- function(nObservaciones) {
 getBoundariesPVariogramaEmpirico <- function(fml, observaciones, minDivDist=5, 
                                              maxDivDist=14, proporcionDeLaDiagonalValida=0) {
   require(gstat)
-  source(paste(script.dir.getBoundariesPVariogramaEmpirico, '/funcsCalidadVariogramasEmpiricos.r', sep=''))
+  source(paste(script.dir.getBoundariesPVariogramaEmpirico, 'funcsCalidadVariogramasEmpiricos.r', sep=''))
   
   if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(observaciones)) }
   

@@ -22,8 +22,17 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-script.dir.ReadGrADS <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
-source(paste(script.dir.ReadGrADS, '/../instalarPaquetes/instant_pkgs.r', sep=''))
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.ReadGrADS <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.ReadGrADS <- NULL }
+while ((is.null(script.dir.ReadGrADS) || is.na(regexpr('ReadGrADS.r', script.dir.ReadGrADS, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.ReadGrADS <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.ReadGrADS)) { script.dir.ReadGrADS <- ''
+} else { script.dir.ReadGrADS <- paste(dirname(script.dir.ReadGrADS), '/', sep='') }
+
+source(paste(script.dir.ReadGrADS, '../instalarPaquetes/instant_pkgs.r', sep=''))
 instant_pkgs(c('stringi', 'rgdal', 'sp', 'akima', 'RANN'))
 
 formaWGS84 <- '+ellps=WGS84 +datum=WGS84 +units=m'

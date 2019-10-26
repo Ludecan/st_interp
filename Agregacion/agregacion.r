@@ -22,8 +22,17 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-script.dir.agregacion <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
-source(paste(script.dir.agregacion, '/../instalarPaquetes/instant_pkgs.r', sep=''))
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.agregacion <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.agregacion <- NULL }
+while ((is.null(script.dir.agregacion) || is.na(regexpr('agregacion.r', script.dir.agregacion, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.agregacion <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.agregacion)) { script.dir.agregacion <- ''
+} else { script.dir.agregacion <- paste(dirname(script.dir.agregacion), '/', sep='') }
+
+source(paste(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r', sep=''))
 instant_pkgs(c('stats', 'sp'))
 
 naSiTodosNAFuncSiNo <- function(x, func, ...) {

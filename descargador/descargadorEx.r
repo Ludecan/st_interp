@@ -22,9 +22,20 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-script.dir.descargadorEx <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
-source(paste(script.dir.descargadorEx, '/../instalarPaquetes/instant_pkgs.r', sep=''))
-source(paste(script.dir.descargadorEx, '/../PathUtils/pathUtils.r', sep=''))
+# Busca en el stack el path relativo a getwd() del script para poder hacer los source correctamente
+# Intenta con el frame actual - 3 primero que es donde estaba siempre cuando se hizo el programa
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.descargadorEx <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.interpolarEx <- NULL }
+while ((is.null(script.dir.descargadorEx) || is.na(regexpr('descargadorEx.r', script.dir.descargadorEx, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.descargadorEx <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.descargadorEx)) { script.dir.descargadorEx <- ''
+} else { script.dir.descargadorEx <- paste(dirname(script.dir.descargadorEx), '/', sep='') }
+
+source(paste(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste(script.dir.descargadorEx, '../PathUtils/pathUtils.r', sep=''))
 instant_pkgs(c('RCurl', 'parallel', 'digest', 'data.table', 'lubridate'))
 
 threadHandle <- getCurlHandle()

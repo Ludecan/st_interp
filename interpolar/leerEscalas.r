@@ -22,9 +22,18 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-script.dir.leerEscalas <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
-source(paste(script.dir.leerEscalas, '/mapearEx.r', sep=''))
-source(paste(script.dir.leerEscalas, '/../instalarPaquetes/instant_pkgs.r', sep=''))
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.leerEscalas <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.leerEscalas <- NULL }
+while ((is.null(script.dir.leerEscalas) || is.na(regexpr('leerEscalas.r', script.dir.leerEscalas, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.leerEscalas <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.leerEscalas)) { script.dir.leerEscalas <- ''
+} else { script.dir.leerEscalas <- paste(dirname(script.dir.leerEscalas), '/', sep='') }
+
+source(paste(script.dir.leerEscalas, 'mapearEx.r', sep=''))
+source(paste(script.dir.leerEscalas, '../instalarPaquetes/instant_pkgs.r', sep=''))
 
 instant_pkgs(c('jsonlite'))
 

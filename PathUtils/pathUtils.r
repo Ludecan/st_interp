@@ -1,6 +1,14 @@
-script.dir.PathUtils <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.PathUtils <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.PathUtils <- NULL }
+while ((is.null(script.dir.PathUtils) || is.na(regexpr('pathUtils.r', script.dir.PathUtils, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.PathUtils <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.PathUtils)) { script.dir.PathUtils <- ''
+} else { script.dir.PathUtils <- paste(dirname(script.dir.PathUtils), '/', sep='') }
 
-# source(paste(script.dir.PathUtils, '/../instalarPaquetes/instant_pkgs.r', sep=''))
+# source(paste(script.dir.PathUtils, '../instalarPaquetes/instant_pkgs.r', sep=''))
 # instant_pkgs("tools")
 # funciones útiles que ya vienen en R
 # basename, dirname, dir.create
@@ -53,6 +61,7 @@ changeFileDrive <- function(filename, nuevoDriveSinDosPuntos) {
 }
 
 prependToFileName <- function(filename, preFijo) {
+  ext <- getFileExt(filename)
   return(sapply(filename, function(x) {
     nomArch <- basename(x)
     paste(gsub(x = x, pattern = nomArch, replacement = ''), preFijo, nomArch, sep='')  

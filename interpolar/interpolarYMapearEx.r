@@ -22,9 +22,19 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-script.dir.interpolarYMapearEx <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
-source(paste(script.dir.interpolarYMapearEx, '/interpolarEx.r', sep=''))
-source(paste(script.dir.interpolarYMapearEx, '/funcionesAuxiliares.r', sep=''))
+# Busca en el stack el path relativo a getwd() del script para poder hacer los source correctamente
+# Intenta con el frame actual - 3 primero que es donde estaba siempre cuando se hizo el programa
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.interpolarYMapearEx <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.interpolarYMapearEx <- NULL }
+while ((is.null(script.dir.interpolarYMapearEx) || is.na(regexpr('interpolarYMapearEx.r', script.dir.interpolarYMapearEx, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.interpolarYMapearEx <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.interpolarYMapearEx)) { script.dir.interpolarYMapearEx <- ''
+} else { script.dir.interpolarYMapearEx <- paste(dirname(script.dir.interpolarYMapearEx), '/', sep='') }
+source(paste(script.dir.interpolarYMapearEx, 'interpolarEx.r', sep=''))
+source(paste(script.dir.interpolarYMapearEx, 'funcionesAuxiliares.r', sep=''))
 
 createDefaultListaMapas <- function(paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
                                     dibujarObservacionesEscalaFija=F, dibujarEscalaFija=T,
@@ -79,8 +89,8 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
     } else { subtitulo <- paste(sum(!is.na(valoresObservaciones[ti,])), 'Observaciones') }
   } else { subtitulo <- '' }
   
-  source(paste(script.dir.interpolarYMapearEx, "/mapearEx.r", sep=''))
-  source(paste(script.dir.interpolarYMapearEx, "/leerEscalas.r", sep=''))
+  source(paste(script.dir.interpolarYMapearEx, "./mapearEx.r", sep=''))
+  source(paste(script.dir.interpolarYMapearEx, "./leerEscalas.r", sep=''))
   coordsObservaciones$value <- as.numeric(valoresObservaciones[ti, ])
   
   nomArch <- listaMapas$nombreArchivo[ti]
@@ -202,8 +212,8 @@ interpolarYMapearI <- function(iTi, tsAInterpolar=1:nrow(valoresObservaciones), 
   # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-03-18')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
-  source(paste(script.dir.interpolarYMapearEx, '/interpolarEx.r', sep=''))
-  source(paste(script.dir.interpolarYMapearEx, '/interpolarYMapearEx.r', sep=''))
+  source(paste(script.dir.interpolarYMapearEx, 'interpolarEx.r', sep=''))
+  source(paste(script.dir.interpolarYMapearEx, 'interpolarYMapearEx.r', sep=''))
 
   nomArchGeoTiff <- changeFileExt(listaMapas$nombreArchivo[ti], '.tif')
   dir.create(dirname(listaMapas$nombreArchivo[ti]), showWarnings = F, recursive = T)
@@ -215,7 +225,6 @@ interpolarYMapearI <- function(iTi, tsAInterpolar=1:nrow(valoresObservaciones), 
   if (!existia) {
     # paramsIyM$modoDiagnostico <- T
     if (paramsIyM$modoDiagnostico) {
-      # Preparo parámetros que s evan a usar en el modo diagnóstico
       if (is.POSIXct(fechasObservaciones)) { 
         paramsIyM$carpetaParaModoDiagnostico <- paste(dirname(listaMapas$nombreArchivo[ti]), '/', format(x = fechasObservaciones[ti], format = '%Y%m%d_%H%M'), '/', sep='')
         paramsIyM$strFecha <- format(fechasObservaciones[ti], '%Y-%m-%d %H:%M')

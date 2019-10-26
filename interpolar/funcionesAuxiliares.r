@@ -22,10 +22,21 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-script.dir.funcionesAuxiliares <- dirname((function() { attr(body(sys.function()), "srcfile") })()$filename)
-source(paste(script.dir.funcionesAuxiliares, '/../instalarPaquetes/instant_pkgs.r',sep=''))
-source(paste(script.dir.funcionesAuxiliares, '/../cacheFunciones/cacheFunciones.r', sep=''))
-source(paste(script.dir.funcionesAuxiliares, '/../graficas/graficas.r', sep=''))
+# Busca en el stack el path relativo a getwd() del script para poder hacer los source correctamente
+# Intenta con el frame actual - 3 primero que es donde estaba siempre cuando se hizo el programa
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.funcionesAuxiliares <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.funcionesAuxiliares <- NULL }
+while ((is.null(script.dir.funcionesAuxiliares) || is.na(regexpr('funcionesAuxiliares.r', script.dir.funcionesAuxiliares, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.funcionesAuxiliares <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.funcionesAuxiliares)) { script.dir.funcionesAuxiliares <- ''
+} else { script.dir.funcionesAuxiliares <- paste(dirname(script.dir.funcionesAuxiliares), '/', sep='') }
+
+source(paste(script.dir.funcionesAuxiliares, '../instalarPaquetes/instant_pkgs.r',sep=''))
+source(paste(script.dir.funcionesAuxiliares, '../cacheFunciones/cacheFunciones.r', sep=''))
+source(paste(script.dir.funcionesAuxiliares, '../graficas/graficas.r', sep=''))
 instant_pkgs(pkgs = c('matrixStats', 'lubridate', 'gridExtra', 'sp', 'rgdal', 'Rmisc', 'gstat', 'grid'))
 
 graficarEstaciones <- function(estaciones, serieComparacion, tempAireMin, tempAireMax, fechaMin=NA, fechaMax=NA, 
@@ -593,7 +604,7 @@ plotRasters <- function(pathsRaster, shpBase=NULL, carpetaSalida=paste(dirname(p
     clusterEvalQ(cl = cl, expr = {    
       require(rgdal)
       source(paste(script.dir.funcionesAuxiliares, '/mapearEx.r', sep=''))
-      source(paste(script.dir.funcionesAuxiliares, '/../PathUtils/pathUtils.r', sep=''))
+      source(paste(script.dir.funcionesAuxiliares, '../PathUtils/pathUtils.r', sep=''))
     })
     parSapplyLB(cl=cl, X=1:length(pathsRaster), FUN=plotRasterI, pathsRaster=pathsRaster, shpBase=shpBase, escala=escala, 
                 carpetaSalida=carpetaSalida, titulos=titulos, replot=replot, widthPx=widthPx, heightPx=heightPx, 
@@ -1348,7 +1359,7 @@ contarNoNulosPorCuadrantes <- function(pathsGeoTiffs, nCuadrantesX=2, nCuadrante
     clusterExport(cl, varlist = c('script.dir.funcionesAuxiliares'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
     clusterEvalQ(cl, { require('rgdal')
-                       source(paste(script.dir.funcionesAuxiliares, '/funcionesAuxiliares.r', sep='')) })
+                       source(paste(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r', sep='')) })
     disponiblesPorCuadrantes <- parSapplyLB(cl = cl, X=as.vector(pathsGeoTiffs), FUN = contarNoNulosPorCuadrantesTi, objCuadrantes=objCuadrantes, shpMask=shpMask)
     stopCluster(cl)
   } else {
@@ -1546,7 +1557,7 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
   print(i)
   if (!is.na(pathsRasters[i])) {
     nomArchSalida <- paste(carpetaSalida, basename(pathsRasters[i]), sep='')
-    source(paste(script.dir.funcionesAuxiliares, '/../TryUtils/tryUtils.r', sep=''))
+    source(paste(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r', sep=''))
     
     run <- reRun || !file.exists(nomArchSalida) || file.info(nomArchSalida)$size <= 0 || !evaluarConReintentos(readGDAL(fname = nomArchSalida, silent = T), maxNIntentos = 1)
   
@@ -1852,7 +1863,7 @@ filtrarRastersGradienteAbrupto <- function(pathsRasters, pathsRastersCentrado=NU
       require(rgdal)
       require(sp)
       require(Rmisc)
-      source(paste(script.dir.funcionesAuxiliares, '/mapearEx.r', sep=''))
+      source(paste(script.dir.funcionesAuxiliares, 'mapearEx.r', sep=''))
     })
     parSapplyLB(cl=cl, X=1:length(pathsRasters), FUN=filtrarRasterIGradienteAbrupto, pathsRasters=pathsRasters, pathsRastersCentrado=pathsRastersCentrado, 
                 pathsRastersEscalado=pathsRastersEscalado, minValAbs=minValAbs, maxValAbs=maxValAbs, carpetaSalida=carpetaSalida, zcol=zcol, 
@@ -2248,9 +2259,9 @@ mapearRastersCentradoYEscalado <- function(pathsRasters, pathsRastersCentrado, p
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.funcionesAuxiliares'))
     clusterEvalQ(cl = cl, expr = {
-      source(paste(script.dir.funcionesAuxiliares, '/../TryUtils/tryUtils.r', sep=''))
-      source(paste(script.dir.funcionesAuxiliares, '/mapearEx.r', sep=''))
-      source(paste(script.dir.funcionesAuxiliares, '/funcionesAuxiliares.r', sep=''))
+      source(paste(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r', sep=''))
+      source(paste(script.dir.funcionesAuxiliares, 'mapearEx.r', sep=''))
+      source(paste(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r', sep=''))
     })
     
     res <- parSapplyLB(cl = cl, X=1:nrow(pathsRasters), FUN = mapearRastersCentradoYEscaladoI, pathsRasters=pathsRasters, 
