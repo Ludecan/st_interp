@@ -130,7 +130,7 @@ parseGradsAbsoluteTime <- function(s) {
     # dmmmyyyy
     # 12345678
     dia <- as.numeric(substring(strDiaMesAnio, 1, 1))
-    mes <- which(substring(strDiaMesAnio, 3, 5) == strs3DigitosMeses)
+    mes <- which(substring(strDiaMesAnio, 2, 4) == strs3DigitosMeses)
     anio <- as.numeric(substring(strDiaMesAnio, nchar(strDiaMesAnio) - 3, nchar(strDiaMesAnio)))
   }  else if (nchar(strDiaMesAnio) == 7) {
     # ddmmmyy o mmmyyyy
@@ -604,7 +604,7 @@ inicializarCTL <- function(ctl) {
   # bytesHastaVariableINivelZ[[i]][j] es la cantidad de bytes hasta el nivel de elevación j de la variable i desde
   # el comienzo de un hipercubo de tiempo
   ctl$bytesHastaVariableINivelZ <- list()
-  i <- 2
+  i <- 1
   for (i in seq_along(ctl$vars)) {
     # Cada celda de la variable i ocupa bytesPorCeldaBytes
     if (ctl$vars[[i]]$structure == 40) { bytesPorCelda <- as.integer(ctl$vars[[i]]$arg1)
@@ -642,8 +642,8 @@ parseCTL_V2 <- function(ctlFile, verbose=FALSE) {
   
   valoresAtributos <- character(length(textoAtributos))
   i <- 1
-  for (i in seq.int(from = 1, to = length(matches[[1]]) - 1, by = 1))
-    valoresAtributos[i] <- trimws(substr(ctl, start = matches[[1]][i] + largoMatches[i], stop = matches[[1]][i + 1] - 1))
+  for (i in seq.int(from = 1, to = length(matches[[1]]) - 1, by = 1)) {
+    valoresAtributos[i] <- trimws(substr(ctl, start = matches[[1]][i] + largoMatches[i], stop = matches[[1]][i + 1] - 1)) }
   i <- length(matches[[1]])
   valoresAtributos[i] <- trimws(substr(ctl, start = matches[[1]][i] + largoMatches[i], stop = nchar(ctl)))
   
@@ -663,10 +663,11 @@ parseCTL_V2 <- function(ctlFile, verbose=FALSE) {
   i <- 1
   # i <- 5
   # i <- i + 1
+  # verbose<-T
   while (i <= length(textoAtributos)) {
     # lower case to check without case sensitivity
     param <- tolower(textoAtributos[i])
-    if (verbose) print(paste(param, '-', valoresAtributos[i]))
+    if (verbose) print(paste(i, ': ', param, '-', valoresAtributos[i]))
     
     # ignore comments for now
     if (!startsWith(x = param, prefix = '*')) {
