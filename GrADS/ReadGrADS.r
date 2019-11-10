@@ -320,13 +320,10 @@ readXYGrid <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1) 
     }
   } else { binFile <- dsetOverride }
 
-  if ('big_endian' %in% ctl$options) { endian <- 'big' 
-  } else if ('little_endian' %in% ctl$options) { endian <- 'little' 
-  } else if ('byteswapped' %in% ctl$options) { endian <- 'big' 
-  } else { endian <- 'little' }
-  
   binFile <- file(binFile, open="rb")
-  seek(binFile, ctl$bytesHastaHiperCuboT[idxFecha] + ctl$bytesHastaVariableINivelZ[[idxVar]][idxNivelZ])
+  iPos <- ctl$bytesHastaHiperCuboT[idxFecha] + ctl$bytesHastaVariableINivelZ[[idxVar]][idxNivelZ]
+  if (iPos > 0) { seek(binFile, iPos) }
+    
   if (ctl$vars[[idxVar]]$structure == 40) {
     signed <- ctl$vars[[idxVar]]$arg2 != ''
     bytesPorCelda <- ctl$vars[[idxVar]]$arg1
@@ -337,17 +334,9 @@ readXYGrid <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1) 
     what="numeric"
   }
 
-  if (!is.null(ctl$pDef)) {
-    nFilas <- ctl$pDef$iSize
-    nCols <- ctl$pDef$jSize
-  } else {
-    nFilas <- ctl$xdef$n
-    nCols <- ctl$ydef$n
-  }
-  
-  gridData <- matrix(readBin(con = binFile, what = what, n= nFilas * nCols, size = bytesPorCelda, 
-                             signed = signed, endian = endian), 
-                     nrow = nFilas, ncol = nCols)
+  gridData <- matrix(readBin(con = binFile, what = what, n = ctl$numCells, size = bytesPorCelda, 
+                             signed = signed, endian = ctl$endian), 
+                     nrow = ctl$numRows, ncol = ctl$numCols)
   close(binFile)
   
   gridData[gridData == ctl$undef] <- NA
@@ -494,10 +483,18 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
   # ctl$pDef$proj4string <- "+proj=lcc +lat_1=-39.765 +lat_2=-39.765 +lat_0=-33.171  +lon_0=-65.478 +a=6370000 +units=m +x_0=-706587.442842593 +y_0=29740.3609605322 +no_defs"
   # ctl$pDef$proj4string <- "+proj=lcc +lat_1=-39.765 +lat_2=-39.765 +lat_0=-33.171  +lon_0=-65.478 +ellps=WGS84 +datum=WGS84 +units=m +x_0=-706587.442842593 +y_0=29740.3609605322 +no_defs"
   datos <- readXYGrid(ctl = ctl, dsetOverride = dsetOverride, idxFecha = idxFecha, idxVar = idxVar, idxNivelZ = idxNivelZ)
-  res <- SpatialGridDataFrame(grid = grillaXY, data = data.frame(value=as.numeric(datos)))
+
+  if (is(grillaXY, 'SpatialGrid')) {
+    res <- SpatialGridDataFrame(grid = grillaXY, data = data.frame(value=as.numeric(datos)))
+  } else if (is(grillaXY, 'SpatialPixels')) {
+    res <- SpatialPixelsDataFrame(points = grillaXY, data = data.frame(value=as.numeric(datos)))
+  } else {
+    stop(paste('ReadGrADS.readXYGridSP: unknown grid class ', class(grillaXY), sep=''))
+  }
+
   return(res)
 
-  if (F)   {
+  if (F) {
     # Obtengo los centroides de la grilla nativa
     puntosGrillaNativa <- SpatialPointsDataFrame(coordinates(grillaXY), data = data.frame(value=as.numeric(datos)), 
                                                  proj4string = CRS(proj4string(grillaXY)))
@@ -723,6 +720,20 @@ parseCTL_V2 <- function(ctlFile, verbose=FALSE) {
   }
   
   res <- inicializarCTL(ctl = res)
+  
+  if ('big_endian' %in% res$options) { res$endian <- 'big' 
+  } else if ('little_endian' %in% res$options) { res$endian <- 'little' 
+  } else if ('byteswapped' %in% res$options) { res$endian <- 'big' 
+  } else { res$endian <- 'little' }
+  
+  if (!is.null(res$pDef)) {
+    res$numRows <- res$pDef$iSize
+    res$numCols <- res$pDef$jSize
+  } else {
+    res$numRows <- res$xdef$n
+    res$numCols <- res$ydef$n
+  }
+  res$numCells <- res$numRows * res$numCols
   
   return (res)
 }

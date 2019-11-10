@@ -40,15 +40,6 @@ instant_pkgs(c('RCurl', 'parallel', 'digest', 'data.table', 'lubridate'))
 
 threadHandle <- getCurlHandle()
 
-crearCurlHandle <- function(authInfo=NULL) {
-  if (!is.null(authInfo) & !is.null(authInfo$user) & !is.null(authInfo$password)) {
-    handle <- getCurlHandle(userpwd=paste(authInfo$user, ':', authInfo$password, sep = ''))
-  } else {
-    handle <- getCurlHandle()
-  }
-  return(handle)  
-}
-
 getURLEx <- function(url) { return(getURL(url, curl = curlHandle, async = FALSE)) }
 
 extraerEnlaces <- function(urls, patronEnlaces='href="[[:print:]]"', concatenarUrlBase=FALSE,
@@ -340,7 +331,8 @@ postprocesarArchivosSinFecha <- function(nombresArchivosDestino) {
 }
 
 descargarArchivo <- function(i, urls, nombresArchivosDestino, forzarReDescarga=FALSE, maxRetries=5, 
-                             segundosEntreIntentos=15, nConexionesSimultaneas=4, authInfo=NULL) {
+                             segundosEntreIntentos=15, nConexionesSimultaneas=4, curlOpts=NULL) {
+  # i <- 2
   nRetries <- 0
   success <- !forzarReDescarga && file.exists(nombresArchivosDestino[i]) && length(readBin(nombresArchivosDestino[i], what='raw')) > 0#file.info(nombresArchivosDestino[i])$size > 0
   
@@ -351,20 +343,17 @@ descargarArchivo <- function(i, urls, nombresArchivosDestino, forzarReDescarga=F
     f = CFILE(nombresArchivosDestino[i], mode="wb")
     er2 <- try(er <- curlPerform(url = urls[i], curl=threadHandle, writedata = f@ref))
     close(f)
-    urls <- 'ftp://hokusai.eorc.jaxa.jp/realtime_ver/v7/hourly_G/2019/11/02/gsmap_gauge.20191102.1700.dat.gz'
     if (class(er2) == "try-error" || er != 0 || !file.exists(nombresArchivosDestino[i]) || length(readBin(nombresArchivosDestino[i], what='raw')) <= 0) {
         #file.info(nombresArchivosDestino[i])$size <= 0) {
       nRetries <- nRetries + 1
       Sys.sleep(segundosEntreIntentos)
       # Reinicio el handle si hay algún problema
-      threadHandle <- crearCurlHandle(authInfo = authInfo)
+      threadHandle <- getCurlHandle(.opts = curlOpts)
     } else { success <- TRUE }
   }
   
   if (!success) res <- 0
   return(res)
-  
-  listCurlOptions()
 }
 
 descargarArchivo_SinKeepalive <- function(i, urls, nombresArchivosDestino, maxRetries=5, segundosEntreIntentos=15) {
@@ -397,7 +386,7 @@ descargarArchivo_curl <- function(i, urls, nombresArchivosDestino, maxRetries=5,
 }
 
 descargarArchivos <- function(urls, nombresArchivosDestino=paste(pathSalida, basename(urls), sep=''), 
-                              nConexionesSimultaneas=4, forzarReDescarga=FALSE, authInfo=NULL, 
+                              nConexionesSimultaneas=4, forzarReDescarga=FALSE, curlOpts = NULL, 
                               pathSalida='') {
   # Retorna:
   # 0 si no se pudo bajar el archivo
@@ -418,20 +407,20 @@ descargarArchivos <- function(urls, nombresArchivosDestino=paste(pathSalida, bas
     # nConexionesAUsar descargas paralelas con Keepalive usando RCurl
     if (nConexionesAUsar > 1) {
       cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
-      clusterExport(cl, varlist = c('crearCurlHandle', 'authInfo'))
+      clusterExport(cl, varlist = c('curlOpts'), envir = environment())
       clusterEvalQ(cl, expr = { 
         require('RCurl')
-        threadHandle <- crearCurlHandle(authInfo = authInfo)
+        threadHandle <- getCurlHandle(.opts = curlOpts)
       })
       res <- parSapplyLB(cl = cl, X=seq_along(urls), FUN = descargarArchivo, urls=urls, 
                          nombresArchivosDestino=nombresArchivosDestino, 
-                         forzarReDescarga=forzarReDescarga)
+                         forzarReDescarga=forzarReDescarga, curlOpts = curlOpts)
       stopCluster(cl)
     } else {
-      threadHandle <- crearCurlHandle(authInfo = authInfo)
+      threadHandle <- getCurlHandle(.opts = curlOpts)
       res <- sapply(X=seq_along(urls), FUN = descargarArchivo, urls=urls, 
                     nombresArchivosDestino=nombresArchivosDestino, 
-                    forzarReDescarga=forzarReDescarga)
+                    forzarReDescarga=forzarReDescarga, curlOpts = curlOpts)
     }
     return(res)
     # descargas secuenciales con Keepalive usando RCurl

@@ -202,46 +202,39 @@ testAgregacion <- function() {
 
 agregacionTemporalGrillada_ti <- function(
   ti=1, fechas, pathsRegresor, nFechasAAgregar, minNfechasParaAgregar, funcionAgregacion, 
-  formatoNomArchivoSalida, padding, ctl, shpBase, borrarOriginales) {
+  formatoNomArchivoSalida, paramsCTL, shpBase, iOver, borrarOriginales, overlap) {
   # fechas <- tempAireMin$fechas
   # pathsRegresor <- pathsRegresores[, 1]
   # formatoNomArchivoSalida <- paste('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif', sep='')
   # ti <- which(fechas==as.POSIXct('2002-09-24', tz=tz(fechas[1])))
-  # ti <- 1
+  # ti <- tSeq[1]
   require('rgdal')
 
-  if (padding) {
+  if (overlap) {
     tiMin <- max(1, ti - trunc(nFechasAAgregar / 2))
     tiMax <- min(length(pathsRegresor), ti + trunc(nFechasAAgregar / 2))
   } else {
-    tiMin <- 1
-    tiMax <- length(pathsRegresor)
+    tiMin <- ti
+    tiMax <- ti + nFechasAAgregar - 1
   }
-  
+
   regresorTs <- list()
   length(regresorTs) <- tiMax - tiMin + 1
   n <- 1
-  if (!is.null(ctl)) {
-    grilla <- getGrillaNativa(ctl)
-  }
 
-  iOver <- NULL
+  #i <- 1
   nPixeles <- 0
   for (i in tiMin:tiMax) {
     # Solo cargo los no nulos
     if (!is.na(pathsRegresor[i])) {
-      if (!is.null(ctl)) { 
+      if (!is.null(paramsCTL)) { 
         regresorTs[[n]] <- try(
-          readXYGridSP(ctl = ctl, dsetOverride = pathsRegresor[i], grillaXY = grilla))
+          readXYGridSP(ctl = paramsCTL$ctl, dsetOverride = pathsRegresor[i], 
+                       grillaXY = paramsCTL$grilla))
       } else { 
-        regresorTs[[n]] <- try(readGDAL(pathsRegresor[i], silent=T)) 
+        regresorTs[[n]] <- try(readGDAL(pathsRegresor[i], silent=T))
       }
       if (!('try-error' %in% class(regresorTs[[n]]))) {
-        if (!is.null(shpBase) & is.null(iOver)) {
-          aux <- spTransform(shpBase, proj4string(grilla))
-          bbaux <- getPoligonoBoundingBox(aux, factorExtensionX = 1.1)
-          iOver <- which(!is.na(over(res, bbaux)))
-        }
         if (!is.null(iOver)) {
           if (is(regresorTs[[n]], 'SpatialGridDataFrame')) {
             regresorTs[[n]] <- as(object = regresorTs[[n]], Class = 'SpatialPixelsDataFrame')[iOver,]
@@ -255,9 +248,9 @@ agregacionTemporalGrillada_ti <- function(
       }
     }
   }
-  if (length(regresorTs) != n - 1) length(regresorTs) <- n - 1
-  if (borrarOriginales) unlink(pathsRegresor[tiMin:tiMax])
   
+  if (length(regresorTs) != n - 1) length(regresorTs) <- n - 1
+
   if (length(regresorTs) >= minNfechasParaAgregar && nPixeles > 0) {
     res <- regresorTs[[1]]
   
@@ -278,8 +271,6 @@ agregacionTemporalGrillada_ti <- function(
     
     # spplot(res)
     
-    source(paste(script.dir.agregacion, '../PathUtils/pathUtils.r', sep=''))
-    
     nomArch <- format(x = fechas[ti], formatoNomArchivoSalida)
     writeGDAL(dataset = res, fname = nomArch, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
     
@@ -288,17 +279,39 @@ agregacionTemporalGrillada_ti <- function(
 }
 
 agregacionTemporalGrillada <- function(
-  fechas, pathsRegresor, formatoNomArchivoSalida=paste('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif', sep=''), 
-  nFechasAAgregar=3, minNfechasParaAgregar=max(trunc(nFechasAAgregar/2), 1), tIni=1, 
-  tFin=length(pathsRegresor), funcionAgregacion=base::mean, padding=TRUE, ctl=NULL, shpBase=NULL,
-  borrarOriginales=FALSE) {
+    fechas, pathsRegresor, formatoNomArchivoSalida=paste('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif', sep=''), 
+    nFechasAAgregar=3, minNfechasParaAgregar=max(trunc(nFechasAAgregar/2), 1), tIni=1, 
+    tFin=length(pathsRegresor), funcionAgregacion=base::mean, ctl=NULL, shpBase=NULL,
+    borrarOriginales=FALSE, overlap=TRUE) {
   # Para calcular agregaciones temporales de una serie temporal de un mismo regresor
   # pathsRegresor es una vector de rasters
   # Para cada fecha fi, se toman los píxeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) y se
   # calcula funcionAgregacion con ellos
   # Si no hay al menos minNfechasParaAgregar píxeles disponibles el píxel se devuelve nulo
   nCoresAUsar <- min(detectCores(T, T), tFin - tIni + 1)
-  dir.create(dirname(formatoNomArchivoSalida), showWarnings = F, recursive = T) 
+  dir.create(dirname(formatoNomArchivoSalida), showWarnings = F, recursive = T)
+  
+  if (overlap) { tSeq <- tIni:tFin
+  } else { tSeq <- seq.int(tIni, tFin, by=nFechasAAgregar) }
+  
+  if (!is.null(ctl)) {
+    paramsCTL <- list(ctl=ctl, grilla=as(object = getGrillaNativa(ctl), Class = 'SpatialPixels'))
+  } else { paramsCTL <- NULL }
+  
+  if (!is.null(shpBase)) {
+    iAux <- which.min(!is.na(pathsRegresor))
+    if (!is.null(paramsCTL)) {
+      regresorAux <- try(readXYGridSP(ctl = paramsCTL$ctl, dsetOverride = pathsRegresor[iAux],
+                                      grillaXY = paramsCTL$grilla))
+    } else {
+      regresorAux <- try(readGDAL(pathsRegresor[iAux], silent=T))
+    }
+    shpBaseAux <- spTransform(shpBase, proj4string(regresorAux))
+    bbaux <- getPoligonoBoundingBox(shpBaseAux, factorExtensionX = 1.1)
+    iOver <- which(!is.na(over(regresorAux, bbaux)))
+    
+    rm(iAux, regresorAux, shpBaseAux, bbaux)
+  }
   
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
@@ -308,26 +321,19 @@ agregacionTemporalGrillada <- function(
       source(paste(script.dir.agregacion, '../interpolar/interpolarEx.r', sep=''))
       if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
     })
-    
-    parSapplyLB(cl=cl, X=tIni:tFin, FUN=agregacionTemporalGrillada_ti,
-                fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar, 
-                minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion, 
-                formatoNomArchivoSalida=formatoNomArchivoSalida, padding=padding, ctl=ctl, 
-                shpBase=shpBase, borrarOriginales=borrarOriginales)
+
+    parSapplyLB(cl=cl, X=tSeq, FUN=agregacionTemporalGrillada_ti,
+                fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar,
+                minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion,
+                formatoNomArchivoSalida=formatoNomArchivoSalida, paramsCTL=paramsCTL,
+                shpBase=shpBase, iOver=iOver, borrarOriginales=borrarOriginales, overlap=overlap)
     stopCluster(cl)
   } else {
-    sapply(X=tIni:tFin, FUN=agregacionTemporalGrillada_ti,
-           fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar, 
-           minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion, 
-           formatoNomArchivoSalida=formatoNomArchivoSalida, padding=padding, ctl=ctl, 
-           shpBase=shpBase, borrarOriginales=borrarOriginales)
-    
-    #for (i in tIni:tFin) {
-    #  print(i)
-    #  agregacionTemporalGrillada_ti(ti=i, fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar, 
-    #                                minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion, 
-    #                                formatoNomArchivoSalida=formatoNomArchivoSalida)
-    #}
+    sapply(X=tSeq, FUN=agregacionTemporalGrillada_ti,
+           fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar,
+           minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion,
+           formatoNomArchivoSalida=formatoNomArchivoSalida, paramsCTL=paramsCTL, shpBase=shpBase,
+           iOver=iOver, borrarOriginales=borrarOriginales, overlap=overlap)
   }
 }
 
