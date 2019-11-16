@@ -338,6 +338,7 @@ descargarArchivo <- function(i, urls, nombresArchivosDestino, forzarReDescarga=F
              length(readBin(nombresArchivosDestino[i], what='raw')) > 0
   
   is_ftp = startsWith(urls, 'ftp://') || startsWith(urls, 'ftps://')
+  is_http = !is_ftp && (startsWith(urls, 'http://') || startsWith(urls, 'https://'))
   
   if (success) { res <- 2
   } else { res <- 1 }
@@ -350,8 +351,11 @@ descargarArchivo <- function(i, urls, nombresArchivosDestino, forzarReDescarga=F
         er != 0 || 
         !file.exists(nombresArchivosDestino[i]) || length(readBin(nombresArchivosDestino[i], what='raw')) <= 0) {
       
-      # Handling permanent error cases. Needs improvement
       if (is_ftp && grepl(pattern = '5[[:digit:]]{2}', er2)) {
+        # Handling FTP permanent error cases. Needs improvement
+        nRetries <- maxRetries
+      } else if (is_http && grepl(pattern = '4[[:digit:]]{2}', er2)) {
+        # Handling HTTP client error cases. Needs improvement
         nRetries <- maxRetries
       } else {
         nRetries <- nRetries + 1
