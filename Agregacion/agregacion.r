@@ -237,7 +237,13 @@ agregacionTemporalGrillada_ti <- function(
       if (!('try-error' %in% class(regresorTs[[n]]))) {
         if (!is.null(iOver)) {
           if (is(regresorTs[[n]], 'SpatialGridDataFrame')) {
-            regresorTs[[n]] <- as(object = regresorTs[[n]], Class = 'SpatialPixelsDataFrame')[iOver,]
+            arrInd <- arrayInd(ind = iOver, .dim = regresorTs[[n]]@grid@cells.dim)
+            xs <- unique(arrInd[,2])
+            ys <- unique(arrInd[,1])
+            # shpBaseAux <- spTransform(shpBase, proj4string(regresorTs[[n]]))
+            # mapearGrillaGGPlot(regresorTs[[n]][xs, ys, 1], shpBase = shpBaseAux)
+            
+            regresorTs[[n]] <- regresorTs[[n]][xs, ys, 1]
           } else {
             regresorTs[[n]] <- regresorTs[[n]][iOver,]
           }
@@ -294,8 +300,7 @@ agregacionTemporalGrillada <- function(
   if (overlap) { tSeq <- tIni:tFin
   } else { tSeq <- seq.int(tIni, tFin, by=nFechasAAgregar) }
   
-  if (!is.null(ctl)) {
-    paramsCTL <- list(ctl=ctl, grilla=as(object = getGrillaNativa(ctl), Class = 'SpatialPixels'))
+  if (!is.null(ctl)) { paramsCTL <- list(ctl=ctl, grilla=getGrillaNativa(ctl))
   } else { paramsCTL <- NULL }
   
   if (!is.null(shpBase)) {
@@ -309,7 +314,6 @@ agregacionTemporalGrillada <- function(
     shpBaseAux <- spTransform(shpBase, proj4string(regresorAux))
     bbaux <- getPoligonoBoundingBox(shpBaseAux, factorExtensionX = 1.1)
     iOver <- which(!is.na(over(regresorAux, bbaux)))
-    
     rm(iAux, regresorAux, shpBaseAux, bbaux)
   }
   

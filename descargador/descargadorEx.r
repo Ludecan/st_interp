@@ -331,10 +331,13 @@ postprocesarArchivosSinFecha <- function(nombresArchivosDestino) {
 }
 
 descargarArchivo <- function(i, urls, nombresArchivosDestino, forzarReDescarga=FALSE, maxRetries=5, 
-                             segundosEntreIntentos=15, nConexionesSimultaneas=4, curlOpts=NULL) {
-  # i <- 2
+                             segundosEntreIntentos=15, curlOpts=NULL) {
+  # i <- 1
   nRetries <- 0
-  success <- !forzarReDescarga && file.exists(nombresArchivosDestino[i]) && length(readBin(nombresArchivosDestino[i], what='raw')) > 0#file.info(nombresArchivosDestino[i])$size > 0
+  success <- !forzarReDescarga && file.exists(nombresArchivosDestino[i]) && 
+             length(readBin(nombresArchivosDestino[i], what='raw')) > 0
+  
+  is_ftp = startsWith(urls, 'ftp://') || startsWith(urls, 'ftps://')
   
   if (success) { res <- 2
   } else { res <- 1 }
@@ -343,10 +346,18 @@ descargarArchivo <- function(i, urls, nombresArchivosDestino, forzarReDescarga=F
     f = CFILE(nombresArchivosDestino[i], mode="wb")
     er2 <- try(er <- curlPerform(url = urls[i], curl=threadHandle, writedata = f@ref))
     close(f)
-    if (class(er2) == "try-error" || er != 0 || !file.exists(nombresArchivosDestino[i]) || length(readBin(nombresArchivosDestino[i], what='raw')) <= 0) {
-        #file.info(nombresArchivosDestino[i])$size <= 0) {
-      nRetries <- nRetries + 1
-      Sys.sleep(segundosEntreIntentos)
+    if (class(er2) == "try-error" || 
+        er != 0 || 
+        !file.exists(nombresArchivosDestino[i]) || length(readBin(nombresArchivosDestino[i], what='raw')) <= 0) {
+      
+      # Handling permanent error cases. Needs improvement
+      if (is_ftp && grepl(pattern = '5[[:digit:]]{2}', er2)) {
+        nRetries <- maxRetries
+      } else {
+        nRetries <- nRetries + 1
+        Sys.sleep(segundosEntreIntentos)
+      }
+      
       # Reinicio el handle si hay algún problema
       threadHandle <- getCurlHandle(.opts = curlOpts)
     } else { success <- TRUE }
