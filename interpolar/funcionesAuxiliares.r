@@ -193,12 +193,21 @@ nombreModelo <- function(params, pathsRegresores=NULL) {
   } else { return(strRegresores) }
 }
 
-cargarRegresor <- function(carpetaRegresor, fechasRegresando, 
-                           funcFechasRegresor=function(x, tz) { 
-                             matches <- gregexpr(pattern = '(19|20)[0-9][0-9][- /._](0[1-9]|1[012])[- /._](0[1-9]|[12][0-9]|3[01])', text = x)
-                             fechasReg <- gsub(pattern = '[ /._]', replacement = '-', x = unlist(regmatches(x = x, m = matches)))
-                             return(as.POSIXct(fechasReg, tz=tz)) 
-                           }, expandir=F) {
+findDateInText <- function(x, tz) {
+  matches <- gregexpr(
+    pattern='(19|20)[0-9][0-9][- /._]*(0[1-9]|1[012])[- /._]*(0[1-9]|[12][0-9]|3[01])', text=x)
+  fechasReg <- gsub(
+    pattern = '[ /._]', replacement = '-', x = unlist(regmatches(x = x, m = matches)))
+  idx <- !grepl(pattern = '-', x=fechasReg, fixed = TRUE)
+  fechasReg[idx] <- paste(
+    substr(fechasReg[idx], 1, 4), '-', 
+    substr(fechasReg[idx], 5, 6), '-', 
+    substr(fechasReg[idx], 7, 8), sep='')
+  return(as.POSIXct(fechasReg, tz=tz)) 
+}
+
+cargarRegresor <- function(carpetaRegresor, fechasRegresando, funcFechasRegresor=findDateInText, 
+                           expandir=F) {
   pathsRegresor <- sort(dir(carpetaRegresor, pattern = '*.tif$', full.names = T, include.dirs = F))
   if (length(pathsRegresor) > 0) {
     fechasRegresor <- funcFechasRegresor(x=pathsRegresor, tz = tz(fechasRegresando[1])) 
@@ -208,37 +217,32 @@ cargarRegresor <- function(carpetaRegresor, fechasRegresando,
   return(res)
 }
 
-cargarRegresores <- function(carpetaRegresores, fechasRegresando, 
-                             funcFechasRegresor=function(x, tz) { 
-                               matches <- gregexpr(pattern = '(19|20)[0-9][0-9][- /._](0[1-9]|1[012])[- /._](0[1-9]|[12][0-9]|3[01])', text = x)
-                               fechasReg <- gsub(pattern = '[ /._]', replacement = '-', x = unlist(regmatches(x = x, m = matches)))
-                               return(as.POSIXct(fechasReg, tz=tz)) 
-                             }, expandir=F) {
+cargarRegresores <- function(carpetaRegresores, fechasRegresando, funcFechasRegresor=findDateInText, 
+                             expandir=F) {
   carpetasRegresores <- setdiff(list.dirs(carpetaRegresores, recursive = F, full.names = F), 'RCache')
   
-  return(cargarRegresoresEx(carpetaRegresores = carpetaRegresores, carpetasRegresores = carpetasRegresores, fechasRegresando = fechasRegresando, 
-                            funcFechasRegresor = funcFechasRegresor, expandir=expandir))
+  return(cargarRegresoresEx(
+    carpetaRegresores=carpetaRegresores, carpetasRegresores=carpetasRegresores, 
+    fechasRegresando=fechasRegresando, funcFechasRegresor=funcFechasRegresor, expandir=expandir))
 }
 
 cargarRegresoresEx <- function(carpetaRegresores, carpetasRegresores, fechasRegresando, 
-                               funcFechasRegresor=function(x, tz) { 
-                                 matches <- gregexpr(pattern = '(19|20)[0-9][0-9][- /._](0[1-9]|1[012])[- /._](0[1-9]|[12][0-9]|3[01])', text = x)
-                                 fechasReg <- gsub(pattern = '[ /._]', replacement = '-', x = unlist(regmatches(x = x, m = matches)))
-                                 return(as.POSIXct(fechasReg, tz=tz)) 
-                               }, expandir=F) {
+                               funcFechasRegresor=findDateInText, expandir=F) {
   stopifnot(length(carpetasRegresores)==length(expandir) || length(expandir)==1)
   
   if (length(expandir) != length(carpetasRegresores)) expandir <- rep(expandir[1], length(carpetasRegresores))
   
   res <- matrix(ncol=length(carpetasRegresores), nrow = length(fechasRegresando))
-  i <- 1
+  i <- 2
   for (i in 1:length(carpetasRegresores)) {
     pathReg <- paste(carpetaRegresores, '/', carpetasRegresores[i], sep='')
     
     pathsRegresor <- sort(dir(pathReg, pattern = '*.tif$', full.names = T, include.dirs = F))
     if (length(pathsRegresor) > 0) {
       fechasRegresor <- funcFechasRegresor(x=pathsRegresor, tz = tz(fechasRegresando[1])) 
-      res[, i] <- expandirPathsRegresor(fechasRegresor = fechasRegresor, pathsRegresor = pathsRegresor, fechasRegresando = fechasRegresando, expandir=expandir[i])
+      res[, i] <- expandirPathsRegresor(
+        fechasRegresor=fechasRegresor, pathsRegresor=pathsRegresor, 
+        fechasRegresando=fechasRegresando, expandir=expandir[i])
     } else {
       res[, i] <- rep(NA_character_, length(fechasRegresando))
     }
@@ -285,10 +289,6 @@ chequearYActualizarRegresores <- function(pathsRegresores, carpetasOriginalesReg
     }
   }
   return(errores)
-}
-
-mosaicoImagenes <- function(patternsImagenes, nrow, ncol= length(patternsImagenes) %/% nrow) {
-  
 }
 
 conteoPixelesRegresor <- function(pathsRegresor, shpMask=NULL, zcol=1) {
@@ -630,8 +630,7 @@ plotMultiRasters <- function(pathsRasters, carpetaSalida='/plots/', shpBase=NULL
   
   if (is.null(escalas)) {
     escala <- crearEscalaEquiespaciadaMultiRasters(pathsRasters)
-    escalas <- list()
-    length(escalas) <- ncol(pathsRasters)
+    escalas <- vector(mode = "list", length = ncol(pathsRasters))
     for (i in 1:length(escalas)) escalas[[i]] <- escala
   }
   
@@ -662,9 +661,7 @@ plotMultiRastersEnPanelesI <- function(i, pathsRasters, fechasRasters, shpBase=N
       for (j in 1:ncol(pathsRasters)) escalas[[j]] <- escala
     }
     
-    gs <- list()
-    length(gs) <- ncol(pathsRasters)
-    
+    gs <- vector(mode = "list", length = ncol(pathsRasters))
     j <- 1
     #j <- j + 1
     for (j in 1:ncol(pathsRasters)) {
@@ -1231,8 +1228,7 @@ muestrearEnCuadrantesYECDF_V2 <- function(sp, size, nCuadrantesX = 2, nCuadrante
   clase <- sprintf('%.2d_%.2d', iCuadrante, iCuadranteZ)
   clases <- sort(unique(clase))
   
-  iESPorClase <- list()
-  length(iESPorClase) <- length(clases)
+  iESPorClase <- vector(mode = "list", length = length(clases))
   i <- 5
   for (i in 1:length(clases)) {
     iESPorClase[[i]] <- todosLosIES[clase == clases[i]]
@@ -1385,8 +1381,7 @@ contarNoNulosPorCuadrantes <- function(pathsGeoTiffs, nCuadrantesX=2, nCuadrante
     
     seqAnios <- range(year(longDF$fecha))
     seqAnios <- (seqAnios[1]+1):seqAnios[2]
-    gs <- list()
-    length(gs) <- length(seqAnios)
+    gs <- vector(mode = "list", length = length(seqAnios))
     
     breaks <- longDF$Cuadrante
     labels <- as.character(breaks)

@@ -115,7 +115,7 @@ leerEspecificacionEscala <- function(jsonEspecificacionEscala) {
 }
 
 leerEspecificacionesEscalas <- function(nEspecificaciones, baseNomArchEscalas, extensionArchsEscalas='.json') {
-  especificaciones <- list()
+  especificaciones <- vector(mode = "list", length = nEspecificaciones)
   if (nEspecificaciones > 0) {
     for (i in 1:nEspecificaciones) {
       especificaciones[[i]] <- fromJSON(paste(baseNomArchEscalas, i - 1, extensionArchsEscalas, sep=''))
@@ -194,7 +194,7 @@ darEscala <- function(especificacion, valores, ajustarExtremos=T) {
 darEscalas <- function(especificaciones, valores) {
   menosInf <- -.Machine$double.xmax
   masInf <- .Machine$double.xmax
-  escalas <- list()
+  escalas <- vector(mode = "list", length = length(especificaciones))
   if (length(especificaciones) > 0) {
     i<-1
     for (i in seq.int(from = 1, to = length(especificaciones))) {

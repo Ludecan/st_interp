@@ -379,8 +379,7 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
     xLineas <- seq(from=lonMin, to=lonMax, by=1)
     yLineas <- seq(from=latMin, to=latMax, by=0.2)
     
-    lineasVerticales <- list()
-    length(lineasVerticales) <- length(xLineas)
+    lineasVerticales <- vector(mode = "list", length = length(xLineas))
     i <- 1
     for (lon in xLineas) {
       lineaVertical <- Line(expand.grid(x=lon, y=yLineas))
@@ -392,8 +391,7 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
     xLineas <- seq(from=lonMin, to=lonMax, by=0.2)
     yLineas <- seq(from=latMin, to=latMax, by=1)
     
-    lineasHorizontales <- list()
-    length(lineasHorizontales) <- length(yLineas)
+    lineasHorizontales <- vector(mode = "list", length = length(yLineas))
     i <- 1
     for (lat in yLineas) {
       lineaHorizontal <- Line(expand.grid(x=xLineas, y=lat))
@@ -773,6 +771,9 @@ mapearGrillaGGPlot <- function(grilla, shpBase=NULL, escala=NULL, nomArchResulta
                                dibujarPuntosObservaciones=FALSE, coordsObservaciones=NULL, 
                                tamaniosPuntos = 0.8, tamanioFuentePuntos = 3, puntosAResaltar=NULL) {
   #grilla <- coarsenGrid(grilla, coarse = 6)
+  if (!is.null(shpBase) & !identicalCRS(grilla, shpBase)) { 
+    shpBase <- spTransform(shpBase, proj4string(grilla))
+  }
   if (is.null(xyLims)) {
     if (is.null(shpBase)) { xyLims <- getXYLims(spObjs = list(grilla), ejesXYLatLong = F)
     } else { xyLims <- getXYLims(spObjs = list(grilla, shpBase), ejesXYLatLong = F, factorMargen = 0) }

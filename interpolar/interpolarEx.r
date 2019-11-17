@@ -221,7 +221,7 @@ netCDFToSP <- function(fname, varName='rfe', p4string="+proj=longlat +datum=WGS8
 }
 
 extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1, silent=T, ...) {
-  # i <- 528
+  # i <- 1
   source(paste(script.dir.interpolarEx, '../TryUtils/tryUtils.r', sep=''))
   source(paste(script.dir.interpolarEx, '../PathUtils/pathUtils.r', sep=''))
   require(rgdal)
@@ -235,7 +235,7 @@ extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1
       # TO-DO: receive varName as parameter
       evaluarConReintentos(regresor <- netCDFToSP(fname = pathsRegresor[i]))
     } else { stop(paste('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresor[i], '"')) }
-    
+
     # Obtengo los valores del regresor en las coordenadas de las observaciones
     if (!identicalCRS(x = objSP, y = regresor)) {
       auxObjSP <- spTransform(x = geometry(objSP), CRSobj = CRS(proj4string(regresor)))
@@ -249,8 +249,9 @@ extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1
   return(res)
 }
 
-extraerValoresRegresorSobreSP <- function(objSP, pathsRegresor, iInicial = 1, iFinal = nrow(pathsRegresor), 
-                                          fn=NULL, zcol=1, silent=T, nCoresAUsar=0, setNames=T, ...) {
+extraerValoresRegresorSobreSP <- function(
+    objSP, pathsRegresor, iInicial = 1, iFinal = length(pathsRegresor), fn=NULL, zcol=1, silent=T, 
+    nCoresAUsar=0, setNames=T, ...) {
   pr <- pathsRegresor[seq.int(from = iInicial, to = iFinal, by = 1)]
   pathsUnicos <- unique(pr)
   iMatch <- match(x = pr, pathsUnicos)
@@ -263,10 +264,14 @@ extraerValoresRegresorSobreSP <- function(objSP, pathsRegresor, iInicial = 1, iF
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.interpolarEx'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    valoresSobreSP <- parSapplyLB(cl = cl, X=1:length(pathsUnicos), FUN = extraerValorRegresorSobreSP, objSP=objSP, pathsRegresor=pathsUnicos, fn=fn, zcol=zcol, silent=silent, ...=...)
+    valoresSobreSP <- parSapplyLB(
+      cl = cl, X=1:length(pathsUnicos), FUN = extraerValorRegresorSobreSP, objSP=objSP, 
+      pathsRegresor=pathsUnicos, fn=fn, zcol=zcol, silent=silent, ...=...)
     stopCluster(cl)
   } else {
-    valoresSobreSP <- sapply(X=1:length(pathsUnicos), FUN = extraerValorRegresorSobreSP, objSP=objSP, pathsRegresor=pathsUnicos, fn=fn, zcol=zcol, silent=silent, ...=...)
+    valoresSobreSP <- sapply(
+      X=1:length(pathsUnicos), FUN = extraerValorRegresorSobreSP, objSP=objSP, 
+      pathsRegresor=pathsUnicos, fn=fn, zcol=zcol, silent=silent, ...=...)
   }
   
   valoresSobreSP <- t(valoresSobreSP[, iMatch])
@@ -278,18 +283,19 @@ extraerValoresRegresorSobreSP <- function(objSP, pathsRegresor, iInicial = 1, iF
   return(valoresSobreSP)
 }
 
-extraerValoresRegresoresSobreSP <- function(objSP, pathsRegresores, iInicial = 1, iFinal = nrow(pathsRegresores),
-                                            fn=NULL, zcol=1, silent=T, nCoresAUsar=0, setNames=T, ...) {
-  # TO-DO: paralelizar esta función. Hoy se está haciendo paralelo en el tiempo pero si solo se quiere cargar una fecha para más de un regresor 
-  # se está serializando innecesariamente. Hay que hacer que decida si paralelizar por filas o columnas para aprovechar mejor los recursos
-  res <- list()
-  length(res) <- ncol(pathsRegresores)
+extraerValoresRegresoresSobreSP <- function(
+    objSP, pathsRegresores, iInicial = 1, iFinal = nrow(pathsRegresores), fn=NULL, zcol=1, silent=T, 
+    nCoresAUsar=0, setNames=T, ...) {
+  # TO-DO: paralelizar esta función. Hoy se está haciendo paralelo en el tiempo pero si solo se 
+  # quiere cargar una fecha para más de un regresor se está serializando innecesariamente. Hay que 
+  # hacer que decida si paralelizar por filas o columnas para aprovechar mejor los recursos
+  res <- vector(mode = "list", ncol(pathsRegresores))
 
   # i <- 1
   for (i in 1:ncol(pathsRegresores)) {
-    res[[i]] <- extraerValoresRegresorSobreSP(objSP = objSP, pathsRegresor = pathsRegresores[, i,drop=F], iInicial = iInicial, 
-                                              iFinal = iFinal, fn=fn, zcol = zcol, silent=silent, nCoresAUsar=nCoresAUsar, 
-                                              setNames = setNames, ...=...)
+    res[[i]] <- extraerValoresRegresorSobreSP(
+      objSP=objSP, pathsRegresor=pathsRegresores[, i,drop=F], iInicial=iInicial, iFinal=iFinal, 
+      fn=fn, zcol = zcol, silent=silent, nCoresAUsar=nCoresAUsar, setNames = setNames, ...=...)
   }
   
   # Código para verificación
@@ -318,14 +324,14 @@ getResiduals <- function(observaciones, grid) {
   return (grid[gridIndexes] - observaciones$value)
 }
 
-cargarSHP <- function(pathSHP, proj4strSHP=NULL, overrideP4str=FALSE) {
+cargarSHP <- function(pathSHP, proj4strSHP=NULL, overrideP4str=FALSE, encoding=NULL) {
   if (file.exists(pathSHP)) {
     dsnSHP <- dirname(pathSHP)
     layerSHP <- nombreArchSinPathNiExtension(pathSHP)
-    
+
     archPrj <- changeFileExt(pathSHP, '.prj')
     if (!overrideP4str && file.exists(archPrj)) { proj4strSHP <- NULL }
-    return (readOGR(dsn=dsnSHP, layer=layerSHP, p4s=proj4strSHP))
+    return (readOGR(dsn=dsnSHP, layer=layerSHP, p4s=proj4strSHP, encoding=encoding))
   } else {
     return (NULL)
   }
@@ -337,26 +343,27 @@ guardarSHP <- function(shp, path) {
   writeOGR(obj = shp, dsn = dsnSHP, layer = layerSHP, driver = "ESRI Shapefile", overwrite_layer = T)
 }
 
-cargarSHPYObtenerMascaraParaGrilla <- function(pathSHP, proj4strSHP=NULL, grilla, spSinMascara=NULL, overrideP4str=FALSE) {
+cargarSHPYObtenerMascaraParaGrilla <- function(
+    pathSHP, proj4strSHP=NULL, grilla, spSinMascara=NULL, overrideP4str=FALSE, encoding = NULL) {
   if (file.exists(pathSHP)) {
     grilla <- geometry(grilla)
     proj4stringGrilla <- proj4string(grilla)
-    
-    if (is.null(spSinMascara)) {
-      objCache <- grilla
-    } else {
+    if (!is.null(spSinMascara)) {
       spSinMascara <- geometry(spSinMascara)
-      if (proj4string(spSinMascara) != proj4stringGrilla) spSinMascara <- spTransform(spSinMascara, CRS(proj4stringGrilla))
-      objCache <- list(grilla, spSinMascara)
+      
+      if (!identicalCRS(grilla, spSinMascara)) {
+        spSinMascara <- spTransform(spSinMascara, CRS(proj4stringGrilla))
+      }
     }
     
-    pathCache <- getPathCache(objCache, dirEjecucion = paste(dirname(pathSHP), '/', sep=''), 
-                              prefijoNombreArchivoCache = paste(nombreArchSinPathNiExtension(pathSHP), '_', sep=''))
+    objCache <- list(pathSHP, proj4strSHP, grilla, spSinMascara, overrideP4str, encoding)
+    pathCache <- getPathCache(
+      objCache, dirEjecucion = paste(dirname(pathSHP), '/', sep=''), 
+      prefijoNombreArchivoCache = paste(nombreArchSinPathNiExtension(pathSHP), '_', sep=''))
     if (!file.exists(pathCache)) {
-      #shp <- readShapeSpatial(pathSHP, proj4string=sp::CRS(proj4strSHP))
-      shp <- cargarSHP(pathSHP, proj4strSHP, overrideP4str = overrideP4str)
+      shp <- cargarSHP(pathSHP, proj4strSHP, overrideP4str = overrideP4str, encoding = encoding)
+      if (!identicalCRS(grilla, shp)) { shp <- spTransform(shp, CRS(proj4stringGrilla)) }
       
-      if (proj4string(shp) != proj4stringGrilla) { shp <- spTransform(shp, CRS(proj4stringGrilla)) }
       # Recorte al contorno del país
       if (!is.null(grilla)) {
         mask <- !is.na(over(grilla, geometry(shp)))
@@ -529,7 +536,7 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
     } else { outputWhat <- list(mean=T) }
     
     interpolacion <- createIntamapObject(observations=observaciones, formulaString=value ~ 1,
-                                         predictionLocations=coordsAInterpolar[shpMask$mask, ], 
+                                         predictionLocations=coordsAInterpolar[shpMask$mask, ],
                                          intCRS=proj4StringAInterpolar, targetCRS=proj4StringAInterpolar, 
                                          class=params$interpolationMethod, 
                                          params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax, 

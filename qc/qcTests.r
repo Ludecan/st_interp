@@ -1051,21 +1051,16 @@ testEspacialPrecipitacionI <- function(i, iesVecinos, coordsObservaciones, fecha
                     stdDif=stdDifs, reemplazar=0L, valorReemplazo=NA_real_, stringsAsFactors = F))
 }
 
-testEspacialPrecipitacionIV2 <- function(i, iesVecinos, coordsObservaciones, fechasObservaciones, dfValoresObservaciones,
-                                         iNoNAs, itsATestear, ispMax, ispObs, isdMin, isdObs, isdEstMin, fInf, fSup, 
-                                         amplitudMin, maxDist, minNCuadrantes, minNVecinosPorCuadrante, datosProtegidos, 
-                                         verbose) {
+testEspacialPrecipitacionIV2 <- function(
+    i, iesVecinos, coordsObservaciones, fechasObservaciones, dfValoresObservaciones, iNoNAs, 
+    itsATestear, ispMax, ispObs, isdMin, isdObs, isdEstMin, fInf, fSup, amplitudMin, maxDist, 
+    minNCuadrantes, minNVecinosPorCuadrante, datosProtegidos, verbose) {
   # i <- 1
   # iFecha <- 31
-  # i <- which(colnames(dfValoresObservaciones) == 'Colonia.Rivera')
-  # i <- which(colnames(dfValoresObservaciones) == 'Río.Branco')
-  # i <- which(colnames(dfValoresObservaciones) == 'Queguay.Chico')
-  # i <- which(colnames(dfValoresObservaciones) == 'Quintana')
-  # i <- which(colnames(dfValoresObservaciones) == 'Salto.G2')
   # i <- which(colnames(dfValoresObservaciones) == 'Villa.25.de.Mayo')
   # iFecha <- which(row.names(dfValoresObservaciones) == '2017-10-20 00:00')
   # mapearPuntosGGPlot(SpatialPointsDataFrame(geometry(coordsObservaciones), data = data.frame(value=as.numeric(dfValoresObservaciones[iFecha,]))), shpBase = shpBase, continuo = T, dibujar = F, dibujarTexto = T, tamaniosPuntos = 2)  
-  #print(i)
+  # print(i)
   iesVecinosI <- iesVecinos[[i]]
   if (length(iesVecinosI) >= minNCuadrantes) {
     valoresVecinos <- dfValoresObservaciones[, iesVecinosI, drop=F]
@@ -1145,12 +1140,75 @@ testEspacialPrecipitacionIV2 <- function(i, iesVecinos, coordsObservaciones, fec
   }
 }
 
-testEspacialPrecipitacion <- function(coordsObservaciones, fechasObservaciones, valoresObservaciones,
-                                      iColumnasATestear=seq.int(from = 1, to = ncol(valoresObservaciones), by = 1), itsATestear=1:nrow(valoresObservaciones), 
-                                      ispMax=0.3, ispObs=8, isdMin=1, isdObs=0.3, isdEstMin=3, fInf=1, fSup=3, amplitudMin=1,
-                                      minValAbs=0, maxValAbs=450, maxDistKm=50, minNCuadrantes=4, minNVecinosPorCuadrante=1,
-                                      datosProtegidos = matrix(data = FALSE, nrow = nrow(valoresObservaciones), ncol = ncol(valoresObservaciones)),
-                                      archivoSalida=NULL, nCoresAUsar=0, verbose=FALSE) {
+#' Applies the isolated precipitation/dryness and too large deviation tests
+#' We define a neighbourhoud of radius maxDistKm around the target station. For any given date where
+#' there are at least minNVecinosPorCuadrante in atl least minNCuadrantes the tests will be run.
+#' The isolated precipitation test checks for the value being observed wether, if it's larger than a 
+#' given threshold, all neighbours have close to zero precipitation.
+#' Conversely the isolated dryness test checks wether for a close to zero value, all neighbours have
+#' precipitation above a threshold.
+#' The large deviations test uses an estimate obtained from neighbours, which currently is 
+#' implemented using an inversely distance weighted interpolation, as well as the amplitude in
+#' neighbouring observations, the max - min value in neighbours.
+#' If the difference between the observed value and the estimate divided by the amplitude exceeds
+#' or is smaller than a certain ratio, the value is considered a high or low valued outlier 
+#' respectively.
+#' @param coordsObservaciones SpatialPointsDataframe object containing station locations.
+#' @param fechasObservaciones dates to which the rows in valoresObservaciones correspond.
+#' @param valoresObservaciones matrix containing actual rainfall observations. Columns should be
+#' the time series of station observations.
+#' @param iColumnasATestear index of the columns in valoresObservaciones to apply the tests to.
+#' @param itsATestear index of the rows in valoresObservaciones to apply the tests to.
+#' @param ispMax maximum neighbour value to consider a case of isolated precipitation. If at least 
+#' one neighbour has a larger value than this, the test will reject isolated precipitation.
+#' @param ispObs minimum observed value to consider a case of isolated precipitation. If the value
+#' being tested is smaller than this it won't be considered isolated precipitation.
+#' @param isdMin minimum neighbour value to consider a case of isolated dryness. If the minimum 
+#' neighbour value is smaller than this the test will reject isolated dryness.
+#' @param isdObs maximum observed value to consider a case of isolated dryness. If the value being
+#' tested is larger than this it won't be considered isolated dryness.
+#' @param isdEstMin minimum neighbour derived estimate to consider a case of isolated dryness. If 
+#' the neigbour based precipitation estimation is smaller than this it won't be considered isolated
+#' dryness.
+#' @param fInf ratio of difference between observation and neighbour derived estimate to observed 
+#' neighbour amplitude to consider the case a low outlier. If the observation minus the estimate 
+#' divided by the amplitude (max - min) observed in the neighbours is smaller than this ratio, the
+#' value is considered a low valued outlier.
+#' @param fSup ratio of difference between observation and neighbour derived estimate to observed 
+#' neighbour amplitude to consider the case a high outlier. If the observation minus the estimate 
+#' divided by the amplitude (max - min) observed in the neighbours is larger than this ratio, the
+#' value is considered a high valued outlier.
+#' @param amplitudMin minimum amplitude observed in neighbours to consider the too large deviations
+#' test. If the maximum minus minimum value observed in neighbours is smaller than this the test
+#' will not consider the value an outlier.
+#' @param minValAbs minimum observable value. Values smaller than this will be considered low valued
+#' outliers.
+#' @param maxValAbs maximum observable value. Values larger than this will be considered high valued
+#' outliers.
+#' @param maxDistKm maximum distance in km to consider another station a neighbour.
+#' @param minNCuadrantes minimum number of quadrants around the station with observations to apply
+#' the tests.
+#' @param minNVecinosPorCuadrante minimum number of neighbours in each quadrant with observations to
+#' apply the tests.
+#' @param datosProtegidos used to feed back the model with corrections. If datosProtegidos[i, j] is
+#' true, valoresObservaciones[i, j] will be assumed to have been manually verified and will not be
+#' tested for.
+#' @param archivoSalida path to store the test results in.
+#' @param nCoresAUsar number of CPU cores to run the tests with. Values less than or equal to 0 will
+#' use all available CPU cores.
+#' @param verbose if verbose and nCoresAUsar == 1, print progress information in console
+#' @return a dataframe of test results containing for each observation: station name, date, value,
+#' neighbourhood based estimate, test result (tipoOutlier), standardized difference (difference 
+#' between observation and estimate divided by amplitude).
+testEspacialPrecipitacion <- function(
+  coordsObservaciones, fechasObservaciones, valoresObservaciones, 
+  iColumnasATestear=seq.int(from = 1, to = ncol(valoresObservaciones), by = 1), 
+  itsATestear=1:nrow(valoresObservaciones), ispMax=0.3, ispObs=8, isdMin=1, isdObs=0.3, isdEstMin=3,
+  fInf=1, fSup=3, amplitudMin=1, minValAbs=0, maxValAbs=450, maxDistKm=50, minNCuadrantes=4, 
+  minNVecinosPorCuadrante=1, 
+  datosProtegidos=matrix(data=FALSE, nrow=nrow(valoresObservaciones), ncol=ncol(valoresObservaciones)),
+  archivoSalida=NULL, nCoresAUsar=0, verbose=FALSE) {
+
   maxDist <- distKmToP4Str(proj4string(coordsObservaciones), maxDistKm)
   iesVecinos <- getIVecinosAMenosDeMaxDist(coordsObservaciones = coordsObservaciones, maxDist = maxDist)
   # cuadrantesIes <- lapply(seq_along(iesVecinos), FUN = iCuadrantes, iesVecinos=ies, coords=coords)
@@ -1163,7 +1221,7 @@ testEspacialPrecipitacion <- function(coordsObservaciones, fechasObservaciones, 
     anguloCuadrantes * 90 / pi
     angulos * 90 / pi
     
-    angulosConVecinos <- atan2(diffs[,1], diffs[,2])
+    # angulosConVecinos <- atan2(diffs[,1], diffs[,2])
   }
   
   dfValoresObservaciones <- as.data.frame(valoresObservaciones)
@@ -1176,20 +1234,24 @@ testEspacialPrecipitacion <- function(coordsObservaciones, fechasObservaciones, 
     clusterExport(cl, varlist = c('script.dir.qcTests'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
     clusterEvalQ(cl = cl, expr = source(paste(script.dir.qcTests, 'qcTests.r', sep='')))
-    test <- parLapplyLB(cl = cl, X=iColumnasATestear, fun = testEspacialPrecipitacionIV2, 
-                        iesVecinos=iesVecinos, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-                        dfValoresObservaciones=dfValoresObservaciones, iNoNAs=iNoNAs,
-                        itsATestear=itsATestear, ispMax=ispMax, ispObs=ispObs, isdMin=isdMin, isdObs=isdObs, isdEstMin=isdEstMin, 
-                        fInf=fInf, fSup=fSup, amplitudMin=amplitudMin, maxDist=maxDist, minNCuadrantes=minNCuadrantes, 
-                        minNVecinosPorCuadrante=minNVecinosPorCuadrante, datosProtegidos=datosProtegidos, verbose=verbose)
+    test <- parLapplyLB(
+      cl = cl, X=iColumnasATestear, fun = testEspacialPrecipitacionIV2, iesVecinos=iesVecinos, 
+      coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      dfValoresObservaciones=dfValoresObservaciones, iNoNAs=iNoNAs, itsATestear=itsATestear, 
+      ispMax=ispMax, ispObs=ispObs, isdMin=isdMin, isdObs=isdObs, isdEstMin=isdEstMin, fInf=fInf, 
+      fSup=fSup, amplitudMin=amplitudMin, maxDist=maxDist, minNCuadrantes=minNCuadrantes, 
+      minNVecinosPorCuadrante=minNVecinosPorCuadrante, datosProtegidos=datosProtegidos, 
+      verbose=verbose)
     stopCluster(cl)
   } else {
-    test <- lapply(X=iColumnasATestear, FUN = testEspacialPrecipitacionIV2,
-                   iesVecinos=iesVecinos, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-                   dfValoresObservaciones=dfValoresObservaciones, iNoNAs=iNoNAs,
-                   itsATestear=itsATestear, ispMax=ispMax, ispObs=ispObs, isdMin=isdMin, isdObs=isdObs, isdEstMin=isdEstMin, 
-                   fInf=fInf, fSup=fSup, amplitudMin=amplitudMin, maxDist=maxDist, minNCuadrantes=minNCuadrantes, 
-                   minNVecinosPorCuadrante=minNVecinosPorCuadrante, datosProtegidos=datosProtegidos, verbose=verbose)
+    test <- lapply(
+      X=iColumnasATestear, FUN = testEspacialPrecipitacionIV2, iesVecinos=iesVecinos, 
+      coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      dfValoresObservaciones=dfValoresObservaciones, iNoNAs=iNoNAs, itsATestear=itsATestear, 
+      ispMax=ispMax, ispObs=ispObs, isdMin=isdMin, isdObs=isdObs, isdEstMin=isdEstMin, fInf=fInf, 
+      fSup=fSup, amplitudMin=amplitudMin, maxDist=maxDist, minNCuadrantes=minNCuadrantes, 
+      minNVecinosPorCuadrante=minNVecinosPorCuadrante, datosProtegidos=datosProtegidos, 
+      verbose=verbose)
   }
   
   # test[[1]][215,]

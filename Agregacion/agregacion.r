@@ -218,8 +218,7 @@ agregacionTemporalGrillada_ti <- function(
     tiMax <- ti + nFechasAAgregar - 1
   }
 
-  regresorTs <- list()
-  length(regresorTs) <- tiMax - tiMin + 1
+  regresorTs <- vector(mode = "list", tiMax - tiMin + 1)
   n <- 1
 
   #i <- 1
@@ -351,8 +350,7 @@ agregacionTemporalGrillada2_ti <- function(ti=1, fechas, pathsRegresores, nFecha
   tiMin <- max(1, ti - trunc(nFechasAAgregar / 2))
   tiMax <- min(nrow(pathsRegresores), ti + trunc(nFechasAAgregar / 2))
   
-  regresores <- list()
-  length(regresores) <- (tiMax - tiMin + 1) * ncol(pathsRegresores)
+  regresores <- vector(mode = "list", (tiMax - tiMin + 1) * ncol(pathsRegresores))
   
   n <- 1
   

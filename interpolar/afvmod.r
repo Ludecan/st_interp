@@ -1109,8 +1109,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   }
   
   # i <- 1
-  fitModels <- list()
-  length(fitModels) <- length(model)
+  fitModels <- vector(mode = "list", length = length(model))
   mses <- rep(NA_real_, length(model))
   
   limites <- getBoundariesPVariogramaEmpiricoV8(fml=formula, observaciones=input_data, cutoff=cutoff)
@@ -1185,8 +1184,7 @@ afvGLSV2 <- function(formula, input_data, model, cutoff=NA, verbose=FALSE, useNu
   }
   
   # i <- 3
-  fitModels <- list()
-  length(fitModels) <- length(model)
+  fitModels <- vector(mode = "list", length = length(model))
   mses <- rep(NA, length(model))
   
   for (i in 1:length(model)) {

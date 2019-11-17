@@ -37,6 +37,8 @@ instant_pkgs(pkgs = c('Rcpp', 'stringi', 'lubridate', 'jsonlite', 'xlsx'))
 
 setIdsEstaciones <- function(dfEstaciones, colId=1) {
   dfEstaciones[, colId] <- make.names(trimws(dfEstaciones[, colId]))
+  dfEstaciones[, colId] <- gsub(pattern='\\.{2,}', replacement = '\\.', x=dfEstaciones[, colId])
+  dfEstaciones[, colId] <- gsub(pattern='\\.$', replacement = '', x=dfEstaciones[, colId])
   rownames(dfEstaciones) <- dfEstaciones[, colId]
   return(dfEstaciones)
 }

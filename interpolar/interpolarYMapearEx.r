@@ -430,16 +430,12 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
     tUltimoValorSinAR <- min(2 * paramsIyM$ventanaIgualacionDistribuciones + max(paramsIyM$tlagsAR) - 1, nT)
     nOrig <- ncol(pathsRegresores)
     
-    vRegsSobreObservacionesTLags <- list()
-    length(vRegsSobreObservacionesTLags) <- length(paramsIyM$tlagsAR)
+    vRegsSobreObservacionesTLags <- vector(mode = "list", length = length(paramsIyM$tlagsAR))
     for (i in 1:length(paramsIyM$tlagsAR))
       vRegsSobreObservacionesTLags[[i]] <- matrix(NA, nrow = nrow(valoresObservaciones), ncol=ncol(valoresObservaciones))
     names(vRegsSobreObservacionesTLags) <- paste('T_', paramsIyM$tlagsAR[i], sep='')
 
-    if (returnInterpolacion) { 
-      res <- list()
-      length(res) <- length(valoresObservaciones)
-    }
+    if (returnInterpolacion) { res <- vector(mode = "list", length = length(valoresObservaciones)) }
     
     # Primeros valores sin AR para inicializar la ventana
     # ti <- 2

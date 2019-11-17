@@ -109,8 +109,7 @@ combinarRasters <- function(pathsRasters, archSalida='test.tif') {
   require(raster)
   pathsRasters <- dir('C:/mea/', pattern = '*.tif$', full.names = T)
   archSalida='C:/mea/GMTED2010_Mean_Uy.tif'
-  rasters <- list()
-  length(rasters) <- length(pathsRasters)
+  rasters <- vector(mode = "list", length = length(pathsRasters))
   for (i in 1:length(pathsRasters)) {
     rasters[[i]] <- raster(pathsRasters[i])
   }

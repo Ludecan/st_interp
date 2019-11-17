@@ -273,8 +273,7 @@ parseCTL <- function(ctlFile) {
           res$tdef <- parseTDef(TDef = ctlSplit[[i]])
         } else if (param == 'vars') {
           res$nVars <- as.integer(ctlSplit[[i]][2])
-          res$vars <- list()
-          length(res$vars) <- res$nVars
+          res$vars <- vector(mode = "list", length = res$nVars)
           j <- 1
           for (j in 1:res$nVars)
             res$vars[[j]] <- parseVarDef(ctlSplit[[i+j]])
@@ -698,8 +697,7 @@ parseCTL_V2 <- function(ctlFile, verbose=FALSE) {
         varsDef <- unlist(strsplit(x = valoresAtributos[i], split = '\n+'))
         res$nVars <- as.integer(varsDef[1])
         varsDef <- varsDef[-1]
-        res$vars <- list()
-        length(res$vars) <- res$nVars
+        res$vars <- vector(mode = "list", length = res$nVars)
         j <- 1
         for (j in seq_along(res$vars))
           res$vars[[j]] <- parseVarDef(varDef = unlist(strsplit(varsDef[[j]], split = '[[:space:]]+')))
@@ -736,11 +734,6 @@ parseCTL_V2 <- function(ctlFile, verbose=FALSE) {
   res$numCells <- res$numRows * res$numCols
   
   return (res)
-}
-
-test <- function() {
-  ctlFile <- 'D:/testsMCH/test/WRF/wrfout_d02_2014-08-20_00%3A00%3A00.ctl'
-  ctl <- parseCTL(ctlFile)
 }
 
 lambert_from_spherical <- function(xlon, ylat, a=6370, lat0, lon0, lat1, lat2, std_lon) {

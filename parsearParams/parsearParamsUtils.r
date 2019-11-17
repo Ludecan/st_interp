@@ -53,7 +53,7 @@ getParamValue <- function(tokens, paramName, classOfValue=NA, obligatorio=FALSE,
 getParamValues <- function(params, separadorTokens=';', paramNames, classOfValues=rep(NA_character_, length(paramNames)), 
                            obligatorios=rep(FALSE, length(paramNames)), paramDefaultValues=rep(NA, length(paramNames))) {
   tokens <- getTokens(params, separadorTokens=separadorTokens)
-  res <- list()
+  res <- vector(mode = "list", length = length(paramNames))
   
   i <- 1
   i <- i - 1
