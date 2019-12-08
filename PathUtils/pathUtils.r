@@ -16,9 +16,9 @@ if (is.null(script.dir.PathUtils)) { script.dir.PathUtils <- ''
 
 nombreArchSinExtension <- function(filename) {
   #             1234567890123456
-  #filename <- 'c:/lele.lala.txt'
-  #filename <- 'c:/lele'
-  #filename <- '//192.168.0.11/wrfout_d02_2014-02-15_00%3A00%3A00'
+  #filename <- 'c:/lele.lala.txt' => 'c:/lele.lala'
+  #filename <- 'c:/lele' => 'c:/lele'
+  #filename <- '//192.168.0.11/wrfout_d02_2014-02-15_00%3A00%3A00' => '//192.168.0.11/wrfout_d02_2014-02-15_00%3A00%3A00'
   iUltimaBarra <- max(gregexpr(pattern = '/', filename)[[1]])
   iUltimoPunto <- max(gregexpr(pattern = '\\.', filename)[[1]])
   # lo que hay después del último punto es una extensión solo si el último punto

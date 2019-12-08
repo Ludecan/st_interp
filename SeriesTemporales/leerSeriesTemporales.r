@@ -33,7 +33,7 @@ if (is.null(script.dir.lecturaDatos)) { script.dir.lecturaDatos <- ''
 } else { script.dir.lecturaDatos <- paste(dirname(script.dir.lecturaDatos), '/', sep='') }
 
 source(paste(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r', sep=''))
-instant_pkgs(pkgs = c('Rcpp', 'stringi', 'lubridate', 'jsonlite', 'xlsx'))
+instant_pkgs(pkgs = c('Rcpp', 'stringi', 'lubridate', 'jsonlite', 'openxlsx'))
 
 setIdsEstaciones <- function(dfEstaciones, colId=1) {
   dfEstaciones[, colId] <- make.names(trimws(dfEstaciones[, colId]))
@@ -110,17 +110,19 @@ leerSeriesArchivoUnico <- function(pathArchivoDatos, nFilasEstaciones=10, filaId
 
 leerSeriesXLSX <- function(pathArchivoDatos, hojaEstaciones='InfoPluvios', headerEstaciones=T,
                            colsEstaciones=1:4, colId=2, hojaDatos='Medidas', formatoFechas='YmdHMS',
-                           truncated=5, tzFechas='UTC', headerDatos=T, fileEncoding = '') {
-  dfEstaciones <- read.xlsx(file = pathArchivoDatos, sheetName = hojaEstaciones, 
-                            colIndex = colsEstaciones, header = headerEstaciones, 
-                            encoding = fileEncoding)
+                           truncated=5, tzFechas='UTC', headerDatos=T, fileEncoding = '',
+                           na.strings=-1111) {
+  
+  
+  dfEstaciones <- read.xlsx(xlsxFile = pathArchivoDatos, sheet = hojaEstaciones, 
+                            cols = colsEstaciones, colNames = headerEstaciones)
   dfEstaciones <- setIdsEstaciones(dfEstaciones, colId = colId)
 
-  dfDatos <- read.xlsx(file = pathArchivoDatos, sheetName = hojaDatos, header = headerDatos, 
-                       encoding = fileEncoding)
+  dfDatos <- read.xlsx(xlsxFile = pathArchivoDatos, sheet = hojaDatos, colNames = headerDatos)
   dfDatos <- limpiarDatos(dfDatos = dfDatos, dfEstaciones = dfEstaciones, colIdEstaciones = colId, 
                           header = headerDatos, overrideHeader = headerDatos, 
                           formatoFechas = formatoFechas, truncated = truncated, tzFechas = tzFechas)
+  dfDatos$datos[apply(dfDatos$datos, MARGIN = 2, FUN = function(x) {x %in% na.strings})] <- NA
   return(list(estaciones=dfEstaciones, fechas=dfDatos$fechas, datos=dfDatos$datos))
 }
 

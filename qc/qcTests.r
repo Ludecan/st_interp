@@ -61,45 +61,54 @@ tiposOutliersValoresSospechosos <- c(TTO_OutlierPorLoBajo, TTO_OutlierPorLoAlto,
 
 between <- function(x, minInclusivo, maxExclusivo) { return(minInclusivo <= x & x < maxExclusivo) }
 
-simpleInvDistanceWeightingI <- function(dataI, distsI, distPower=2, RnRMaskThreshold=0.3) {
-  pesos <- 1 / (distsI ^ distPower)
-  pesos <- pesos / sum(pesos)
+simpleInvDistanceWeightingI <- function(dataI, pesosI, RnRMaskThreshold=0.3) {
+  pesos <- pesosI / sum(pesosI)
   if (RnRMaskThreshold > 0) { rnr <- as.integer(as.integer(dataI > 0) %*% pesos > RnRMaskThreshold)
   } else { rnr <- 1L }
     
   return(as.numeric(as.numeric(dataI) %*% pesos * rnr))
 }
 
-simpleInvDistanceWeighting <- function(data, dists, idpRange=seq(1, 15, by = 0.5), RnRMaskThreshold=0.3) {
+simpleInvDistanceWeighting <- function(data, dists, idpRange=seq(1, 15, by = 0.5), 
+                                       RnRMaskThreshold=0.3, iNoNA=NULL) {
   #data=valoresVecinos
   #dists=distsVecinos
   # iFecha <- 24
   # iFecha <- nrow(data)-1
   # iFecha <- which(row.names(data) == '2017-10-01 00:00')
 
-  res <- numeric(nrow(data))
+  res <- numeric(length = nrow(data))
   rmses <- numeric(length = length(idpRange))
-  iNoNA <- !is.na(data)
-  iFecha <- 29
+  if (is.null(iNoNA)) iNoNA <- !is.na(data)
+  # iFecha <- 29
   for (iFecha in 1:nrow(data)) {
     #print(iFecha)
     dataI <- as.numeric(data[iFecha, iNoNA[iFecha,]])
     distsI <- dists[iNoNA[iFecha,]]
-    estimsCV <- numeric(length(dataI))
+    estimsCV <- numeric(length = length(dataI))
+    rmses[] <- Inf
     
     if (length(dataI) > 1 & var(dataI) > 1E-3) {
+      # idp <- idpRange[1]
       for (idp in seq_along(idpRange)) {
+        pesos <- 1 / (distsI ^ idpRange[idp])
         #print(paste(iFecha, idp))
         for (i in seq_along(dataI)) {
           #print(paste(iFecha, idp, i))
-          estimsCV[i] <- simpleInvDistanceWeightingI(dataI = dataI[-i], distsI = distsI[-i], 
-                                                     distPower = idpRange[idp], RnRMaskThreshold = RnRMaskThreshold)
+          estimsCV[i] <- simpleInvDistanceWeightingI(
+            dataI = dataI[-i], pesosI = pesos[-i], RnRMaskThreshold = RnRMaskThreshold)
         }
         rmses[idp] <- mean((estimsCV - dataI)^2)
+        if (idp > 1 && rmses[idp - 1] < rmses[idp]) {
+          break
+        }
       }
     } else { rmses[] <- 0 }
     
-    res[iFecha] <- simpleInvDistanceWeightingI(dataI = dataI, distsI = distsI, distPower = idpRange[which.min(rmses)], RnRMaskThreshold = RnRMaskThreshold)
+    distPower <- idpRange[which.min(rmses)]
+    pesos <- 1 / (distsI ^ distPower)
+    res[iFecha] <- simpleInvDistanceWeightingI(
+      dataI = dataI, pesosI = pesos, RnRMaskThreshold = RnRMaskThreshold)
   }
   
   return(res)
@@ -472,13 +481,16 @@ mapearResultadosDeteccionOutliers <- function(test, carpetaSalida=NULL, coordsOb
   }
 }
 
-mapearResultadosDeteccionOutliersV2 <- function(test, carpetaSalida=NULL, coordsObservaciones, valoresObservaciones, 
-                                                shpBase, tamaniosPuntos=5, tiposOutliersDeInteres=tiposOutliersValoresSospechosos, 
-                                                nCoresAUsar=0) {
-  mapearResultadosDeteccionOutliersV2I <- function(i, fechas, test, carpetaSalida, coordsObservaciones, valoresObservaciones, 
-                                                   shpBase, xyLims, tamaniosPuntos, tiposOutliersDeInteres) {
+mapearResultadosDeteccionOutliersV2 <- function(
+    test, carpetaSalida=NULL, coordsObservaciones, valoresObservaciones, shpBase, tamaniosPuntos=5, 
+    tiposOutliersDeInteres=tiposOutliersValoresSospechosos, nCoresAUsar=0) {
+  mapearResultadosDeteccionOutliersV2I <- function(
+    i, fechas, test, carpetaSalida, coordsObservaciones, valoresObservaciones, shpBase, xyLims, 
+    tamaniosPuntos, tiposOutliersDeInteres) {
     # i <- 1
-    # i <- which(fechas=='2017-12-09 00:00')
+    # i <- which(fechas=='2018-10-21')
+    # i <- which(fechas=='2018-10-21 00:00')
+    print(i)
     
     fecha <- fechas[i]
     if (!is.null(carpetaSalida)) {
@@ -500,16 +512,25 @@ mapearResultadosDeteccionOutliersV2 <- function(test, carpetaSalida=NULL, coords
         iOutliers <- iOutliers[orden]
       } 
       
+      if (length(iOutliers) > 10) { 
+        iOutliersTitulo <- iOutliers[1:10]
+        postFijoTitulo <- '...'
+      } else { 
+        iOutliersTitulo <- iOutliers
+        postFijoTitulo <- ''
+      }
+      
       titulo <- paste(fecha, '\n', 
-                      paste(test$estacion[iOutliers], ': Valor = ', test$valor[iOutliers], 
-                            '. Estimado = ', round(test$estimado[iOutliers], digits = 1),
-                            '. StdDif = ', round(test$stdDif[iOutliers], digits = 1), 
-                            '. ', TTipoOutlierToString(test$tipoOutlier[iOutliers]), sep='', collapse = '\n'))
+                      paste(test$estacion[iOutliersTitulo], ': Valor = ', round(test$valor[iOutliersTitulo], digits = 1), 
+                            '. Estimado = ', round(test$estimado[iOutliersTitulo], digits = 1),
+                            '. StdDif = ', round(test$stdDif[iOutliersTitulo], digits = 1), 
+                            '. ', TTipoOutlierToString(test$tipoOutlier[iOutliersTitulo]), sep='', collapse = '\n'))
       titulo <- gsub(pattern = 'Estimado = NA. ', replacement = '', titulo, fixed = T)
       titulo <- gsub(pattern = 'StdDif = NA. ', replacement = '', titulo, fixed = T)
+      if (postFijoTitulo != '') titulo <- paste(titulo, postFijoTitulo, sep = '\n') 
 
       iPuntosOutliers <- which(row.names(coordsObservaciones) %in% test$estacion[iOutliers]) 
-      puntosAResaltar <- coordsObservaciones[iPuntosOutliers,]
+      puntosAResaltar <- as(object = coordsObservaciones[iPuntosOutliers,], 'SpatialPointsDataFrame')
     } else { 
       titulo <- paste(fecha, '\nNo se encontraron valores sospechosos.')
       puntosAResaltar <- NULL
@@ -517,19 +538,36 @@ mapearResultadosDeteccionOutliersV2 <- function(test, carpetaSalida=NULL, coords
     
     # nomArchResultados <- 'C:/testsMCH/EjemploSRT/1-Vecindad.png'
     # titulo <- paste(fecha, '\n', paste(test$estacion[iOutliers], ': Valor = ', test$valor[iOutliers], '.', sep=''))
-    mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpBase, nomArchResultados = archivoSalida, dibujarTexto = T, 
-                       zcol='value', titulo = titulo, xyLims = xyLims, dibujar = is.null(archivoSalida), tamaniosPuntos=tamaniosPuntos, 
-                       contornearPuntos = nrow(valoresObservaciones) <= 50, puntosAResaltar=puntosAResaltar, widthPx = 1024, 
-                       heightPx = 1024, continuo=T)
+    
+    
+    if (is(object = geometry(coordsObservaciones), class2 = 'SpatialPixels') | 
+        is(object = geometry(coordsObservaciones), class2 = 'SpatialGrid')) {
+      mapearGrillaGGPlot(
+        grilla = coordsObservaciones, shpBase = shpBase, nomArchResultados = archivoSalida, 
+        xyLims = xyLims, zcol = 'value', titulo = titulo, dibujar = is.null(archivoSalida),
+        puntosAResaltar = puntosAResaltar, widthPx = 1024, heightPx = 1024, continuo = T)  
+    } else {
+      mapearPuntosGGPlot(
+        puntos = coordsObservaciones, shpBase = shpBase, nomArchResultados = archivoSalida, 
+        dibujarTexto = TRUE, zcol='value', titulo = titulo, xyLims = xyLims, 
+        dibujar = is.null(archivoSalida), tamaniosPuntos=tamaniosPuntos, 
+        contornearPuntos = nrow(valoresObservaciones) <= 50, puntosAResaltar=puntosAResaltar,
+        widthPx = 1024, heightPx = 1024, continuo=T)      
+    }
+
     return(NULL)
+  }
+  
+  if (!identicalCRS(coordsObservaciones, shpBase)) {
+    shpBase <- spTransform(shpBase, proj4string(coordsObservaciones))
   }
   
   #test <- testSRT
   #shpBase <- shpMask$shp
   #carpetaSalida <- 'Resultados/QC/SRT/'
   test <- test[order(test$fecha, test$estacion), ]
-  xyLims <- getXYLims(c(coordsObservaciones, shpBase), ejesXYLatLong = T)
-  
+  xyLims <- getXYLims(spObjs = c(coordsObservaciones, shpBase), ejesXYLatLong = T)
+
   fechas <- unique(test$fecha)
   
   if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones))
@@ -589,28 +627,42 @@ obtenerValoresProtegidos <- function(test, valoresObservaciones) {
   return(res)
 }
 
-getIVecinosAMenosDeMaxDist <- function(coordsObservaciones, maxDist=50, filtrarDistanciaCero=FALSE) {
+getIVecinosAMenosDeMaxDist_i <- function(i, coordsObservaciones, maxDist, filtrarDistanciaCero) {
+  # i <- 1
+  dists <- spDistsN1(pts=coordsObservaciones, pt=coordsObservaciones[i, ], 
+                     longlat=!is.projected(coordsObservaciones))
+  if (filtrarDistanciaCero) { ies <- which(dists > 0 & dists <= maxDist)
+  } else { ies <- which(dists <= maxDist) }
+  if (!filtrarDistanciaCero) { ies <- setdiff(ies, i) }
+  return(ies[order(dists[ies])])
+}
+
+getIVecinosAMenosDeMaxDist <- function(
+    coordsObservaciones, maxDist=50, filtrarDistanciaCero=FALSE, nCoresAUsar=0) {
   # Retorna para cada punto i en coordsObservaciones una lista con los índices de los demás puntos de coordsObservaciones
   # que estén a menos de maxDist de i. Las unidades de distancia son las especificadas en la 
   # proj4string de coordsObservaciones
-  dists <- spDists(coordsObservaciones, longlat = FALSE)
-  # x <- dists[277,]
-  ies <- apply(dists, 1, FUN = function(x, maxStn, maxDist, elvDiff_m, filtrarDistanciaCero) {
-    if (filtrarDistanciaCero) { ies <- which(x > 0 & x <= maxDist)
-    } else { ies <- which(x <= maxDist) }
-    
-    ies <- ies[order(x[ies])]
-    return(ies)
-  }, maxStn=maxStn, maxDist=maxDist, elvDiff_m=elvDiff_m, filtrarDistanciaCero=filtrarDistanciaCero)
-  if (!filtrarDistanciaCero) {
-    ies <- lapply(seq_along(ies), FUN = function(x, ies) { return(setdiff(ies[[x]], x)) }, ies=ies)  
+  if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), length(coordsObservaciones))
+  if (nCoresAUsar > 1) {
+    cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
+    if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
+    clusterEvalQ(cl = cl, expr = require(sp))
+    ies <- parLapplyLB(cl = cl, X=seq_along(coordsObservaciones), fun = getIVecinosAMenosDeMaxDist_i, 
+                       coordsObservaciones=coordsObservaciones, maxDist=maxDist, 
+                       filtrarDistanciaCero=filtrarDistanciaCero)
+    stopCluster(cl)
+  } else {
+    ies <- lapply(X=seq_along(coordsObservaciones), fun = getIVecinosAMenosDeMaxDist_i, 
+                  coordsObservaciones=coordsObservaciones, maxDist=maxDist, 
+                  filtrarDistanciaCero=filtrarDistanciaCero)
   }
+  
   return(ies)
 }
 
-getICuadrantes <- function(iPunto, iesVecinos, coords) {
-  derecha <- coords[iesVecinos[[iPunto]], 1] > coords[iPunto, 1]
-  arriba <- coords[iesVecinos[[iPunto]], 2] > coords[iPunto, 2]
+getICuadrantes <- function(iPunto, iesVecinosI, coords) {
+  derecha <- coords[iesVecinosI, 1] > coords[iPunto, 1]
+  arriba <- coords[iesVecinosI, 2] > coords[iPunto, 2]
   return(derecha * 2 + arriba + 1)
 }
 
@@ -1052,23 +1104,24 @@ testEspacialPrecipitacionI <- function(i, iesVecinos, coordsObservaciones, fecha
 }
 
 testEspacialPrecipitacionIV2 <- function(
-    i, iesVecinos, coordsObservaciones, fechasObservaciones, dfValoresObservaciones, iNoNAs, 
-    itsATestear, ispMax, ispObs, isdMin, isdObs, isdEstMin, fInf, fSup, amplitudMin, maxDist, 
+    i, coordsObservaciones, fechasObservaciones, valoresObservaciones, iNoNAs, itsATestear, 
+    ispMax, ispObs, isdMin, isdObs, isdEstMin, fInf, fSup, amplitudMin, maxDist,
     minNCuadrantes, minNVecinosPorCuadrante, datosProtegidos, verbose) {
   # i <- 1
-  # iFecha <- 31
-  # i <- which(colnames(dfValoresObservaciones) == 'Villa.25.de.Mayo')
-  # iFecha <- which(row.names(dfValoresObservaciones) == '2017-10-20 00:00')
-  # mapearPuntosGGPlot(SpatialPointsDataFrame(geometry(coordsObservaciones), data = data.frame(value=as.numeric(dfValoresObservaciones[iFecha,]))), shpBase = shpBase, continuo = T, dibujar = F, dibujarTexto = T, tamaniosPuntos = 2)  
+  # iFecha <- 1
+  # i <- which(colnames(valoresObservaciones) == 'PASO.LAS.TOSCAS.RHT')
+  # iFecha <- which(row.names(valoresObservaciones) == '2018-12-14')
+  # mapearPuntosGGPlot(SpatialPointsDataFrame(geometry(coordsObservaciones), data = data.frame(value=as.numeric(valoresObservaciones[iFecha,]))), shpBase = shpBase, continuo = T, dibujar = F, dibujarTexto = T, tamaniosPuntos = 2)  
   # print(i)
-  iesVecinosI <- iesVecinos[[i]]
+  iesVecinosI <- getIVecinosAMenosDeMaxDist_i(
+    i=i, coordsObservaciones=coordsObservaciones, maxDist=maxDist, filtrarDistanciaCero=FALSE)
   if (length(iesVecinosI) >= minNCuadrantes) {
-    valoresVecinos <- dfValoresObservaciones[, iesVecinosI, drop=F]
+    valoresVecinos <- valoresObservaciones[, iesVecinosI, drop=F]
     iNoNAsVecinos <- iNoNAs[, iesVecinosI, drop=F]
     
-    cuadrantesVecinos <- getICuadrantes(iesVecinos = iesVecinos, iPunto = i, coords = coordinates(coordsObservaciones))
-    nVecinosPorCuadrante <- matrix(data = 0L, nrow = nrow(dfValoresObservaciones), ncol = 4)
-    for (iFechaAux in 1:nrow(dfValoresObservaciones)) {
+    cuadrantesVecinos <- getICuadrantes(iPunto = i, iesVecinosI=iesVecinosI, coords = coordinates(coordsObservaciones))
+    nVecinosPorCuadrante <- matrix(data = 0L, nrow = nrow(valoresObservaciones), ncol = 4)
+    for (iFechaAux in 1:nrow(valoresObservaciones)) {
       cuadrantesVecinosI <- cuadrantesVecinos[iNoNAsVecinos[iFechaAux,]]
       for (iCuadrante in seq_along(cuadrantesVecinosI))
         nVecinosPorCuadrante[iFechaAux, cuadrantesVecinosI[iCuadrante]] <- nVecinosPorCuadrante[iFechaAux, cuadrantesVecinosI[iCuadrante]] + 1L
@@ -1079,8 +1132,8 @@ testEspacialPrecipitacionIV2 <- function(
     coords <- coordinates(coordsObservaciones)[c(i, iesVecinosI),]
     distsVecinos <- spDistsN1(pts = coords[2:nrow(coords), ,drop=F], pt = coords[1, ,drop=F])
     
-    estimado <- simpleInvDistanceWeighting(data = valoresVecinos, dists=distsVecinos)
-    #estimado <- sapply(X = 1:nrow(dfValoresObservaciones), FUN = simpleInvDistanceWeighting, data = valoresVecinos, dists=distsVecinos)
+    estimado <- simpleInvDistanceWeighting(data=valoresVecinos, dists=distsVecinos, iNoNA = iNoNAsVecinos)
+    #estimado <- sapply(X = 1:nrow(valoresObservaciones), FUN = simpleInvDistanceWeighting, data = valoresVecinos, dists=distsVecinos)
     #estimadoMedian <- apply(X = valoresVecinos, MARGIN = 1, FUN = median, na.rm=T)
     estimado[!iFechasConVecinosSuficientes] <- NA
     #estimadoMedian[!iFechasConVecinosSuficientes] <- NA
@@ -1089,10 +1142,11 @@ testEspacialPrecipitacionIV2 <- function(
     n <- length(itsATestear)
     tiposOutliers <- integer(n)
     stdDifs <- numeric(n)
+    # iFecha <- itsATestear[1]
     for (iFecha in itsATestear) {
-      Pobs <- dfValoresObservaciones[iFecha, i]
+      Pobs <- valoresObservaciones[iFecha, i]
       # verbose <- TRUE
-      if (verbose) print(paste(i, '.', colnames(dfValoresObservaciones)[i], ', ', iFecha, '. ', row.names(dfValoresObservaciones)[iFecha], ', ', Pobs, sep=''))
+      if (verbose) print(paste(i, '.', colnames(valoresObservaciones)[i], ', ', iFecha, '. ', row.names(valoresObservaciones)[iFecha], ', ', Pobs, sep=''))
       
       if (!datosProtegidos[iFecha, i]) {
         if (!is.na(Pobs)) {
@@ -1130,12 +1184,12 @@ testEspacialPrecipitacionIV2 <- function(
         } else { tiposOutliers[iFecha] <- TTO_ValorNulo }
       } else { tiposOutliers[iFecha] <- TTO_ValorConfirmado }
     }
-    return(data.frame(estacion=row.names(coordsObservaciones)[i], fecha=row.names(dfValoresObservaciones)[itsATestear], 
-                      valor=dfValoresObservaciones[itsATestear, i], estimado=estimado, tipoOutlier=tiposOutliers, 
+    return(data.frame(estacion=row.names(coordsObservaciones)[i], fecha=row.names(valoresObservaciones)[itsATestear],
+                      valor=valoresObservaciones[itsATestear, i], estimado=estimado, tipoOutlier=tiposOutliers, 
                       stdDif=stdDifs, reemplazar=0L, valorReemplazo=NA_real_, stringsAsFactors = F))
   } else {
-    return(data.frame(estacion=row.names(coordsObservaciones)[i], fecha=row.names(dfValoresObservaciones)[itsATestear], 
-                      valor=dfValoresObservaciones[itsATestear, i], estimado=NA_real_, tipoOutlier=TTO_SinDatosSuficientesEnVecinos, 
+    return(data.frame(estacion=row.names(coordsObservaciones)[i], fecha=row.names(valoresObservaciones)[itsATestear], 
+                      valor=valoresObservaciones[itsATestear, i], estimado=NA_real_, tipoOutlier=TTO_SinDatosSuficientesEnVecinos, 
                       stdDif=NA_real_, reemplazar=0L, valorReemplazo=NA_real_, stringsAsFactors = F))
   }
 }
@@ -1202,17 +1256,15 @@ testEspacialPrecipitacionIV2 <- function(
 #' between observation and estimate divided by amplitude).
 testEspacialPrecipitacion <- function(
   coordsObservaciones, fechasObservaciones, valoresObservaciones, 
-  iColumnasATestear=seq.int(from = 1, to = ncol(valoresObservaciones), by = 1), 
+  iColumnasATestear=seq.int(from = 1, to = ncol(valoresObservaciones), by = 1),
   itsATestear=1:nrow(valoresObservaciones), ispMax=0.3, ispObs=8, isdMin=1, isdObs=0.3, isdEstMin=3,
   fInf=1, fSup=3, amplitudMin=1, minValAbs=0, maxValAbs=450, maxDistKm=50, minNCuadrantes=4, 
-  minNVecinosPorCuadrante=1, 
+  minNVecinosPorCuadrante=1,
   datosProtegidos=matrix(data=FALSE, nrow=nrow(valoresObservaciones), ncol=ncol(valoresObservaciones)),
   archivoSalida=NULL, nCoresAUsar=0, verbose=FALSE) {
 
-  maxDist <- distKmToP4Str(proj4string(coordsObservaciones), maxDistKm)
-  iesVecinos <- getIVecinosAMenosDeMaxDist(coordsObservaciones = coordsObservaciones, maxDist = maxDist)
+  maxDist <- distKmToP4Str(p4str = proj4string(coordsObservaciones), distKm = maxDistKm)
   # cuadrantesIes <- lapply(seq_along(iesVecinos), FUN = iCuadrantes, iesVecinos=ies, coords=coords)
-  
   if (F) {
     # TO-DO: Para permitir rotar los angulos de los cuadrantes
     diffs <- coords[ies[[i]], ] - coords[i, ]
@@ -1224,9 +1276,23 @@ testEspacialPrecipitacion <- function(
     # angulosConVecinos <- atan2(diffs[,1], diffs[,2])
   }
   
-  dfValoresObservaciones <- as.data.frame(valoresObservaciones)
-  dfValoresObservaciones[dfValoresObservaciones < minValAbs | dfValoresObservaciones > maxValAbs] <- NA
-  iNoNAs <- !is.na(dfValoresObservaciones)
+  if (!is.na(minValAbs)) {
+    idxAbsLow <- which(valoresObservaciones[itsATestear, iColumnasATestear] < minValAbs)
+    if (length(idxAbsLow) > 0) {
+      valsAbsLow <- valoresObservaciones[idxAbsLow]
+      valoresObservaciones[idxAbsLow] <- NA
+    }
+  } 
+  if (!is.na(maxValAbs)) {
+    idxAbsHigh <- which(valoresObservaciones[itsATestear, iColumnasATestear] > maxValAbs)
+    if (length(idxAbsHigh) > 0) {
+      valsAbsHigh <- valoresObservaciones[idxAbsHigh]
+      valoresObservaciones[idxAbsHigh] <- NA
+    }
+  }
+  
+  iNoNAs <- !is.na(valoresObservaciones)
+  row.names(valoresObservaciones) <- as.character(fechasObservaciones)
   
   if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones))
   if (nCoresAUsar > 1) {
@@ -1235,9 +1301,9 @@ testEspacialPrecipitacion <- function(
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
     clusterEvalQ(cl = cl, expr = source(paste(script.dir.qcTests, 'qcTests.r', sep='')))
     test <- parLapplyLB(
-      cl = cl, X=iColumnasATestear, fun = testEspacialPrecipitacionIV2, iesVecinos=iesVecinos, 
+      cl = cl, X=iColumnasATestear, fun = testEspacialPrecipitacionIV2,
       coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-      dfValoresObservaciones=dfValoresObservaciones, iNoNAs=iNoNAs, itsATestear=itsATestear, 
+      valoresObservaciones=valoresObservaciones, iNoNAs=iNoNAs, itsATestear=itsATestear, 
       ispMax=ispMax, ispObs=ispObs, isdMin=isdMin, isdObs=isdObs, isdEstMin=isdEstMin, fInf=fInf, 
       fSup=fSup, amplitudMin=amplitudMin, maxDist=maxDist, minNCuadrantes=minNCuadrantes, 
       minNVecinosPorCuadrante=minNVecinosPorCuadrante, datosProtegidos=datosProtegidos, 
@@ -1245,22 +1311,21 @@ testEspacialPrecipitacion <- function(
     stopCluster(cl)
   } else {
     test <- lapply(
-      X=iColumnasATestear, FUN = testEspacialPrecipitacionIV2, iesVecinos=iesVecinos, 
+      X=iColumnasATestear, FUN = testEspacialPrecipitacionIV2,
       coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-      dfValoresObservaciones=dfValoresObservaciones, iNoNAs=iNoNAs, itsATestear=itsATestear, 
+      valoresObservaciones=valoresObservaciones, iNoNAs=iNoNAs, itsATestear=itsATestear, 
       ispMax=ispMax, ispObs=ispObs, isdMin=isdMin, isdObs=isdObs, isdEstMin=isdEstMin, fInf=fInf, 
       fSup=fSup, amplitudMin=amplitudMin, maxDist=maxDist, minNCuadrantes=minNCuadrantes, 
       minNVecinosPorCuadrante=minNVecinosPorCuadrante, datosProtegidos=datosProtegidos, 
       verbose=verbose)
   }
-  
   # test[[1]][215,]
   # Código para profiling
   #system.time({
   #Rprof()
   #lele <- spatialRegressionTestI(i = 5,
   #                               ies=ies, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-  #                               dfValoresObservaciones=dfValoresObservaciones, ventana=ventana, minStn=minStn, maxStn=maxStn, 
+  #                               valoresObservaciones=valoresObservaciones, ventana=ventana, minStn=minStn, maxStn=maxStn, 
   #                               maxDist=maxDist, elvDiff_m=elvDiff_m, zcolElv=zcolElv, minAdjR2=minAdjR2, f=f, iNoNAs = iNoNAs)
   #Rprof(NULL)
   #})
@@ -1269,8 +1334,16 @@ testEspacialPrecipitacion <- function(
   test <- do.call(rbind, test)
   row.names(test) <- paste(make.names(test$estacion), test$fecha, sep='_')
   
-  if (!is.na(minValAbs)) test$tipoOutlier[which(valoresObservaciones[itsATestear, iColumnasATestear] < minValAbs)] <- 1
-  if (!is.na(maxValAbs)) test$tipoOutlier[which(valoresObservaciones[itsATestear, iColumnasATestear] > maxValAbs)] <- 2
+  test[test$tipoOutlier %in% tiposOutliersValoresSospechosos,]
+  
+  if (!is.na(minValAbs) && length(idxAbsLow) > 0) {
+    test$valor[idxAbsLow] <- valsAbsLow
+    test$tipoOutlier[idxAbsLow] <- 1
+  } 
+  if (!is.na(maxValAbs) && length(idxAbsHigh) > 0) {
+    test$valor[idxAbsHigh] <- valsAbsHigh
+    test$tipoOutlier[idxAbsHigh] <- 2
+  }
   
   if (!is.null(archivoSalida)) {
     dir.create(dirname(archivoSalida), showWarnings = F, recursive = T)

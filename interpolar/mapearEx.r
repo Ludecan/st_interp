@@ -331,6 +331,8 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
   if (length(spObjs) > 1) {
     for (i in 2:length(spObjs)) {
       if (!is.null(spObjs[[i]])) {
+        stopifnot(identicalCRS(spObjs[[1]], spObjs[[i]]))
+        
         xLimI <- spObjs[[i]]@bbox[1,]
         yLimI <- spObjs[[i]]@bbox[2,]
         
@@ -456,7 +458,7 @@ aplicarOpcionesAMapa <- function(p, xyLims, shpBase, dibujarEscala=T, dibujarEje
   if (!is.null(shpBase)) {
     if (!rgeos::gIsValid(shpBase)) shpBase <- gBuffer(shpBase, byid=TRUE, width=0)
     if ('SpatialPolygonsDataFrame' %in% class(shpBase)) {
-      shpBase@data$id <- rownames(shpBase@data)  
+      shpBase@data$id <- rownames(shpBase@data)
     } else {
       shpBase <- SpatialPolygonsDataFrame(Sr = shpBase, data = data.frame(id=1:length(shpBase)))
     }
@@ -654,10 +656,12 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
   return(p)
 }
 
-mapearPuntosGGPlot <- function(puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEjes=T, zcol=1, DPI=90, widthPx=630, heightPx=630, 
-                               tamaniosPuntos=5, dibujarTexto=F, tamanioFuentePuntos=3, tamanioFuenteEjes=15, nDigitos=1, escala=NULL, 
-                               dibujar=interactive(), titulo='', subtitulo='', colorFillSHPBase=NA, contornearPuntos=FALSE, continuo, 
-                               alturaEscalaContinua=unit(0.1, 'npc'), escalaGraficos = 1, puntosAResaltar=NULL) {
+mapearPuntosGGPlot <- function(
+    puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEjes=T, zcol=1, DPI=90, 
+    widthPx=630, heightPx=630, tamaniosPuntos=5, dibujarTexto=F, tamanioFuentePuntos=3, 
+    tamanioFuenteEjes=15, nDigitos=1, escala=NULL, dibujar=interactive(), titulo='', subtitulo='', 
+    colorFillSHPBase=NA, contornearPuntos=FALSE, continuo, alturaEscalaContinua=unit(0.1, 'npc'), 
+    escalaGraficos = 1, puntosAResaltar=NULL) {
   oldSciPen <- getOption("scipen")
   options(scipen=15)
   if (is.null(xyLims)) {
@@ -719,12 +723,6 @@ mapearPuntosGGPlot <- function(puntos, shpBase=NULL, nomArchResultados=NULL, xyL
     p <- p + scale_colour_manual(breaks=breaks, drop=F, labels=labels, values=escala$colores[1:ultimoI], na.value="gray95")
   }
 
-  # Dibujar escala no se usa, se pasa con true para que no haga nada
-  #dibujarEjes <- T
-  #subtitulo <- ''
-  p <- aplicarOpcionesAMapa(p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=T, dibujarEjes=dibujarEjes, 
-                            tamanioFuenteEjes=tamanioFuenteEjes * escalaGraficos, titulo=titulo, subtitulo=subtitulo,
-                            colorFillSHPBase=colorFillSHPBase, puntosAResaltar = puntosAResaltar, widthPx = widthPx)
   if (!todosNA) {
     if (contornearPuntos)
       p <- p + geom_point(colour='black', size=tamaniosPuntos * escalaGraficos + 1, show.legend = F)
@@ -743,6 +741,13 @@ mapearPuntosGGPlot <- function(puntos, shpBase=NULL, nomArchResultados=NULL, xyL
       #p <- p + geom_text(data=df, aes(label=labels), vjust=-1, size=tamanioFuentePuntos * escalaGraficos)
     }
   }
+  
+  # Dibujar escala no se usa, se pasa con true para que no haga nada
+  #dibujarEjes <- T
+  #subtitulo <- ''
+  p <- aplicarOpcionesAMapa(p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=T, dibujarEjes=dibujarEjes, 
+                            tamanioFuenteEjes=tamanioFuenteEjes * escalaGraficos, titulo=titulo, subtitulo=subtitulo,
+                            colorFillSHPBase=colorFillSHPBase, puntosAResaltar = puntosAResaltar, widthPx = widthPx)
 
   if (dibujar) print(p)
   if (!is.null(nomArchResultados)) {

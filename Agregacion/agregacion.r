@@ -202,7 +202,7 @@ testAgregacion <- function() {
 
 agregacionTemporalGrillada_ti <- function(
   ti=1, fechas, pathsRegresor, nFechasAAgregar, minNfechasParaAgregar, funcionAgregacion, 
-  formatoNomArchivoSalida, paramsCTL, shpBase, iOver, borrarOriginales, overlap) {
+  formatoNomArchivoSalida, paramsCTL, shpBase, iOver, borrarOriginales, overlap, funcEscalado) {
   # fechas <- tempAireMin$fechas
   # pathsRegresor <- pathsRegresores[, 1]
   # formatoNomArchivoSalida <- paste('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif', sep='')
@@ -268,6 +268,8 @@ agregacionTemporalGrillada_ti <- function(
     valsPixeles <- matrix(nrow = nPixeles, ncol = length(regresorTs))
     for (j in 1:length(regresorTs)) valsPixeles[, j] <- regresorTs[[j]]@data[, 1]
     
+    if (!is.null(funcEscalado)) { valsPixeles <- funcEscalado(valsPixeles) }
+    
     # Hardcodeo por performance
     if (identical(x = funcionAgregacion, y = base::mean)) { res@data[, 1] <- rowMeans(x = valsPixeles, na.rm = T) 
     } else if (identical(x = funcionAgregacion, y = base::sum)) { res@data[, 1] <- rowSums(x = valsPixeles, na.rm = T) 
@@ -287,7 +289,7 @@ agregacionTemporalGrillada <- function(
     fechas, pathsRegresor, formatoNomArchivoSalida=paste('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif', sep=''), 
     nFechasAAgregar=3, minNfechasParaAgregar=max(trunc(nFechasAAgregar/2), 1), tIni=1, 
     tFin=length(pathsRegresor), funcionAgregacion=base::mean, ctl=NULL, shpBase=NULL,
-    borrarOriginales=FALSE, overlap=TRUE) {
+    borrarOriginales=FALSE, overlap=TRUE, funcEscalado=NULL) {
   # Para calcular agregaciones temporales de una serie temporal de un mismo regresor
   # pathsRegresor es una vector de rasters
   # Para cada fecha fi, se toman los píxeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) y se
@@ -329,14 +331,15 @@ agregacionTemporalGrillada <- function(
                 fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar,
                 minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion,
                 formatoNomArchivoSalida=formatoNomArchivoSalida, paramsCTL=paramsCTL,
-                shpBase=shpBase, iOver=iOver, borrarOriginales=borrarOriginales, overlap=overlap)
+                shpBase=shpBase, iOver=iOver, borrarOriginales=borrarOriginales, overlap=overlap, 
+                funcEscalado=funcEscalado)
     stopCluster(cl)
   } else {
     sapply(X=tSeq, FUN=agregacionTemporalGrillada_ti,
            fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar,
            minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion,
            formatoNomArchivoSalida=formatoNomArchivoSalida, paramsCTL=paramsCTL, shpBase=shpBase,
-           iOver=iOver, borrarOriginales=borrarOriginales, overlap=overlap)
+           iOver=iOver, borrarOriginales=borrarOriginales, overlap=overlap, funcEscalado=funcEscalado)
   }
 }
 

@@ -64,12 +64,16 @@ formulaConCoeficientes <- function(modelo, nDecimales=1, quitarCeros=TRUE) {
 }
 
 distKmToP4Str <- function(p4str, distKm) {
-  unidad <- gsub(pattern = '+units=', fixed=T, replacement = '', 
-                 x = regmatches(p4str, regexpr(pattern = '[+]units=[[:alpha:]]+', p4str)))
-  
-  if (unidad == 'm') { return(distKm * 1000)
-  } else if (unidad =='km') { return(distKm)
-  } else stop(paste('interpolarEx.distKmToP4Str: Unidad de distancia no implementada "', unidad, '"', sep=''))
+  if (grepl(pattern = "+proj=longlat", x = p4str, fixed = T)) {
+    return(distKm)
+  } else {
+    unidad <- gsub(pattern = '+units=', fixed=T, replacement = '', 
+                   x = regmatches(p4str, regexpr(pattern = '[+]units=[[:alpha:]]+', p4str)))
+    
+    if (unidad == 'm') { return(distKm * 1000)
+    } else if (unidad =='km') { return(distKm)
+    } else stop(paste('interpolarEx.distKmToP4Str: Unidad de distancia no implementada "', unidad, '"', sep=''))
+  }
 }
 
 crearSpatialPointsDataFrame <- function(x, y, value, proj4string='+proj=longlat +datum=WGS84', nombresFilas=NULL) {
@@ -277,7 +281,17 @@ extraerValoresRegresorSobreSP <- function(
   valoresSobreSP <- t(valoresSobreSP[, iMatch])
   if (setNames) {
     colnames(valoresSobreSP) <- row.names(objSP)
-    rownames(valoresSobreSP) <- rownames(pathsRegresor)
+    
+    if (!is.null(row.names(pathsRegresor))) {
+      rownames(valoresSobreSP) <- rownames(pathsRegresor)
+    } else if (!is.null(names(pathsRegresor))) {
+      rownames(valoresSobreSP) <- names(pathsRegresor)
+    } else {
+      warning(paste(
+        'interpolarEx.extraerValoresRegresorSobreSP: using setNames == TRUE but both row.names(',
+        'pathsRegresor) and names(pathsRegresor) are NULL. make sure to set them to have appropiate',
+        'result rownames'))
+    }
   }
   
   return(valoresSobreSP)
@@ -2721,12 +2735,9 @@ salvarInterpolacion <- function(baseNomArchResultados, interpolacion, formatoSal
   }
 }
 
-expandirPathsRegresor <- function(fechasRegresor=funcFechasRegresor(pathsRegresor, tz(fechasRegresando[1])), pathsRegresor, fechasRegresando, expandir=T,
-                                  funcFechasRegresor=function(x, tz) { 
-                                    matches <- gregexpr(pattern = '(19|20)[0-9][0-9][- /._](0[1-9]|1[012])[- /._](0[1-9]|[12][0-9]|3[01])', text = x)
-                                    fechasReg <- gsub(pattern = '[ /._]', replacement = '-', x = unlist(regmatches(x = x, m = matches)))
-                                    return(as.POSIXct(fechasReg, tz=tz)) 
-                                  }) {
+expandirPathsRegresor <- function(
+    fechasRegresor=funcFechasRegresor(pathsRegresor, tz(fechasRegresando[1])), pathsRegresor, 
+    fechasRegresando, expandir=T, funcFechasRegresor=findDateInText) {
   # retorna los paths de un regresor, repitiendo sus valores si tiene mayor periodicidad que el regresando.
   # Por ejemplo si el regresor es cada 8 días y el regresando cada 1, se repite el valor del mismo regresor
   # para los 8 días que abarca su período
