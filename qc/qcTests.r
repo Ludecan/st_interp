@@ -498,7 +498,7 @@ mapearResultadosDeteccionOutliersV2 <- function(
       archivoSalida <- paste(carpetaSalida, strFecha, '.png', sep = '')
     } else { archivoSalida <- NULL }
     iFecha <- which(row.names(valoresObservaciones) == fecha)
-    coordsObservaciones$value <- t(valoresObservaciones[iFecha, ])
+    coordsObservaciones$value <- valoresObservaciones[iFecha, ]
     
     iOutliers <- which(test$fecha == fecha & test$tipoOutlier %in% tiposOutliersDeInteres)
     

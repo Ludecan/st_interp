@@ -697,10 +697,11 @@ mapearPuntosGGPlot <- function(
     
     if (!continuo) { v <- cut(v, breaks=c(escala$escala[1:ultimoI], valMax), right=FALSE, include.lowest=!is.infinite(valMax), dig.lab=15, ordered_result=T) }
   }
-    
-  coords <- coordinates(puntos)[iNoNA,,drop=F]
-  if (length(tamaniosPuntos) > 1) tamaniosPuntos <- tamaniosPuntos[iNoNA]
-  df <- data.frame(x=as.numeric(coords[,1]), y=as.numeric(coords[,2]), value = v, 
+
+  coords <- coordinates(puntos)[iNoNA, , drop=F]
+  if (length(tamaniosPuntos) > 1) { tamaniosPuntos <- tamaniosPuntos[iNoNA] 
+  } else { tamaniosPuntos <- rep(tamaniosPuntos, nrow(coords)) }
+  df <- data.frame(x=as.numeric(coords[,1]), y=as.numeric(coords[,2]), value = v,
                    size = tamaniosPuntos * escalaGraficos)
   # df$size <- tamaniosPuntos * escalaGraficos
 
