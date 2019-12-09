@@ -670,7 +670,7 @@ mapearPuntosGGPlot <- function(
   }
   iNoNA <- !is.na(puntos@data[,zcol])
   todosNA <- !any(iNoNA)
-  v <- c(puntos@data[iNoNA, zcol])
+  v <- puntos@data[iNoNA, zcol]
   
   # continuo <- T
   if (missing(continuo)) continuo <- !is.null(escala) && !is.null(escala$continuo) && escala$continuo
