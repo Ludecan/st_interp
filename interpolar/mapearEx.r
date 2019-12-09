@@ -670,7 +670,7 @@ mapearPuntosGGPlot <- function(
   }
   iNoNA <- !is.na(puntos@data[,zcol])
   todosNA <- !any(iNoNA)
-  v <- puntos@data[iNoNA,zcol]
+  v <- c(puntos@data[iNoNA, zcol])
   
   # continuo <- T
   if (missing(continuo)) continuo <- !is.null(escala) && !is.null(escala$continuo) && escala$continuo
@@ -700,7 +700,8 @@ mapearPuntosGGPlot <- function(
     
   coords <- coordinates(puntos)[iNoNA,,drop=F]
   if (length(tamaniosPuntos) > 1) tamaniosPuntos <- tamaniosPuntos[iNoNA]
-  df <- data.frame(x=as.numeric(coords[,1]), y=as.numeric(coords[,2]), value = v, size = tamaniosPuntos * escalaGraficos)
+  df <- data.frame(x=as.numeric(coords[,1]), y=as.numeric(coords[,2]), value = v, 
+                   size = tamaniosPuntos * escalaGraficos)
   # df$size <- tamaniosPuntos * escalaGraficos
 
   p <- ggplot(aes(x=x, y=y), data=df) + 
