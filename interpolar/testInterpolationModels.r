@@ -49,9 +49,9 @@ getTSeqs <- function(fechasObservaciones) {
 }
 
 testRegressors <- function(
-    valoresObservaciones, pathsRegresores, pathSHPNotNUll, pathResultados='Resultados/', 
+    valoresObservaciones, pathsRegresores, pathSHPNotNUll, pathResultados='Resultados/1-Exploracion/', 
     seriesName='Rainfall', outputTableFilename=NULL) {
-  carpeta <- paste(pathResultados, '1-Exploracion/', sep='')
+  dir.create(pathResultados, showWarnings = FALSE, recursive = TRUE)
   serie <- unlist(c(valoresObservaciones))
   
   res <- matrix(nrow=ncol(pathsRegresores), ncol = 7)
@@ -101,9 +101,7 @@ testRegressors <- function(
       res[i, 6] <- mean(nNoNulos) / nPixeles * 100
       res[i, 7] <- aux[2] / nPixeles * 100
       
-      # quantile(nNoNulos, probs=c(0, 0.01, 0.02, 0.5, 0.98, 0.99, 1)) / nPixeles * 100
-      
-      arch <- paste(carpeta, seriesName, '_vs_', colnames(pathsRegresores)[i], '.png', sep='')
+      arch <- paste(pathResultados, seriesName, '_vs_', colnames(pathsRegresores)[i], '.png', sep='')
       linePlot(
         x=r, y=s, tituloEjeX=colnames(pathsRegresores)[i], tituloEjeY=seriesName, 
         lineaRegresion = T, intervalosConfianza = T,  dibujarPuntos = T, 
@@ -116,11 +114,11 @@ testRegressors <- function(
   }
   
   if (!is.null(outputTableFilename)) {
-    write.table(res, file = paste(carpeta, outputTableFilename), col.names=T, row.names=T, 
+    write.table(res, file = paste(pathResultados, outputTableFilename), col.names=T, row.names=T, 
                 append = F, quote = F, sep = "\t", eol = "\r", dec = ".", 
                 qmethod = c("escape", "double"))  
   }
-  rm(serie, carpeta)
+  rm(serie)
   
   return(res)
 }
@@ -156,7 +154,7 @@ st_interpCrossValidations <- function(
     pathResultados='Resultados/3-GrilladoYCV/', recalcCV=FALSE, 
     modelosACorrer=1:length(listaParams)) {
   cvs <- vector(mode="list", length = length(modelosACorrer))
-  # i <- 1
+  # i <- 2
   for (i in seq_along(modelosACorrer)) {
     iModel <- modelosACorrer[i]
     params <- listaParams[[iModel]]

@@ -48,11 +48,11 @@ instant_pkgs(pkgs = c('unmarked', 'VGAM'), silent = TRUE, doCargarPaquetes=FALSE
 instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'raster', 
                       'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 'rms',
                       'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
-                      'htmltools', 'httr', 'stats', 'float'), 
+                      'htmltools', 'httr', 'stats', 'float', 'intamap'), 
              silent = TRUE)
 
-#instant_pkgs_github(reposgithub = 'Ludecan/intamap', minVersions = '1.4-4', silent = TRUE)
-instant_pkgs_github(reposgithub = 'jskoien/intamap', minVersions = '1.4-6', silent = TRUE)
+# instant_pkgs_github(reposgithub = 'Ludecan/intamap', minVersions = '1.4-4', silent = TRUE)
+# instant_pkgs_github(reposgithub = 'jskoien/intamap', minVersions = '1.4-6', silent = TRUE)
 
 formulaStr <- function(coeficientes, nDecimales=1, quitarCeros=TRUE) {
   if (quitarCeros) coeficientes <- coeficientes[coeficientes != 0]
@@ -2356,7 +2356,7 @@ universalGriddingCV_i <- function(iObservacion=1, tIni=1, tFin=nrow(valoresObser
   # Creo una máscara dummy para que no la cree (vacía) todos los pasos de tiempo
   shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP='', proj4strSHP='', grilla=coordsAInterpolar_i)
   
-  # ti <- ts[1]
+  # ti <- ts[381]
   # ti <- which(fechasObservaciones==as.POSIXct('2014-11-27', tz=tz(fechasObservaciones[1])))
   # ti <- 365
   for (ti in ts) {
