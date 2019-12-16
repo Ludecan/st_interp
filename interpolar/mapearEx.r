@@ -91,6 +91,17 @@ crearEscalaTemperaturaWRF <- function() {
   return(crearEscala(escala, colores))
 }
 
+
+crearEscalaPrecipitacionGSMaP <- function() {
+  colR <- c(0  , 0,   0,   51,  155, 255, 255, 255, 235, 175)
+  colG <- c(0  , 100, 180, 219, 235, 235, 179, 100, 30,  0)
+  colB <- c(150, 255, 255, 128, 74,  0,   0,   0,   0,   0)
+  escala <- c(0.1, 0.5, 1, 2, 3, 5, 10, 15, 20, 25)
+  colores <- rgb(colR, colG, colB, 255, maxColorValue = 255)
+  return(crearEscala(escala, colores))
+}
+
+
 achicarToNDigitos <- function(x, nDigitos=1) {
   pot <- 10^-nDigitos
   return(floor(x / pot) * pot)

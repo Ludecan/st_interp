@@ -407,7 +407,7 @@ getBoundariesPVariogramaEmpiricoV8 <- function(fml, observaciones, minNIntervalo
   # this way the "ideal" variogram honors the actual observation as much as it can, is monotonically growing and is given by the data  
   require(gstat)
   require(zoo)
-  if (is.na(cutoff)) {
+  if (is.na(cutoff) || is.infinite(cutoff)) {
     if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(unique(coordinates(observaciones)))) }
     longlat <- !is.projected(observaciones)
     if (is.na(longlat)) longlat <- FALSE

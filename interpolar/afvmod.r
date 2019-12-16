@@ -1118,10 +1118,17 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
 
   for (i in 1:length(model)) {
     if (verbose) print(paste(i, ': ', model[[i]], sep=''))
-    vgIni <- afvmod(formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, miscFitOptions=list(orig.behavior=F), 
-                    fix.values=c(fixNugget, NA, NA), verbose=verbose, nPuntosIniciales=2, fit.method = 7)$var_model
+    vgIni <- afvmod(
+      formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, 
+      miscFitOptions=list(orig.behavior=F), fix.values=c(fixNugget, NA, NA), verbose=verbose, 
+      nPuntosIniciales=2, fit.method = 7)$var_model
+    
     try({
-      res <- withWarnings(expr = { vg <- fit.variogram.gls_mod(formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = F, maxiter = 100) })
+      res <- withWarnings(expr = { 
+        vg <- fit.variogram.gls_mod(
+          formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = F, 
+          maxiter = 100) })
+      
       # res <- withWarnings(expr = { vg <- fit.variogram.gls(formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = T, maxiter = 100) })
       #if (length(res$warnings) == 0) {
         # plot(x=vc$dist, y=(variogramLine(object = vg, dist_vector = vc$dist)$gamma))

@@ -583,8 +583,10 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
           source(paste(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r', sep=''))
           
           if (usarAFVGLS) {
-            variogramas <- afvGLS(formula=interpolacion$formulaString, input_data=interpolacion$observations, cutoff = params$cutoff,
-                                  model=params$modelosVariograma, verbose=params$verbose, useNugget=params$usarNugget)
+            variogramas <- afvGLS(
+              formula=interpolacion$formulaString, input_data=interpolacion$observations, 
+              cutoff = params$cutoff, model=params$modelosVariograma, verbose=params$verbose, 
+              useNugget=params$usarNugget)
           }
           
           if (!usarAFVGLS || is.null(variogramas$var_model)) {
@@ -2368,11 +2370,15 @@ universalGriddingCV_i <- function(iObservacion=1, tIni=1, tFin=nrow(valoresObser
       if (!eliminarSerieTemporalCompleta) valoresObservaciones[ti, iObservacion] <- NA
       
       # coordsAInterpolar = coordsAInterpolar_i
-      interp <- universalGriddingEx(ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-                                    valoresObservaciones = valoresObservaciones, coordsAInterpolar = coordsAInterpolar_i, params = params,
-                                    valoresRegresoresSobreObservaciones = valoresRegresoresSobreObservaciones,
-                                    valoresRegresoresSobreCoordsAInterpolar_ti = valoresRegresoresSobreCoordsAInterpolar_ti,
-                                    iObservacionesEnCoordsAInterpolar=NULL, shpMask = shpMask, longitudesEnColumnas=longitudesEnColumnas)
+      # iObservacionesEnCoordsAInterpolar=NULL
+      interp <- universalGriddingEx(
+        ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+        valoresObservaciones = valoresObservaciones, coordsAInterpolar = coordsAInterpolar_i, 
+        params = params, valoresRegresoresSobreObservaciones = valoresRegresoresSobreObservaciones,
+        valoresRegresoresSobreCoordsAInterpolar_ti = valoresRegresoresSobreCoordsAInterpolar_ti,
+        iObservacionesEnCoordsAInterpolar=NULL, shpMask = shpMask, 
+        longitudesEnColumnas=longitudesEnColumnas)
+      
       if (!eliminarSerieTemporalCompleta) valoresObservaciones[ti, iObservacion] <- oldValores[ti]
       
       res[ti - tIni + 1] <- interp$predictions@data[1, interp$campoMedia]
@@ -2384,11 +2390,14 @@ universalGriddingCV_i <- function(iObservacion=1, tIni=1, tFin=nrow(valoresObser
   return (res)
 }
 
-universalGriddingCV <- function(coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores=NULL, longitudesEnColumnas=T,
-                                iesAEstimar=1:ncol(valoresObservaciones), eliminarSerieTemporalCompleta=TRUE, estimarNAs=FALSE) {
+universalGriddingCV <- function(
+    coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores=NULL, 
+    longitudesEnColumnas=T, iesAEstimar=1:ncol(valoresObservaciones), 
+    eliminarSerieTemporalCompleta=TRUE, estimarNAs=FALSE) {
   # longitudesEnColumnas=T
   # iesAEstimar=1:ncol(valoresObservaciones)
-  # eliminarSerieTemporalCompleta=T
+  # eliminarSerieTemporalCompleta=TRUE
+  # eliminarSerieTemporalCompleta=FALSE
   # estimarNAs=FALSE
   
   coordsObservaciones <- geometry(coordsObservaciones)
@@ -2448,11 +2457,12 @@ universalGriddingCV <- function(coordsObservaciones, fechasObservaciones, valore
       
       # iObservacion <- iesAEstimar[1]
       for (iObservacion in iesAEstimar) {
-        res[,iObservacion] <- universalGriddingCV_i(iObservacion, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-                                                    valoresObservaciones=valoresObservaciones, params=params, 
-                                                    valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones,
-                                                    longitudesEnColumnas=longitudesEnColumnas, eliminarSerieTemporalCompleta=eliminarSerieTemporalCompleta,
-                                                    estimarNAs=estimarNAs)
+        res[,iObservacion] <- universalGriddingCV_i(
+          iObservacion, coordsObservaciones=coordsObservaciones, 
+          fechasObservaciones=fechasObservaciones, valoresObservaciones=valoresObservaciones, 
+          params=params, valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones,
+          longitudesEnColumnas=longitudesEnColumnas, 
+          eliminarSerieTemporalCompleta=eliminarSerieTemporalCompleta, estimarNAs=estimarNAs)
       }
       #res <- sapply(X=iesAEstimar, FUN=universalGriddingCV_i, 
       #              coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, valoresObservaciones=valoresObservaciones, 

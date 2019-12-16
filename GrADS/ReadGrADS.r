@@ -216,88 +216,6 @@ parseVarDef <- function(varDef) {
                description=paste(varDef[4:length(varDef)], collapse=' '), arg1=varArg1, arg2=varArg2))
 }
 
-parseCTL <- function(ctlFile) {
-  # ctlFile <- 'D:/iri/Datos/TRMM-3B42-RT/3b42rt.ctl'
-  ctl <- readLines(ctlFile)
-  ctlSplit <- strsplit(ctl, " +")
-  
-  # not all fields will be assigned to res, only those in the ctl file.
-  # when using it you must check for for example res$dset != NULL
-  res <- list(ctlFile=ctlFile)
-  # these fields are an exception to the rule since they must always have a value to be able to read the bin
-  res$fileHeader <- 0L
-  res$tHeader <- 0L
-  res$trailerBytes <- 0L
-  res$xyHeader <- 0L
-  
-  # partial support, more options need to be coded but this handles TRMM-3B42-RT ctl files
-  # also no multiline support
-  # most of the code comes from MCH's source code and is converted from Delphi to R 
-  i <- 1
-  while (i <= length(ctlSplit)) {
-    #ignore white lines
-    if (length(ctlSplit[[i]]) > 0) {
-      # i <- 8
-      print(paste(i, '-', ctlSplit[[i]]))
-      # ctlSplit[[i]]
-      # lower case to check without case sensitivity
-      param <- tolower(ctlSplit[[i]][1])
-      
-      # ignore comments for now
-      if (substr(param, 1, 1) != '*') {
-        if (param == 'dset') {
-          res$dset <- ctlSplit[[i]][2]
-        } else if (param == 'title') {
-          res$title <- paste(ctlSplit[[i]][2:length(ctlSplit[[i]])], collapse=' ')
-        } else if (param == 'undef') {
-          res$undef <- as.numeric(ctlSplit[[i]][2])
-        } else if (param == 'fileheader') {
-          res$fileHeader <- as.integer(ctlSplit[[i]][2])
-        } else if (param == 'xyheader') {
-          res$xyHeader <- as.integer(ctlSplit[[i]][2])
-        } else if (param == 'headerbytes' || param == 'theader') {
-          res$tHeader <- as.integer(ctlSplit[[i]][2])
-        } else if (param == 'trailerbytes') {
-          res$trailerBytes <- as.integer(ctlSplit[[i]][2])
-        } else if (param == 'options') {
-          res$options <- ctlSplit[[i]][2:length(ctlSplit[[i]])]
-        } else if (param == 'pdef') {
-          res$pDef <- parsePDef(ctlSplit[[i]])
-        } else if (param == 'xdef') {
-          res$xdef <- parseDimDef(ctlSplit[[i]])
-        } else if (param == 'ydef') {
-          res$ydef <- parseDimDef(ctlSplit[[i]], T)
-        } else if (param == 'zdef') {
-          res$zdef <- parseDimDef(ctlSplit[[i]])
-        } else if (param == 'tdef') {
-          res$tdef <- parseTDef(TDef = ctlSplit[[i]])
-        } else if (param == 'vars') {
-          res$nVars <- as.integer(ctlSplit[[i]][2])
-          res$vars <- vector(mode = "list", length = res$nVars)
-          j <- 1
-          for (j in 1:res$nVars)
-            res$vars[[j]] <- parseVarDef(ctlSplit[[i+j]])
-          names(res$vars) <- lapply(res$vars, FUN = function(x) { return(x$varname) })
-          # the +1 for endvars
-          i = i + res$nVars + 1
-        } else if (param == '*') {
-          # no processing done for now
-          res$comments[[length(res$comments)+1]] <- ctlSplit[[i]][2:length(ctlSplit[[i]])]
-        } else if (param == '@') {
-          # no processing done for now
-          res$attributes[[length(res$attributes)+1]] <- ctlSplit[[i]][2:length(ctlSplit[[i]])]
-        }else {
-          stop(paste('parseCTL: Error unknown GrADS Data Descriptor File Component in line ', i, ': "', ctl[[i]], '"', sep=''))
-        }
-      }
-    }
-    i <- i + 1
-  }
-  
-  res <- inicializarCTL(res)
-  return (res)
-}
-
 iFecha <- function(ctl, fecha) {
   return (as.integer((difftime(fecha, ctl$tdef$from, 'days') / ctl$tdef$by)))
 }
@@ -481,8 +399,18 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
   # ctl$pDef$proj4string
   # ctl$pDef$proj4string <- "+proj=lcc +lat_1=-39.765 +lat_2=-39.765 +lat_0=-33.171  +lon_0=-65.478 +a=6370000 +units=m +x_0=-706587.442842593 +y_0=29740.3609605322 +no_defs"
   # ctl$pDef$proj4string <- "+proj=lcc +lat_1=-39.765 +lat_2=-39.765 +lat_0=-33.171  +lon_0=-65.478 +ellps=WGS84 +datum=WGS84 +units=m +x_0=-706587.442842593 +y_0=29740.3609605322 +no_defs"
+  # dsetOverride <- 'F:/ADME/precip_rionegro/datos/satelites/GSMaP/originales/gsmap_gauge.20191214.1000.dat'
   datos <- readXYGrid(ctl = ctl, dsetOverride = dsetOverride, idxFecha = idxFecha, idxVar = idxVar, idxNivelZ = idxNivelZ)
 
+  if (ctl$convert360to180) {
+    mid <- nrow(datos) %/% 2
+    idxLeft <- 1:mid
+    idxRight <- (mid + 1):nrow(datos)
+    aux <- datos[idxLeft, ]
+    datos[idxLeft, ] <- datos[idxRight, ]
+    datos[idxRight, ] <- aux
+  }
+  
   if (is(grillaXY, 'SpatialGrid')) {
     res <- SpatialGridDataFrame(grid = grillaXY, data = data.frame(value=as.numeric(datos)))
   } else if (is(grillaXY, 'SpatialPixels')) {
@@ -490,7 +418,7 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
   } else {
     stop(paste('ReadGrADS.readXYGridSP: unknown grid class ', class(grillaXY), sep=''))
   }
-
+dim(datos)
   return(res)
 
   if (F) {
@@ -624,7 +552,7 @@ inicializarCTL <- function(ctl) {
   return(ctl)
 }
 
-parseCTL_V2 <- function(ctlFile, verbose=FALSE) {
+parseCTL <- function(ctlFile, convert360to180=FALSE, verbose=FALSE) {
   # verbose = TRUE
   # ctlFile <- 'D:/testsMCH/GrADS/wrfout_d02_2017-05-04_000000.ctl'
   ctl <- readChar(con = ctlFile, nchars = file.info(ctlFile)$size)
@@ -653,6 +581,9 @@ parseCTL_V2 <- function(ctlFile, verbose=FALSE) {
   res$tHeader <- 0L
   res$trailerBytes <- 0L
   res$xyHeader <- 0L
+  
+  # extensions
+  res$convert360to180 <- convert360to180
   
   # partial support, more options need to be coded but this handles TRMM-3B42-RT and WRF ctl files 
   # most of the code comes from MCH's source code and is converted from Delphi to R 
@@ -687,6 +618,15 @@ parseCTL_V2 <- function(ctlFile, verbose=FALSE) {
         res$pDef <- parsePDef(PDef = c('pdef', unlist(strsplit(x = valoresAtributos[i], split = '[[:space:]]+'))))
       } else if (param == 'xdef') {
         res$xdef <- parseDimDef(dimDef = c('xdef', unlist(strsplit(x = valoresAtributos[i], split = '[[:space:]]+'))))
+        if (res$convert360to180) {
+          if (res$xdef$type == 'linear') {
+            res$xdef$from <- res$xdef$from - 180
+            res$xdef$vals <- res$xdef$vals - 180
+          } else {
+            stop(paste(
+              'readGrADS.parseCTL: convert360to180 not implemented for xdef$type==', res$xdef$type, sep=''))
+          }
+        }
       } else if (param == 'ydef') {
         res$ydef <- parseDimDef(dimDef = c('ydef', unlist(strsplit(x = valoresAtributos[i], split = '[[:space:]]+'))), allowGaussian = TRUE)
       } else if (param == 'zdef') {
