@@ -136,6 +136,9 @@ st_interpCrossValidation <- function(
     
     #eliminarSerieTemporalCompleta = FALSE
     #longitudesEnColumnas = T
+    #iesAEstimar=1:ncol(valoresObservaciones)
+    #params$nCoresAUsar <- 1
+    #estimarNAs=FALSE
     
     cv <- universalGriddingCV(
       coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 

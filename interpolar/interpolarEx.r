@@ -55,8 +55,10 @@ instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterat
 # instant_pkgs_github(reposgithub = 'jskoien/intamap', minVersions = '1.4-6', silent = TRUE)
 
 formulaStr <- function(coeficientes, nDecimales=1, quitarCeros=TRUE) {
-  if (quitarCeros) coeficientes <- coeficientes[coeficientes != 0]
-  return(paste0("y ~ ", paste(sprintf(paste("%+.",nDecimales,"f*%s "), coeficientes[-1],names(coeficientes[-1])), collapse=""), sprintf(paste("%+.",nDecimales,"f"), coeficientes[1])))
+  if (quitarCeros) coeficientes <- coeficientes[coeficientes != 0 | names(coeficientes) == '(Intercept)']
+  return(paste0("y ~ ", 
+                paste(sprintf(paste("%+.", nDecimales,"f*%s ", sep=''), coeficientes[-1], names(coeficientes[-1])), collapse=""), 
+                sprintf(paste("%+.", nDecimales, "f", sep=''), coeficientes[1])))
 }
 
 formulaConCoeficientes <- function(modelo, nDecimales=1, quitarCeros=TRUE) {
@@ -782,7 +784,8 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
   }  
   
   if (!is.null(valoresCampoBase) & !is.null(valoresCampoBaseSobreObservaciones)) {
-    interpolacion$predictions@data[,interpolacion$campoMedia] <- interpolacion$predictions@data[,interpolacion$campoMedia] + valoresCampoBase[shpMask$mask]
+    interpolacion$predictions@data[, interpolacion$campoMedia] <- interpolacion$predictions@data[, interpolacion$campoMedia] + 
+      valoresCampoBase[shpMask$mask]
   }
   
   if (params$modoDiagnostico) {
@@ -1825,15 +1828,15 @@ incorporarRegresoresEstaticos <- function(ti, coordsObservaciones, fechasObserva
               valoresRegresoresSobreCoordsAInterpolar_ti=valoresRegresoresSobreCoordsAInterpolar_ti))
 }
 
-ajusteRegresores <- function(ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
-                             valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL,
-                             incorporarCoordenadas=FALSE, formulaCoordenadas='x + y', #formulaCoordenadas='I(x^2) + I(y^2) + I(x*y) + x + y',
-                             incorporarTiempo=FALSE, formulaTiempo='t',
-                             incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
-                             incorporarAltitud=FALSE, formulaAltitud='alt',
-                             descartarCoordenadasNoSignificativas=FALSE, 
-                             invertir=FALSE,
-                             shpMask=NULL) {
+ajusteRegresores <- function(
+    ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
+    valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL,
+    incorporarCoordenadas=FALSE, formulaCoordenadas='x + y', #formulaCoordenadas='I(x^2) + I(y^2) + I(x*y) + x + y',
+    incorporarTiempo=FALSE, formulaTiempo='t',
+    incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
+    incorporarAltitud=FALSE, formulaAltitud='alt',
+    descartarCoordenadasNoSignificativas=FALSE, 
+    invertir=FALSE, shpMask=NULL) {
   if (invertir && length(valoresRegresoresSobreObservaciones) == 1) {
     aux <- valoresRegresoresSobreObservaciones[[1]]
     valoresRegresoresSobreObservaciones[[1]] <- valoresObservaciones
@@ -1937,7 +1940,8 @@ ajusteRegresores <- function(ti, coordsObservaciones, fechasObservaciones, valor
         # mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpMask$shp, continuo = T)
         
         if (metodoIgualacionDistribuciones != 5) {
-          iFilasCompletas <- !is.na(valoresObservacionesTsVentana) & !apply(valsRegresoresObservaciones, MARGIN = 1, FUN = function(x) { any(is.na(x)) })
+          iFilasCompletas <- !is.na(valoresObservacionesTsVentana) & 
+            !apply(valsRegresoresObservaciones, MARGIN = 1, FUN = function(x) { any(is.na(x)) })
 
           # Chequeo que tenga suficientes observaciones no nulas para hacer la regresión
           if (sum(iFilasCompletas) > nU + 1 && nrow(unique(valsRegresoresObservaciones[iFilasCompletas, , drop=F])) >= nU + 1) {
@@ -1947,7 +1951,15 @@ ajusteRegresores <- function(ti, coordsObservaciones, fechasObservaciones, valor
             
             if (metodoIgualacionDistribuciones %in% c(2, 3, 4, 7)) {
               # Regresion lineal
-              df <- data.frame(value=valoresObservacionesTsVentana[iFilasCompletas], valsRegresoresObservaciones[iFilasCompletas, , drop=F])
+              if (metodoIgualacionDistribuciones == 7 && !incorporarCoordenadas) {
+                df <- data.frame(value=valoresObservacionesTsVentana[iFilasCompletas],
+                                 valsRegresoresObservaciones[iFilasCompletas, , drop=F],
+                                 x=coordinates(coordsObservaciones)[iFilasCompletas, 1],
+                                 y=coordinates(coordsObservaciones)[iFilasCompletas, 2])
+              } else {
+                df <- data.frame(value=valoresObservacionesTsVentana[iFilasCompletas], 
+                                 valsRegresoresObservaciones[iFilasCompletas, , drop=F])
+              }
               
               if (params$verbose) {
                 nombresFilas <- rownames(valoresObservaciones[tsVentana, , drop=F])
@@ -2095,8 +2107,28 @@ ajusteRegresores <- function(ti, coordsObservaciones, fechasObservaciones, valor
                 
               if (modeloAjustado) {
                 coeficientes <- coefficients(modelo)
-                valoresCampoBaseSobreObservaciones <- predict(object = modelo, newdata = data.frame(valsRegresoresObservaciones[iesVals, , drop=F]), na.action=na.pass)
-                if (!invertir) valoresCampoBase <- predict(object = modelo, newdata = data.frame(valoresRegresoresSobreCoordsAInterpolar_ti), na.action=na.pass)
+                
+                if (metodoIgualacionDistribuciones == 7 && !incorporarCoordenadas) {
+                  newdata <- data.frame(valsRegresoresObservaciones[iesVals, , drop=F],
+                                   x=coordinates(coordsObservaciones)[iesVals, 1],
+                                   y=coordinates(coordsObservaciones)[iesVals, 2])
+                } else {
+                  newdata <- data.frame(valsRegresoresObservaciones[iesVals, , drop=F])
+                }
+                
+                valoresCampoBaseSobreObservaciones <- predict(
+                  object = modelo, newdata = newdata, na.action=na.pass)
+                if (!invertir) {
+                  if (metodoIgualacionDistribuciones == 7 && !incorporarCoordenadas) {
+                    newdata <- data.frame(valoresRegresoresSobreCoordsAInterpolar_ti,
+                                          x=coordinates(coordsAInterpolar)[, 1],
+                                          y=coordinates(coordsAInterpolar)[, 2])
+                  } else {
+                    newdata <- data.frame(valoresRegresoresSobreCoordsAInterpolar_ti)
+                  } 
+                  valoresCampoBase <- predict(
+                   object = modelo, newdata = newdata, na.action=na.pass)
+                }
               } else {
                 # si la formula no tiene terminos (regresores), el mejor predictor es la media de las observaciones
                 coeficientes <- mean(valoresObservacionesTsVentana, na.rm=T)
@@ -2174,7 +2206,7 @@ ajusteRegresores <- function(ti, coordsObservaciones, fechasObservaciones, valor
                 }
               }
             }
-            formulaRegresionCC <- formulaStr(coeficientes = coeficientes, nDecimales = 2)
+            formulaRegresionCC <- formulaStr(coeficientes = coeficientes[!is.na(coeficientes)], nDecimales = 2)
           } else {
             # Si no hay suficientes observaciones no nulas para estimar los coeficientes de los 
             # regresores hago la interpolacion sin campo base
@@ -2333,7 +2365,7 @@ universalGriddingCV_i <- function(iObservacion=1, tIni=1, tFin=nrow(valoresObser
   # valoresRegresoresSobreObservaciones lista de matrices con valoresRegresoresSobreObservaciones[[i]][j, k] los valores del regresor i en la fecha j estacion k
   # valoresRegresoresSobreCoordsAInterpolar_ti matriz con los valores de los regresores para la fecha ti. valoresRegresoresSobreCoordsAInterpolar_ti[i, j] tiene el valor de la estacion i, regresor j
   
-  # iObservacion=1
+  # iObservacion=3
   # tIni=1
   # tFin=nrow(valoresObservaciones)
   # estimarNAs=F
@@ -2356,7 +2388,7 @@ universalGriddingCV_i <- function(iObservacion=1, tIni=1, tFin=nrow(valoresObser
   # Creo una máscara dummy para que no la cree (vacía) todos los pasos de tiempo
   shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP='', proj4strSHP='', grilla=coordsAInterpolar_i)
   
-  # ti <- ts[381]
+  # ti <- ts[302]
   # ti <- which(fechasObservaciones==as.POSIXct('2014-11-27', tz=tz(fechasObservaciones[1])))
   # ti <- 365
   for (ti in ts) {

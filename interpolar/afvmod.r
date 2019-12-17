@@ -309,7 +309,7 @@ isInvalidVariogram <- function(v, minPsill = 1E-3, minRange = 0.05) {
   return((is.null(v) |
    any(!v$model %in% c('Nug', "Pow")  & ((v$psill < minPsill) | (v$range <= minRange))) |
    any(v$model == 'Nug' & v$psill < 0) |
-   any(v$model == 'Pow' & v$range > 2)))
+   any(v$model == 'Pow' & (v$range > 2 | v$range <= 0))))
 }
 
 getModelVariogram <- function(experimental_variogram, formula, input_data = NULL, model = c("Sph", "Exp", "Gau", "Ste"),
@@ -1123,14 +1123,15 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
       miscFitOptions=list(orig.behavior=F), fix.values=c(fixNugget, NA, NA), verbose=verbose, 
       nPuntosIniciales=2, fit.method = 7)$var_model
     
-    try({
-      res <- withWarnings(expr = { 
-        vg <- fit.variogram.gls_mod(
-          formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = F, 
-          maxiter = 100) })
-      
-      # res <- withWarnings(expr = { vg <- fit.variogram.gls(formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = T, maxiter = 100) })
-      #if (length(res$warnings) == 0) {
+    if (!is.null(vgIni)) {
+      try({
+        res <- withWarnings(expr = { 
+          vg <- fit.variogram.gls_mod(
+            formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = F, 
+            maxiter = 100) })
+        
+        # res <- withWarnings(expr = { vg <- fit.variogram.gls(formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = T, maxiter = 100) })
+        #if (length(res$warnings) == 0) {
         # plot(x=vc$dist, y=(variogramLine(object = vg, dist_vector = vc$dist)$gamma))
         fitModels[[i]] <- res$value
         mses[i] <- mean((variogramLine(object = vg, dist_vector = vc$dist)$gamma - vc$gamma)^2)
@@ -1139,8 +1140,8 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
           print(fitModels[[i]])
           print(mses[i])
         }
-      #}
-    })
+      })      
+    }
   }
   
   if (any(!is.na(mses))) {
