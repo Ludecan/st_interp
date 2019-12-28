@@ -43,13 +43,14 @@ paletasInvertidas <- c('Spectral', 'RdBu', 'RdYlBu', 'RdYlGn')
 crearEscala <- function(escala, colores=NULL, brewerPal='Spectral', 
                         invertirPaleta=brewerPal %in% paletasInvertidas, continuo=F,
                         iniciosIntervalosIsoLineas=NULL) {
-  u <- unique(escala)
+  i <-  match(unique(escala), escala)
+  escala <- escala[i]  
   
   if (is.null(colores)) {
     # Si la escala es continua, los colores son de los puntos del intervalo,
     # si es discreta, los colores son de los intervalos, y por lo tanto hay uno menos
-    if (continuo) { nColores <- length(u)
-    } else { nColores <- length(u) - 1 }
+    if (continuo) { nColores <- length(escala)
+    } else { nColores <- length(escala) - 1 }
     
     if (nColores < 3) {
       colores <- brewer.pal(3, name = brewerPal)
@@ -64,20 +65,6 @@ crearEscala <- function(escala, colores=NULL, brewerPal='Spectral',
     if (invertirPaleta) colores <- rev(colores)
   }
   
-  if (length(u) < length(escala)) {
-    i <-  match(u, escala)
-    escala <- escala[i]
-    
-    if (length(escala) == 1) {
-      escala <- c(escala, escala[1] + 1)
-      colores <- colores[c(1, length(colores))]
-    } else if (i[length(i)] > length(colores)) { 
-      colores <- colores[i[1:(length(i)-1)]]
-    } else { 
-      colores <- colores[i] 
-    }
-  }
- 
   if (length(colores) == length(escala) - 1 && !continuo) colores <- c(colores, '')
   return (list(escala=escala, colores=colores, continuo=continuo, iniciosIntervalosIsoLineas=iniciosIntervalosIsoLineas))
 }
@@ -113,7 +100,7 @@ agrandarToNDigitos <- function(x, nDigitos=1) {
 }
 
 rangoExtendidoANDigitos <- function(x, nDigitos=1, na.rm=T) {
-  rango <- range(x, na.rm = na.rm)
+  rango <- round(range(x, na.rm = na.rm), nDigitos*2)
   pot <- 10^-nDigitos
   rango[1] <- floor(rango[1] / pot) * pot
   rango[2] <- ceiling(rango[2] / pot) * pot

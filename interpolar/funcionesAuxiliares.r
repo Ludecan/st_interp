@@ -2015,7 +2015,8 @@ filtroMediaSD <- function(x, factorSDHaciaAbajo=3, factorSDHaciaArriba=factorSDH
   }
 }
 
-outlyingnessMedianaMAD <- function(x, na.rm=T, constanteMAD=1.4826, nMinParaEstimar = 10) {
+outlyingnessMedianaMAD <- function(x, na.rm=T, constanteMAD=1.4826, nMinParaEstimar = 10, 
+                                   desvMedAbsMin=NA) {
   if (na.rm) { xSinNA <- x[!is.na(x)]
   } else { xSinNA <- x }
   
@@ -2023,7 +2024,13 @@ outlyingnessMedianaMAD <- function(x, na.rm=T, constanteMAD=1.4826, nMinParaEsti
     mediana <- median(xSinNA, na.rm = FALSE)
     desvMedAbs <- mad(xSinNA, center = mediana, na.rm = FALSE, constant = constanteMAD)
     
-    return((x - mediana) / desvMedAbs)
+    if (is.na(desvMedAbsMin) || desvMedAbs > desvMedAbsMin) {
+      return((x - mediana) / desvMedAbs)
+    } else {
+      res <- rep(NA_real_, length(x))
+      names(res) <- names(x)
+      return(res) 
+    }
   } else { 
     res <- rep(NA_real_, length(x))
     names(res) <- names(x)

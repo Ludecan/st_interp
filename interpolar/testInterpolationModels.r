@@ -157,7 +157,7 @@ st_interpCrossValidations <- function(
     pathResultados='Resultados/3-GrilladoYCV/', recalcCV=FALSE, 
     modelosACorrer=1:length(listaParams)) {
   cvs <- vector(mode="list", length = length(modelosACorrer))
-  # i <- 2
+  # i <- 5
   for (i in seq_along(modelosACorrer)) {
     iModel <- modelosACorrer[i]
     params <- listaParams[[iModel]]
@@ -166,7 +166,6 @@ st_interpCrossValidations <- function(
     } else { pathsRegresores <- listaRegresores[[iModel]] }
     
     names(cvs)[iModel] <- nombreModelo(params = params, pathsRegresores=pathsRegresores)
-    
     try(cvs[[i]] <- st_interpCrossValidation(
       coordsObservaciones, fechasObservaciones, valoresObservaciones, params = params, 
       pathsRegresores = pathsRegresores, pathResultados=pathResultados, recalcCV=recalcCV))
@@ -174,10 +173,8 @@ st_interpCrossValidations <- function(
   return(cvs)
 }
 
-calcValidationStatistics <- function(valoresObservaciones, cvs, climatologias=NULL, 
-                                     pathResultados='Resultados/4-Validacion/') {
-  source(paste(pathScripts, 'verificacionPronosticos/verificacionPronosticos.r', sep=''))
-  
+calcValidationStatisticsMultipleModels <- function(
+    valoresObservaciones, cvs, climatologias=NULL, pathResultados='Resultados/4-Validacion/') {
   i <- 1
   # Estadísticos de Validación
   validationStatsOverall <- data.frame()

@@ -70,7 +70,7 @@ prependToFileName <- function(filename, preFijo) {
 }
 
 appendToFileName <- function(filename, postFijo) {
-  ext <- getFileExt(filename)
+  ext <- getFileExt(filename = filename)
   return(ifelse(ext != "", 
                 yes = paste(substr(filename, start=1, stop=nchar(filename) - (nchar(ext) + 1)), postFijo, '.', ext, sep=''),
                 no = paste(filename, postFijo, sep='')))

@@ -425,11 +425,14 @@ getBoundariesPVariogramaEmpiricoV8 <- function(fml, observaciones, minNIntervalo
   }
   
   sDist <- sort(vCloud$dist)
+  logSDist <- log(sDist)
+  sqrtSDist <- sqrt(sDist)
   
   invProporcionObservaciones <- 2
   semik = round(length(vCloud$gamma) / invProporcionObservaciones) %/% 2
   modeloTendencia <- rollmean(vCloud$gamma, k = 2 * semik + 1, fill = 'extend')
-  modeloTendencia <- modeloTendencia * log(sDist) / max(log(sDist))
+  modeloTendencia <- modeloTendencia * logSDist / logSDist[length(logSDist) - 1]
+  # modeloTendencia <- modeloTendencia * sqrtSDist / sqrtSDist[length(sqrtSDist) - 1]
   
   # modeloTendencia <- rollmean(c(rep(0, semik), vCloud$gamma), k = 2 * semik + 1)
   # modeloTendencia <- c(modeloTendencia, rep(modeloTendencia[length(modeloTendencia)], semik))
@@ -437,7 +440,8 @@ getBoundariesPVariogramaEmpiricoV8 <- function(fml, observaciones, minNIntervalo
   # modeloTendencia <- modeloTendencia * mean(vCloud$gamma) / mean(modeloTendencia)
   # plot(vCloud$gamma)
   # lines(modeloTendencia, col='red')
-  # lines(modeloTendencia * log(sDist) / max(log(sDist)), col='blue')
+  # lines( modeloTendencia * logSDist / logSDist[length(logSDist) - 1], col='blue')
+  # lines( modeloTendencia * sqrtSDist / sqrtSDist[length(sqrtSDist) - 1], col='green')
   
   gammas <- numeric(length(modeloTendencia))
   
@@ -463,7 +467,7 @@ getBoundariesPVariogramaEmpiricoV8 <- function(fml, observaciones, minNIntervalo
         k <- k + 1
       }
       
-      valor <- sum((gammas - modeloTendencia)^2 / sqrt(sDist))
+      valor <- sum((gammas - modeloTendencia)^2 / sqrtSDist)
       
       # print(ggplot(data = data.frame(dist = c(0, sDist), semivariance = c(0, gammas), tendencia = c(0, modeloTendencia)), aes(dist)) + geom_point(aes(y=semivariance), colour="black") + geom_line(aes(y=tendencia), colour="red") + scale_x_continuous(breaks=seq(from = 0, to = cutoff, length.out = 11)) + scale_y_continuous(breaks=seq(from = 0, to = max(v$gamma), length.out = 11)) + labs(title = paste('i = ', i, ', valor = ', valor)))
       # print(c(i, valor, ifelse(valor < valorOptimo, 'New best', '')))

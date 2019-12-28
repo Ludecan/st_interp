@@ -482,21 +482,22 @@ getModelVariogram <- function(experimental_variogram, formula, input_data = NULL
     }
   }
   
-  #ordenSSErr <- sort(SSerr_list, index.return=T)
-  #SSerr_list <- SSerr_list[ordenSSErr]
-  #vgm_list <- vgm_list[ordenSSErr]
-  #distOpt <- max(experimental_variogram$dist) / 3
-  
-  #maxErrorTolerable <- SSerr_list[1] + (SSerr_list[length(SSerr_list)] - SSerr_list[1]) * 0.25
-  #mejorModelo <- vgm_list[1]
-  #valorOpt <- 
-  #i <- 2
-  #while (SSerr_list[i] <= maxErrorTolerable) {
-  #  
-  #}
-  
   if (length(vgm_list) > 0) { 
-    var_model = vgm_list[[which.min(SSerr_list)]]
+    #ordenSSErr <- order(SSerr_list)
+    #SSerr_list <- SSerr_list[ordenSSErr]
+    #vgm_list <- vgm_list[ordenSSErr]
+    #maxErrorTolerable <- SSerr_list[1] + (SSerr_list[length(SSerr_list)] - SSerr_list[1]) * 0.25
+    
+    #idx <- SSerr_list < maxErrorTolerable
+    #vgm_list <- vgm_list[idx]
+    #SSerr_list <- SSerr_list[idx]
+    
+    #rangos <- sapply(vgm_list, getExperimentalRange, maxDist=experimental_variogram$dist[nrow(experimental_variogram)])
+    #i <- which.max(rangos)    
+    #var_model <- vgm_list[[i]]
+    #sserr <- SSerr_list[[i]]
+    
+    var_model <- vgm_list[[which.min(SSerr_list)]]
     sserr <- min(SSerr_list)
   } else { 
     var_model = NULL 

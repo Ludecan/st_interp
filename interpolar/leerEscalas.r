@@ -92,7 +92,8 @@ leerEscalaJSON <- function(nombreArchivo) {
 
 redondearEscala <- function(escala, nDigitos=1) {
   n <- length(escala)
-  return(c(achicarToNDigitos(escala[1], nDigitos = nDigitos), round(escala[2:(n-1)], nDigitos), agrandarToNDigitos(escala[n], nDigitos = nDigitos)))
+  return(c(achicarToNDigitos(escala[1], nDigitos = nDigitos), round(escala[2:(n-1)], nDigitos), 
+           agrandarToNDigitos(escala[n], nDigitos = nDigitos)))
 }
 
 leerEscalas <- function(params, datosGrillaPredicciones, datosGrillaSD) {
@@ -135,9 +136,25 @@ darEscala <- function(especificacion, valores, ajustarExtremos=T) {
     rango <- range(valores, na.rm = T)
     min <- rango[1]
     max <- rango[2]
-    escala <- ((max - min) / 100) * especificacion$iniciosIntervalos  + min
-    escala <- crearEscala(escala = redondearEscala(((max - min) / 100) * especificacion$iniciosIntervalos  + min, nDigitos = especificacion$nDigitos),
-                          colores = especificacion$colores, brewerPal = especificacion$brewerPal, continuo=especificacion$continuo)
+    escala <- crearEscala(
+      escala = redondearEscala(((max - min) * 0.01) * especificacion$iniciosIntervalos  + min, nDigitos = especificacion$nDigitos),
+      colores = especificacion$colores, brewerPal = especificacion$brewerPal, 
+      continuo=especificacion$continuo)
+  } else if (especificacion$Clase == 'TEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0') {
+    # TEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0
+    i <- which(!is.na(valores) & valores > 0)
+    if (length(i) > 0) {
+      rango <- range(valores[i])
+      min <- rango[1]
+      max <- rango[2]
+      escala <- c(0, redondearEscala(((max - min) * 0.01) * especificacion$iniciosIntervalos  + min, nDigitos = especificacion$nDigitos))
+    } else {
+      escala <- 0
+    }
+    
+    escala <- crearEscala(
+      escala = escala, colores = especificacion$colores, brewerPal = especificacion$brewerPal, 
+      continuo=especificacion$continuo)
   } else if (especificacion$Clase == 'TEspecificacionEscalaCuantil') {
     # TEspecificacionEscalaCuantil
     escala <- crearEscala(escala = redondearEscala(escala = quantile(x = valores, probs = especificacion$iniciosIntervalos/100, na.rm = T), nDigitos = especificacion$nDigitos),
@@ -187,7 +204,9 @@ darEscala <- function(especificacion, valores, ajustarExtremos=T) {
   } else {
     stop(paste('leerEscalas.darEscala: clase de especificación de escala no implementada ', especificacion$Clase, sep=''))
   }
-  if (ajustarExtremos) escala <- ajustarExtremosEscala(escala, datos=valores, nDigitos = especificacion$nDigitos, redondear = F)
+  if (ajustarExtremos) {
+    escala <- ajustarExtremosEscala(escala, datos=valores, nDigitos = especificacion$nDigitos, redondear = F)
+  }
   return(escala)
 }
 
@@ -214,6 +233,10 @@ crearEspecificacionEscalaFija <- function(iniciosIntervalos, colores=NULL, brewe
 
 crearEspecificacionEscalaRelativaAlMinimoYMaximo <- function(iniciosIntervalos=seq(from=0, to=100, length.out = 11), colores=NULL, brewerPal='Spectral', continuo=F, nDigitos=1) {
   return(list(Clase='TEspecificacionEscalaRelativaAlMinimoYMaximo', iniciosIntervalos=iniciosIntervalos, colores=colores, brewerPal=brewerPal, continuo=continuo, nDigitos=nDigitos))
+}
+
+crearEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0 <- function(iniciosIntervalos=seq(from=0, to=100, length.out = 8), colores=NULL, brewerPal='Blues', continuo=F, nDigitos=1) {
+  return(list(Clase='TEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0', iniciosIntervalos=iniciosIntervalos, colores=colores, brewerPal=brewerPal, continuo=continuo, nDigitos=nDigitos))
 }
 
 crearEspecificacionEscalaCuantil <- function(iniciosIntervalos, colores=NULL, brewerPal='Spectral', continuo=F, nDigitos=1) {

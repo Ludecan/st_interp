@@ -34,7 +34,9 @@ while ((is.null(script.dir.interpolarYMapearEx) || is.na(regexpr('interpolarYMap
 if (is.null(script.dir.interpolarYMapearEx)) { script.dir.interpolarYMapearEx <- ''
 } else { script.dir.interpolarYMapearEx <- paste(dirname(script.dir.interpolarYMapearEx), '/', sep='') }
 source(paste(script.dir.interpolarYMapearEx, 'interpolarEx.r', sep=''))
+source(paste(script.dir.interpolarYMapearEx, "mapearEx.r", sep=''))
 source(paste(script.dir.interpolarYMapearEx, 'funcionesAuxiliares.r', sep=''))
+source(paste(script.dir.interpolarYMapearEx, 'leerEscalas.r', sep=''))
 
 createDefaultListaMapas <- function(paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
                                     dibujarObservacionesEscalaFija=F, dibujarEscalaFija=T,
@@ -89,8 +91,6 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
     } else { subtitulo <- paste(sum(!is.na(valoresObservaciones[ti,])), 'Observaciones') }
   } else { subtitulo <- '' }
   
-  source(paste(script.dir.interpolarYMapearEx, "./mapearEx.r", sep=''))
-  source(paste(script.dir.interpolarYMapearEx, "./leerEscalas.r", sep=''))
   coordsObservaciones$value <- as.numeric(valoresObservaciones[ti, ])
   
   nomArch <- listaMapas$nombreArchivo[ti]
@@ -202,10 +202,12 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
   #}
 }
 
-interpolarYMapearI <- function(iTi, tsAInterpolar=1:nrow(valoresObservaciones), coordsObservaciones, fechasObservaciones, valoresObservaciones, 
-                               pathsRegresores=NULL, valoresRegresoresSobreObservaciones=NULL, coordsAInterpolar, paramsIyM, shpMask, xyLims, listaMapas, 
-                               returnInterpolacion=TRUE, paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, 
-                               espEscalaFija=NULL, espEscalaAdaptada=NULL) {
+interpolarYMapearI <- function(
+    iTi, tsAInterpolar=1:nrow(valoresObservaciones), coordsObservaciones, fechasObservaciones, 
+    valoresObservaciones, pathsRegresores=NULL, valoresRegresoresSobreObservaciones=NULL, 
+    coordsAInterpolar, paramsIyM, shpMask, xyLims, listaMapas, returnInterpolacion=TRUE, 
+    paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
+    espEscalaAdaptada=NULL) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   # iTi <- 1
   # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-06')
@@ -235,14 +237,19 @@ interpolarYMapearI <- function(iTi, tsAInterpolar=1:nrow(valoresObservaciones), 
       dir.create(paramsIyM$carpetaParaModoDiagnostico, recursive = T, showWarnings = F)
       paramsIyM$nombreModelo <- nombreModelo(params = paramsIyM, pathsRegresores = pathsRegresores)
       
-      if (is.null(paramsIyM$paletaColoresDiagnostico)) paramsIyM$paletaColoresDiagnostico <- 'Spectral'
+      if (is.null(paramsIyM$especEscalaDiagnostico)) {
+        paramsIyM$especEscalaDiagnostico <- crearEspecificacionEscalaRelativaAlMinimoYMaximo()
+      }
     }
     # params <- paramsIyM
     # objParameters <- NULL
-    interpolacion <- universalGridding(ti=ti, coordsObservaciones = coordsObservaciones, fechasObservaciones=fechasObservaciones, valoresObservaciones = valoresObservaciones, 
-                                       pathsRegresores = pathsRegresores, valoresRegresoresSobreObservaciones = valoresRegresoresSobreObservaciones,
-                                       coordsAInterpolar = coordsAInterpolar, params = paramsIyM, shpMask = shpMask, paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
-                                       pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores)
+    interpolacion <- universalGridding(
+      ti=ti, coordsObservaciones = coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      valoresObservaciones = valoresObservaciones, pathsRegresores = pathsRegresores, 
+      valoresRegresoresSobreObservaciones = valoresRegresoresSobreObservaciones, 
+      coordsAInterpolar = coordsAInterpolar, params = paramsIyM, shpMask = shpMask, 
+      paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
+      pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores)
     # mapearGrillaGGPlot(grilla=interpolacion$predictions, shpBase = shpMask$shp, continuo = T, dibujar=F)
     # mapearPuntosGGPlot(coordsObservaciones, shpBase = shpMask$shp, continuo = T, dibujar=F)
   }
@@ -250,17 +257,24 @@ interpolarYMapearI <- function(iTi, tsAInterpolar=1:nrow(valoresObservaciones), 
   #plotKML(interpolacion$predictions)
   
   nomArch <- listaMapas$nombreArchivo[ti]
-  if (listaMapas$salvarBin[ti]) { salvarInterpolacion(baseNomArchResultados=nomArch, interpolacion, formatoSalida='binary', salvarPrediccion=TRUE, salvarVarianza=FALSE) }
+  if (listaMapas$salvarBin[ti]) { 
+    salvarInterpolacion(baseNomArchResultados=nomArch, interpolacion, formatoSalida='binary', 
+                        salvarPrediccion=TRUE, salvarVarianza=FALSE) }
   
-  if (!existia && listaMapas$salvarGeoTiff[ti]) { writeGDAL(dataset = interpolacion$predictions, fname = nomArchGeoTiff, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9')) }
+  if (!existia && listaMapas$salvarGeoTiff[ti]) { 
+    writeGDAL(dataset = interpolacion$predictions, fname = nomArchGeoTiff, 
+              options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9')) 
+  }
   
   if (listaMapas$dibujarObservacionesEscalaFija[ti] || listaMapas$dibujarEscalaFija[ti] || listaMapas$generarThumbnailFija[ti] || 
       listaMapas$dibujarObservacionesEscalaAdaptada[ti] || listaMapas$dibujarEscalaAdaptada[ti] || listaMapas$generarThumbnailAdaptada[ti]) {
     # puntosAResaltar = paramsIyM$puntosAResaltar[[iTi]]
-    mapearI(ti=ti, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, valoresObservaciones=valoresObservaciones, 
-            pathsRegresores=pathsRegresores, valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, coordsAInterpolar=coordsAInterpolar,
-            interpolacion=interpolacion, paramsIyM=paramsIyM, shpMask=shpMask, xyLims=xyLims, listaMapas=listaMapas, 
-            espEscalaFija=espEscalaFija, espEscalaAdaptada=espEscalaAdaptada, puntosAResaltar = paramsIyM$puntosAResaltar[[iTi]])
+    mapearI(ti=ti, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones,
+            valoresObservaciones=valoresObservaciones, pathsRegresores=pathsRegresores, 
+            valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
+            coordsAInterpolar=coordsAInterpolar, interpolacion=interpolacion, paramsIyM=paramsIyM, 
+            shpMask=shpMask, xyLims=xyLims, listaMapas=listaMapas, espEscalaFija=espEscalaFija, 
+            espEscalaAdaptada=espEscalaAdaptada, puntosAResaltar = paramsIyM$puntosAResaltar[[iTi]])
   }
   if (returnInterpolacion) { return(interpolacion)
   } else { return(NULL) }
@@ -403,22 +417,29 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
       clusterEvalQ(cl, set.seed(31))
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       
-      res <- parLapplyLB(cl=cl, X=seq(along.with = tsAInterpolar), fun=interpolarYMapearI, tsAInterpolar=tsAInterpolar,
-                         coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, valoresObservaciones=valoresObservaciones,
-                         pathsRegresores=pathsRegresores, valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
-                         coordsAInterpolar=coordsAInterpolar, paramsIyM=paramsIyM, shpMask=shpMask, xyLims=xyLims, listaMapas=listaMapas, 
-                         returnInterpolacion=returnInterpolacion, paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
-                         pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores, 
-                         espEscalaFija=espEscalaFija, espEscalaAdaptada=espEscalaAdaptada)
+      res <- parLapplyLB(
+        cl=cl, X=seq(along.with = tsAInterpolar), fun=interpolarYMapearI, tsAInterpolar=tsAInterpolar,
+        coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+        valoresObservaciones=valoresObservaciones, pathsRegresores=pathsRegresores, 
+        valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
+        coordsAInterpolar=coordsAInterpolar, paramsIyM=paramsIyM, shpMask=shpMask, xyLims=xyLims, 
+        listaMapas=listaMapas, returnInterpolacion=returnInterpolacion, 
+        paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
+        pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores, 
+        espEscalaFija=espEscalaFija, espEscalaAdaptada=espEscalaAdaptada)
       stopCluster(cl)
     } else {
       set.seed(31)
-      res <- lapply(X=seq(along.with = tsAInterpolar), FUN=interpolarYMapearI, tsAInterpolar=tsAInterpolar,coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones,
-                    valoresObservaciones=valoresObservaciones, pathsRegresores=pathsRegresores, valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
-                    coordsAInterpolar=coordsAInterpolar, paramsIyM=paramsIyM, shpMask=shpMask, xyLims=xyLims, listaMapas=listaMapas, 
-                    returnInterpolacion=returnInterpolacion, paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
-                    pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores, 
-                    espEscalaFija=espEscalaFija, espEscalaAdaptada=espEscalaAdaptada)
+      res <- lapply(
+        X=seq(along.with = tsAInterpolar), FUN=interpolarYMapearI, tsAInterpolar=tsAInterpolar,
+        coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones,
+        valoresObservaciones=valoresObservaciones, pathsRegresores=pathsRegresores, 
+        valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
+        coordsAInterpolar=coordsAInterpolar, paramsIyM=paramsIyM, shpMask=shpMask, xyLims=xyLims, 
+        listaMapas=listaMapas, returnInterpolacion=returnInterpolacion, 
+        paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
+        pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores, 
+        espEscalaFija=espEscalaFija, espEscalaAdaptada=espEscalaAdaptada)
     }
   } else {
     nT <- max(tsAInterpolar)

@@ -93,14 +93,19 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
       RankCorr <- NA
     }
     
-    # Anomalías
-    clim <- climatologia[i]
-    a_p <- p - clim
-    a_o <- o - clim
-    
-    if (var(a_p) > 0 && var(a_o) > 0) {
-      CorrAnom <- cor(a_p, a_o, method = 'pearson')
-      RankCorrAnom <- cor(a_p, a_o, method = 'spearman')
+    if (!is.null(climatologia)) {
+      # Anomalías
+      clim <- climatologia[i]
+      a_p <- p - clim
+      a_o <- o - clim
+      
+      if (var(a_p) > 0 && var(a_o) > 0) {
+        CorrAnom <- cor(a_p, a_o, method = 'pearson')
+        RankCorrAnom <- cor(a_p, a_o, method = 'spearman')
+      } else {
+        CorrAnom <- NA
+        RankCorrAnom <- NA
+      }
     } else {
       CorrAnom <- NA
       RankCorrAnom <- NA
@@ -199,10 +204,10 @@ calcAndPlotAllValidationStatistics <- function(nombreModelo, fechas, pronosticos
   return(validationStats)
 }
 
-calcAndPlotAllValidationStatisticsV2 <- function(fechas, pronosticos, observaciones, climatologias, carpetaSalida='Resultados/Validacion2/', 
-                                                 coordsObservaciones, shpBase=NULL, xyLims=NULL, nColsPlots = 3,
-                                                 ordenModelosPorColumnas=NULL, 
-                                                 tamaniosPuntos = 4, tamanioFuentePuntos = 3, tamanioFuenteEjes = 15) {
+calcAndPlotAllValidationStatisticsV2 <- function(
+    fechas, pronosticos, observaciones, climatologias, carpetaSalida='Resultados/Validacion2/', 
+    coordsObservaciones, shpBase=NULL, xyLims=NULL, nColsPlots = 3, ordenModelosPorColumnas=NULL, 
+    tamaniosPuntos = 4, tamanioFuentePuntos = 3, tamanioFuenteEjes = 15) {
   dir.create(carpetaSalida, showWarnings = FALSE, recursive = TRUE)
   if (is.null(ordenModelosPorColumnas)) ordenModelosPorColumnas <- names(pronosticos)
   
