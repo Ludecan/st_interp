@@ -210,8 +210,7 @@ interpolarYMapearI <- function(
     espEscalaAdaptada=NULL) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   # iTi <- 1
-  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-06')
-  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-03-18')
+  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-10-27')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
   source(paste(script.dir.interpolarYMapearEx, 'interpolarEx.r', sep=''))

@@ -193,7 +193,9 @@ createParamsInterpolarFaltantesMultiObservaciones <- function(pathEjecucion,
                                                               difMaxFiltradoDeOutliersRLM=0,
                                                               difMaxFiltradoDeOutliersCV=0,
                                                               modoDiagnostico=FALSE,
-                                                              imitarSurfer=FALSE) {
+                                                              imitarSurfer=FALSE,
+                                                              simpleKrigingEnRK=TRUE,
+                                                              betaSimpleKriging=NULL) {
   return(list(pathEjecucion=pathEjecucion,
               pathProceso=pathProceso,
               incluyeNombresObservaciones=incluyeNombresObservaciones,
@@ -235,7 +237,9 @@ createParamsInterpolarFaltantesMultiObservaciones <- function(pathEjecucion,
               difMaxFiltradoDeOutliersRLM=difMaxFiltradoDeOutliersRLM,
               difMaxFiltradoDeOutliersCV=difMaxFiltradoDeOutliersCV,
               modoDiagnostico=modoDiagnostico,
-              imitarSurfer=imitarSurfer))
+              imitarSurfer=imitarSurfer,
+              simpleKrigingEnRK=simpleKrigingEnRK,
+              betaSimpleKriging=betaSimpleKriging))
 }
 
 parsearParamsInterpolarFaltantesMultiObservaciones <- function(params) {

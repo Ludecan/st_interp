@@ -1995,6 +1995,28 @@ detectarDiscontinuidadesEnRasters <- function(pathsRasters, pathsRastersCentrado
   
 }
 
+outlyingnessMediaSD <- function(x, na.rm=T, nMinParaEstimar = 10, sdMin=NA) {
+  if (na.rm) { xSinNA <- x[!is.na(x)]
+  } else { xSinNA <- x }
+  
+  if (length(xSinNA) >= nMinParaEstimar) {
+    media <- mean(xSinNA, na.rm = FALSE)
+    stDev <- sd(xSinNA, na.rm = FALSE)
+    
+    if (is.na(sdMin) || stDev > sdMin) {
+      return((x - media) / stDev)
+    } else {
+      res <- rep(NA_real_, length(x))
+      names(res) <- names(x)
+      return(res) 
+    }
+  } else { 
+    res <- rep(NA_real_, length(x))
+    names(res) <- names(x)
+    return(res) 
+  }
+}
+
 filtroMediaSD <- function(x, factorSDHaciaAbajo=3, factorSDHaciaArriba=factorSDHaciaAbajo, na.rm=T, nMinParaAplicarFiltro = 10) {
   if (na.rm) { xSinNA <- x[!is.na(x)]
   } else { xSinNA <- x }

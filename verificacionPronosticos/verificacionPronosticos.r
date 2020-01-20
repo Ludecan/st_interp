@@ -207,7 +207,7 @@ calcAndPlotAllValidationStatistics <- function(nombreModelo, fechas, pronosticos
 calcAndPlotAllValidationStatisticsV2 <- function(
     fechas, pronosticos, observaciones, climatologias, carpetaSalida='Resultados/Validacion2/', 
     coordsObservaciones, shpBase=NULL, xyLims=NULL, nColsPlots = 3, ordenModelosPorColumnas=NULL, 
-    tamaniosPuntos = 4, tamanioFuentePuntos = 3, tamanioFuenteEjes = 15) {
+    tamaniosPuntos = 4, tamanioFuentePuntos = 3, tamanioFuenteEjes = 15, tamanioFuenteTitulo=22) {
   dir.create(carpetaSalida, showWarnings = FALSE, recursive = TRUE)
   if (is.null(ordenModelosPorColumnas)) ordenModelosPorColumnas <- names(pronosticos)
   
@@ -266,7 +266,7 @@ calcAndPlotAllValidationStatisticsV2 <- function(
       spValidationStats$value <- vsEspaciales[, jPron]
       nomArchivo <- paste(carpetaSalida, sprintf("%02d", i), '-', iEstadistico, '/', sprintf("%02d", j), '-', ordenModelosPorColumnas[j], '.png', sep='')
       gs[[j]] <- mapearPuntosGGPlot(puntos = spValidationStats, shpBase = shpBase, xyLims = xyLims, dibujarTexto = TRUE, escala = escala, 
-                                    tamaniosPuntos = tamaniosPuntos, tamanioFuentePuntos = tamanioFuentePuntos, tamanioFuenteEjes = tamanioFuenteEjes, 
+                                    tamaniosPuntos = tamaniosPuntos, tamanioFuentePuntos = tamanioFuentePuntos, tamanioFuenteEjes = tamanioFuenteEjes, tamanioFuenteTitulo=tamanioFuenteTitulo,
                                     nDigitos = 2, titulo = paste(ordenModelosPorColumnas[j], ': ', iEstadistico, sep=''), 
                                     nomArchResultados = nomArchivo, dibujar = F, alturaEscalaContinua = unit(x=0.65, units = 'in'), 
                                     escalaGraficos = escalaGraficos)

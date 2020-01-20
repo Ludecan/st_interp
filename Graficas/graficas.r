@@ -30,7 +30,7 @@ while ((is.null(script.dir.graficas) || is.na(regexpr('graficas.r', script.dir.g
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.graficas)) { script.dir.graficas <- ''
-} else { script.dir.graficas <- paste(dirname(script.dir.graficas), '/', sep='') }
+} else { script.dir.graficas <- paste0(dirname(script.dir.graficas), '/') }
 
 set1 <- c('#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999')
 colores64 <- c('#000000','#00FF00','#0000FF','#FF0000','#01FFFE','#FFA6FE','#FFDB66','#006401','#010067','#95003A',
@@ -70,7 +70,7 @@ colores269 <- c('#000000','#FFFF00','#1CE6FF','#FF34FF','#FF4A46',
                 '#D83D66','#2F5D9B','#6C5E46','#D25B88','#5B656C','#00B57F','#545C46','#866097','#365D25','#252F99',
                 '#00CCFF','#674E60','#FC009C','#92896B')
 
-source(paste(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste0(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r'))
 #instant_pkgs(c("sp", "RColorBrewer", "rgeos", "maptools", "rgdal", "proj4", "scales", "ggplot2"))
 instant_pkgs(c("colorspace", "ggplot2", "Cairo", 'reshape'))
 
@@ -130,26 +130,34 @@ guardarGrafico <- function(p, nomArchSalida, DPI=120, widthPx=800, heightPx=800)
   ggsave(p, file=nomArchSalida, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in', type='cairo')
 }
 
-linePlot <- function(x, y, 
-                     lineaRegresion=F, intervalosConfianza=lineaRegresion, metodoRegresion=lm, formulaRegresion=y~x,
-                     dibujarPuntos=F, titulo='', tituloEjeX='', tituloEjeY='', dibujarEscala=T, dibujarEjes=T, xyLims=NULL, 
-                     dibujar=interactive(), nomArchSalida=NULL, DPI=120, widthPx=800, heightPx=800, tamanioFuenteTextos=15, 
-                     grosorLineas=1, escalaGraficos=1, annotateMean=F, colores=getColoresParaSeries(y), 
-                     tiposDeLinea=getTiposDeLineaParaSeries(y), sinFondo=TRUE, nombresSeries=NULL, nombreVariableGrupo=NULL) {
+linePlot <- function(
+    x, y, lineaRegresion=F, intervalosConfianza=lineaRegresion, metodoRegresion=lm, 
+    formulaRegresion=y~x, dibujarPuntos=F, dibujarLineas=T, titulo='', tituloEjeX='', tituloEjeY='', 
+    dibujarEscala=T, dibujarEjes=T, xyLims=NULL, dibujar=interactive(), nomArchSalida=NULL, DPI=120, 
+    widthPx=800, heightPx=800, tamanioFuenteTextos=15, grosorLineas=1, escalaGraficos=1, 
+    annotateMean=F, colores=getColoresParaSeries(y), tiposDeLinea=getTiposDeLineaParaSeries(y), 
+    sinFondo=TRUE, nombresSeries=NULL, nombreVariableGrupo=NULL) {
   df <- data.frame(x, y)
   
   if (is.matrix(y) && ncol(y) > 1) {
     df <- melt(df, id.vars = 'x')
     if (!is.null(nombresSeries)) { df$variable <- factor(nombresSeries[as.integer(df$variable)]) }
     p <- ggplot(df, aes(x=x, y=value)) +
-         geom_line(size=grosorLineas, aes(colour=variable, linetype=variable)) + 
          scale_linetype_manual(values = tiposDeLinea) +
          scale_color_manual(values = colores)
     if (!is.null(nombreVariableGrupo)) p <- p + labs(colour=nombreVariableGrupo, linetype=nombreVariableGrupo)
   } else {
-    p <- ggplot(df, aes(x=x, y=y)) + geom_line(color=colores[1], linetype=tiposDeLinea[1], size=grosorLineas)
+    p <- ggplot(df, aes(x=x, y=y))
   }
-  
+
+  if (dibujarLineas){
+    if (is.matrix(y) && ncol(y) > 1) {
+      p <- p + geom_line(size=grosorLineas, aes(colour=variable, linetype=variable))
+    } else {
+      p <- p + geom_line(color=colores[1], linetype=tiposDeLinea[1], size=grosorLineas)
+    }
+  }
+    
   if (dibujarPuntos) p <- p + geom_point(color=colores)
   if (lineaRegresion) p <- p + stat_smooth(method=metodoRegresion, se=intervalosConfianza, formula=formulaRegresion)
   
@@ -281,7 +289,7 @@ graficoCorrVsDistancia <- function(dist, corr, clasesEstaciones=rep(1, nrow(corr
         idx <- (colorMap$Var1 == claseI & colorMap$Var2 == claseJ) | 
           (colorMap$Var1 == claseJ & colorMap$Var2 == claseI)
         colorMap[idx, 'color'] <- colores[nClases + nCruces]
-        colorMap[idx, 'label'] <- paste(claseI, ',', claseJ, sep='')
+        colorMap[idx, 'label'] <- paste0(claseI, ',', claseJ)
         nCruces <- nCruces + 1
       }
     }

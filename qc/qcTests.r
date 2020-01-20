@@ -67,6 +67,20 @@ createDFTests <- function(
     stdDif=stdDif, reemplazar=reemplazar, valorReemplazo=valorReemplazo, stringsAsFactors = F))
 }
 
+createDFTestsConEstimadosYStdDifs <- function(
+    x, estimados, stdDifs, factorHaciaAbajo, factorHaciaArriba) {
+  estaciones <- as.character(sapply(colnames(x), FUN = function(name) { rep(name, nrow(x)) }))
+  fechas <- rep(rownames(x), ncol(x))
+  
+  tiposOutliers <- rep(TTO_SinProblemasDetectados, length(x))
+  tiposOutliers[stdDifs < -factorHaciaAbajo] <- TTO_OutlierPorLoBajo
+  tiposOutliers[stdDifs > factorHaciaArriba] <- TTO_OutlierPorLoAlto
+  
+  return(createDFTests(
+    estacion = estaciones, fecha = fechas, valor = as.numeric(x), estimado = estimados, 
+    tipoOutlier = tiposOutliers, stdDif = stdDifs, reemplazar = FALSE))
+}
+
 
 between <- function(x, minInclusivo, maxExclusivo) { return(minInclusivo <= x & x < maxExclusivo) }
 

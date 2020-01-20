@@ -142,19 +142,25 @@ darEscala <- function(especificacion, valores, ajustarExtremos=T) {
       continuo=especificacion$continuo)
   } else if (especificacion$Clase == 'TEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0') {
     # TEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0
-    i <- which(!is.na(valores) & valores > 0)
+    minVal <- 10^(-especificacion$nDigitos)
+    i <- which(!is.na(valores) & valores >= minVal)
     if (length(i) > 0) {
       rango <- range(valores[i])
       min <- rango[1]
       max <- rango[2]
-      escala <- c(0, redondearEscala(((max - min) * 0.01) * especificacion$iniciosIntervalos  + min, nDigitos = especificacion$nDigitos))
+      escala <- redondearEscala(((max - min) * 0.01) * especificacion$iniciosIntervalos  + min, nDigitos = especificacion$nDigitos)
+      escala <- crearEscala(
+        escala = escala, colores = especificacion$colores, brewerPal = especificacion$brewerPal, 
+        continuo=especificacion$continuo)
+      escala$escala <- c(0, escala$escala)
+      escala$colores <- c(especificacion$colorCero, escala$colores)
     } else {
       escala <- 0
+      escala <- crearEscala(
+        escala = escala, colores = especificacion$colores, brewerPal = especificacion$brewerPal, 
+        continuo=especificacion$continuo)
+      escala$colores <- especificacion$colorCero
     }
-    
-    escala <- crearEscala(
-      escala = escala, colores = especificacion$colores, brewerPal = especificacion$brewerPal, 
-      continuo=especificacion$continuo)
   } else if (especificacion$Clase == 'TEspecificacionEscalaCuantil') {
     # TEspecificacionEscalaCuantil
     escala <- crearEscala(escala = redondearEscala(escala = quantile(x = valores, probs = especificacion$iniciosIntervalos/100, na.rm = T), nDigitos = especificacion$nDigitos),
@@ -235,8 +241,8 @@ crearEspecificacionEscalaRelativaAlMinimoYMaximo <- function(iniciosIntervalos=s
   return(list(Clase='TEspecificacionEscalaRelativaAlMinimoYMaximo', iniciosIntervalos=iniciosIntervalos, colores=colores, brewerPal=brewerPal, continuo=continuo, nDigitos=nDigitos))
 }
 
-crearEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0 <- function(iniciosIntervalos=seq(from=0, to=100, length.out = 8), colores=NULL, brewerPal='Blues', continuo=F, nDigitos=1) {
-  return(list(Clase='TEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0', iniciosIntervalos=iniciosIntervalos, colores=colores, brewerPal=brewerPal, continuo=continuo, nDigitos=nDigitos))
+crearEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0 <- function(iniciosIntervalos=seq(from=0, to=100, length.out = 11), colores=NULL, colorCero=rgb(245L, 245L, 249L, alpha = 0, maxColorValue = 255L), brewerPal='Spectral', continuo=F, nDigitos=1) {
+  return(list(Clase='TEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0', iniciosIntervalos=iniciosIntervalos, colores=colores, colorCero=colorCero, brewerPal=brewerPal, continuo=continuo, nDigitos=nDigitos))
 }
 
 crearEspecificacionEscalaCuantil <- function(iniciosIntervalos, colores=NULL, brewerPal='Spectral', continuo=F, nDigitos=1) {

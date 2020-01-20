@@ -50,7 +50,7 @@ getTSeqs <- function(fechasObservaciones) {
 
 testRegressors <- function(
     valoresObservaciones, pathsRegresores, pathSHPNotNUll, pathResultados='Resultados/1-Exploracion/', 
-    seriesName='Rainfall', outputTableFilename=NULL) {
+    seriesName='Rainfall', outputTableFilename=NULL, logTransforms=FALSE) {
   dir.create(pathResultados, showWarnings = FALSE, recursive = TRUE)
   serie <- unlist(c(valoresObservaciones))
   
@@ -81,7 +81,11 @@ testRegressors <- function(
     iNoNa <- which(iNoNaSerie & !is.na(regresor))
     if (length(iNoNa) > 1) {
       s <- serie[iNoNa]
-      r <- regresor[iNoNa] 
+      r <- regresor[iNoNa]
+      if (logTransforms) {
+        s <- log1p(s)
+        r <- log1p(s)
+      }
       
       res[i, 1] <- cor(s, r)
       res[i, 2] <- cor(s, r, method = 'spearman')
@@ -104,7 +108,7 @@ testRegressors <- function(
       arch <- paste(pathResultados, seriesName, '_vs_', colnames(pathsRegresores)[i], '.png', sep='')
       linePlot(
         x=r, y=s, tituloEjeX=colnames(pathsRegresores)[i], tituloEjeY=seriesName, 
-        lineaRegresion = T, intervalosConfianza = T,  dibujarPuntos = T, 
+        lineaRegresion = T, intervalosConfianza = T,  dibujarPuntos = T, dibujarLineas = F,
         titulo = paste(seriesName, ' vs ', colnames(pathsRegresores)[i], sep=''), 
         dibujar = interactive(), nomArchSalida = arch)
       
@@ -165,7 +169,7 @@ st_interpCrossValidations <- function(
     if (is.na(listaRegresores[iModel])) { pathsRegresores <- NULL
     } else { pathsRegresores <- listaRegresores[[iModel]] }
     
-    names(cvs)[iModel] <- nombreModelo(params = params, pathsRegresores=pathsRegresores)
+    names(cvs)[i] <- nombreModelo(params = params, pathsRegresores=pathsRegresores)
     try(cvs[[i]] <- st_interpCrossValidation(
       coordsObservaciones, fechasObservaciones, valoresObservaciones, params = params, 
       pathsRegresores = pathsRegresores, pathResultados=pathResultados, recalcCV=recalcCV))
@@ -182,6 +186,8 @@ calcValidationStatisticsMultipleModels <- function(
   validationStatsTemporales <- list()
   length(validationStatsEspaciales) <- length(cvs)
   length(validationStatsTemporales) <- length(cvs)
+  names(validationStatsEspaciales) <- names(cvs)
+  names(validationStatsTemporales) <- names(cvs)
   
   for (i in 1:length(cvs)) {
     nomModelo <- names(cvs)[i]

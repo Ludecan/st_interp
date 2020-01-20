@@ -86,7 +86,9 @@ createParamsInterpolarYMapear <- function(baseNomArchResultados='',
                                           difMaxFiltradoDeOutliersRLM=0,
                                           difMaxFiltradoDeOutliersCV=0,
                                           modoDiagnostico=FALSE,
-                                          imitarSurfer=FALSE) {
+                                          imitarSurfer=FALSE,
+                                          simpleKrigingEnRK=TRUE,
+                                          betaSimpleKriging=NULL) {
   res <- list(pathEjecucion=pathEjecucion, pathProceso=pathProceso, baseNomArchResultados=baseNomArchResultados, proj4StringObservaciones=proj4StringObservaciones, 
               proj4StringAInterpolar=proj4StringAInterpolar, coordsAInterpolarSonGrilla=coordsAInterpolarSonGrilla, interpolationMethod=interpolationMethod, 
               mLimitarValoresInterpolados=mLimitarValoresInterpolados,minimoLVI=minimoLVI, maximoLVI=maximoLVI, factorDesvEstLVI=factorDesvEstLVI, 
@@ -102,7 +104,8 @@ createParamsInterpolarYMapear <- function(baseNomArchResultados='',
               pathSHPMapaBase=pathSHPMapaBase, nCoresAUsar=nCoresAUsar,radioReduccionSeriesKm=radioReduccionSeriesKm,
               funcionReduccionSeries=funcionReduccionSeries, difMaxFiltradoDeOutliersRLM=difMaxFiltradoDeOutliersRLM,
               difMaxFiltradoDeOutliersCV=difMaxFiltradoDeOutliersCV, modoDiagnostico=modoDiagnostico, 
-              imitarSurfer=imitarSurfer)
+              imitarSurfer=imitarSurfer, simpleKrigingEnRK=simpleKrigingEnRK,
+              betaSimpleKriging=betaSimpleKriging)
   if (res$usarNugget) { res$fixNugget <- NA
   } else { res$fixNugget <- 0 }
   return(res)
@@ -162,5 +165,7 @@ createParamsInterpolarYMapearPInterpolarFaltantesMultiObservaciones <- function(
     funcionReduccionSeries=paramsMultiObservaciones$funcionReduccionSeries,
     difMaxFiltradoDeOutliersRLM=paramsMultiObservaciones$difMaxFiltradoDeOutliersRLM,
     difMaxFiltradoDeOutliersCV=paramsMultiObservaciones$difMaxFiltradoDeOutliersCV,
-    imitarSurfer=paramsMultiObservaciones$imitarSurfer))
+    imitarSurfer=paramsMultiObservaciones$imitarSurfer,
+    simpleKrigingEnRK=paramsMultiObservaciones$simpleKrigingEnRK,
+    betaSimpleKriging=paramsMultiObservaciones$betaSimpleKriging))
 }

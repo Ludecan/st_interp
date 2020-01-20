@@ -32,23 +32,23 @@ while ((is.null(script.dir.interpolarEx) || is.na(regexpr('interpolarEx.r', scri
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.interpolarEx)) { script.dir.interpolarEx <- ''
-} else { script.dir.interpolarEx <- paste(dirname(script.dir.interpolarEx), '/', sep='') }
+} else { script.dir.interpolarEx <- paste0(dirname(script.dir.interpolarEx), '/') }
 
-source(paste(script.dir.interpolarEx, '../instalarPaquetes/instant_pkgs.r', sep=''))
-source(paste(script.dir.interpolarEx, '../PathUtils/pathUtils.r', sep=''))
-source(paste(script.dir.interpolarEx, '../IO/uIOMatrices.r', sep=''))
-source(paste(script.dir.interpolarEx, '../TryUtils/tryUtils.r', sep=''))
-source(paste(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r', sep=''))
-source(paste(script.dir.interpolarEx, './mapearEx.r', sep=''))
-source(paste(script.dir.interpolarEx, 'funcionesAuxiliares.r', sep=''))
-source(paste(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r', sep=''))
-source(paste(script.dir.interpolarEx, '../Agregacion/agregacion.r', sep=''))
+source(paste0(script.dir.interpolarEx, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.interpolarEx, '../PathUtils/pathUtils.r'))
+source(paste0(script.dir.interpolarEx, '../IO/uIOMatrices.r'))
+source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'))
+source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
+source(paste0(script.dir.interpolarEx, './mapearEx.r'))
+source(paste0(script.dir.interpolarEx, 'funcionesAuxiliares.r'))
+source(paste0(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r'))
+source(paste0(script.dir.interpolarEx, '../Agregacion/agregacion.r'))
 
 instant_pkgs(pkgs = c('unmarked', 'VGAM'), silent = TRUE, doCargarPaquetes=FALSE)
 instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'raster', 
                       'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 'rms',
                       'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
-                      'htmltools', 'httr', 'stats', 'float', 'intamap'), 
+                      'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC'), 
              silent = TRUE)
 
 # instant_pkgs_github(reposgithub = 'Ludecan/intamap', minVersions = '1.4-4', silent = TRUE)
@@ -57,8 +57,8 @@ instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterat
 formulaStr <- function(coeficientes, nDecimales=1, quitarCeros=TRUE) {
   if (quitarCeros) coeficientes <- coeficientes[coeficientes != 0 | names(coeficientes) == '(Intercept)']
   return(paste0("y ~ ", 
-                paste(sprintf(paste("%+.", nDecimales,"f*%s ", sep=''), coeficientes[-1], names(coeficientes[-1])), collapse=""), 
-                sprintf(paste("%+.", nDecimales, "f", sep=''), coeficientes[1])))
+                paste(sprintf(paste0("%+.", nDecimales,"f*%s "), coeficientes[-1], names(coeficientes[-1])), collapse=""), 
+                sprintf(paste0("%+.", nDecimales, "f"), coeficientes[1])))
 }
 
 formulaConCoeficientes <- function(modelo, nDecimales=1, quitarCeros=TRUE) {
@@ -74,7 +74,7 @@ distKmToP4Str <- function(p4str, distKm) {
     
     if (unidad == 'm') { return(distKm * 1000)
     } else if (unidad =='km') { return(distKm)
-    } else stop(paste('interpolarEx.distKmToP4Str: Unidad de distancia no implementada "', unidad, '"', sep=''))
+    } else stop(paste0('interpolarEx.distKmToP4Str: Unidad de distancia no implementada "', unidad, '"'))
   }
 }
 
@@ -157,7 +157,9 @@ cargarMatrizDeBinario <- function(pathArchivo, nFilas, NAValue=-.Machine$double.
 }
 
 crearObservacionesBinarias <- function(observaciones, zcol=1) {
-  return (SpatialPointsDataFrame(geometry(observaciones), data = data.frame(value=as.numeric(observaciones@data[,zcol] >= 1E-3)), proj4string = proj4string(observaciones)))
+  return (SpatialPointsDataFrame(
+    geometry(observaciones), data = data.frame(value=as.numeric(observaciones@data[,zcol] >= 1E-3)), 
+    proj4string = proj4string(observaciones)))
 }
 
 crearCoordsAInterpolar <- function(xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84') {  
@@ -228,8 +230,8 @@ netCDFToSP <- function(fname, varName='rfe', p4string="+proj=longlat +datum=WGS8
 
 extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1, silent=T, ...) {
   # i <- 1
-  source(paste(script.dir.interpolarEx, '../TryUtils/tryUtils.r', sep=''))
-  source(paste(script.dir.interpolarEx, '../PathUtils/pathUtils.r', sep=''))
+  source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'))
+  source(paste0(script.dir.interpolarEx, '../PathUtils/pathUtils.r'))
   require(rgdal)
   require(sp)
   if (!silent) print(i)
@@ -240,7 +242,7 @@ extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1
     } else if (ext == 'nc') {
       # TO-DO: receive varName as parameter
       evaluarConReintentos(regresor <- netCDFToSP(fname = pathsRegresor[i]))
-    } else { stop(paste('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresor[i], '"')) }
+    } else { stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresor[i], '"')) }
 
     # Obtengo los valores del regresor en las coordenadas de las observaciones
     if (!identicalCRS(x = objSP, y = regresor)) {
@@ -289,10 +291,10 @@ extraerValoresRegresorSobreSP <- function(
     } else if (!is.null(names(pathsRegresor))) {
       rownames(valoresSobreSP) <- names(pathsRegresor)
     } else {
-      warning(paste(
+      warning(paste0(
         'interpolarEx.extraerValoresRegresorSobreSP: using setNames == TRUE but both row.names(',
         'pathsRegresor) and names(pathsRegresor) are NULL. make sure to set them to have appropiate',
-        'result rownames'))
+        ' result rownames'))
     }
   }
   
@@ -374,8 +376,8 @@ cargarSHPYObtenerMascaraParaGrilla <- function(
     
     objCache <- list(pathSHP, proj4strSHP, grilla, spSinMascara, overrideP4str, encoding)
     pathCache <- getPathCache(
-      objCache, dirEjecucion = paste(dirname(pathSHP), '/', sep=''), 
-      prefijoNombreArchivoCache = paste(nombreArchSinPathNiExtension(pathSHP), '_', sep=''))
+      objCache, dirEjecucion = paste0(dirname(pathSHP), '/'), 
+      prefijoNombreArchivoCache = paste0(nombreArchSinPathNiExtension(pathSHP), '_'))
     if (!file.exists(pathCache)) {
       shp <- cargarSHP(pathSHP, proj4strSHP, overrideP4str = overrideP4str, encoding = encoding)
       if (!identicalCRS(grilla, shp)) { shp <- spTransform(shp, CRS(proj4stringGrilla)) }
@@ -444,7 +446,7 @@ setMinMaxVal <- function(observacionesValue, params) {
     params$minVal <- max(params$minimoLVI, mediana - params$factorDesvEstLVI * desvMedAbs, na.rm=T)
     params$maxVal <- min(params$maximoLVI, mediana + params$factorDesvEstLVI * desvMedAbs, na.rm=T)
   } else {
-    stop(paste('interpolarEx.setMinMaxVal: método para limitar valores interpolados desconocido ',  params$mLimitarValoresInterpolados, sep=''))
+    stop(paste0('interpolarEx.setMinMaxVal: método para limitar valores interpolados desconocido ',  params$mLimitarValoresInterpolados))
   }
   
   if (!is.na(params$minVal)) { params$minVal <- min(params$minVal, observacionesValue, na.rm=T)}
@@ -517,10 +519,20 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
       valoresCampoBaseSobreObservaciones <- valoresCampoBaseSobreObservaciones[i]
     }
     
-    beta <- mean(observaciones$value)
-    # Si es simple kriging no puedo usar el variograma potencia porque es para campos no estacionarios
-    params$modelosVariograma <- params$modelosVariograma[params$modelosVariograma != 'Pow']
-  } else { beta <- NULL }
+    if (params$simpleKrigingEnRK) {
+      if (is.null(params$betaSimpleKriging)) {
+        beta <- params$betaSimpleKriging
+      } else {
+        beta <- mean(observaciones$value)  
+      }
+      # Si es simple kriging no puedo usar el variograma potencia porque es para campos no estacionarios
+      params$modelosVariograma <- params$modelosVariograma[params$modelosVariograma != 'Pow']
+    } else {
+      beta <- NULL
+    }
+  } else { 
+    beta <- params$betaSimpleKriging
+  }
   
   # Si la varianza es muy chica (todos los valores son iguales) el método de interpolación da un error.
   # Manejamos el caso aparte, según los datos observados el campo es constante
@@ -568,7 +580,7 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
       
       if (is.null(objParameters)) {
         # Variograma
-        source(paste(script.dir.interpolarEx, 'afvmod.r', sep=''))
+        source(paste0(script.dir.interpolarEx, 'afvmod.r'))
         require('gstat')
         
         if (params$imitarSurfer) {
@@ -582,7 +594,7 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
           variogramas$var_model$range <- maxDist
         } else {
           usarAFVGLS <- (params$usarFitVariogramGLS == 'auto' && length(interpolacion$observations) <= 50) || (is.logical(params$usarFitVariogramGLS) && as.logical(params$usarFitVariogramGLS))
-          source(paste(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r', sep=''))
+          source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'))
           
           if (usarAFVGLS) {
             variogramas <- afvGLS(
@@ -642,7 +654,7 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
         # interpolacion$variogramModel <- bestVG
         # fechasObservaciones[ti]
         if (params$modoDiagnostico) {
-          png(paste(params$carpetaParaModoDiagnostico, '05.2-Variograma.png', sep=''))
+          png(paste0(params$carpetaParaModoDiagnostico, '05.2-Variograma.png'))
           print(annotatedplot(krigeobj = variogramas))
           dev.off()
         }
@@ -677,7 +689,7 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
         interpolacion <- estimateAnisotropy(interpolacion)
       }
     } else if (params$interpolationMethod == 'idw') {
-      source(paste(script.dir.interpolarEx, 'afvmod.r', sep=''))
+      source(paste0(script.dir.interpolarEx, 'afvmod.r'))
       #intamap:::spatialPredict.automap
       #intamap:::estimateParameters.automap
       #intamap:::estimateParameters.idw
@@ -764,20 +776,20 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
       nDigitos = 2, continuo = T)
     # En modo diagnóstico si es RK guardo el mapa con los residuos y su interpolación 
     mapearPuntosGGPlot(puntos = observaciones, shpBase = shpMask$shp, continuo = T, dibujarTexto = T, escala = escalaResiduos,
-                       nDigitos = 2, titulo = paste('Residuos -', params$strFecha), zcol='value', 
-                       nomArchResultados = paste(params$carpetaParaModoDiagnostico, '05.1-Residuos.png', sep=''), 
+                       nDigitos = 2, titulo = paste0('Residuos - ', params$strFecha), zcol='value', 
+                       nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '05.1-Residuos.png'), 
                        dibujar = F)
     
     if (params$interpolationMethod != 'none') {
       if (gridded(coordsAInterpolar)) {
         mapearGrillaGGPlot(grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=1, escala = escalaResiduos,
-                           titulo = paste('Interpolación - ', params$strFecha), 
-                           nomArchResultados = paste(params$carpetaParaModoDiagnostico, '05.3-Interpolacion.png', sep=''), 
+                           titulo = paste0('Interpolación - ', params$strFecha), 
+                           nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '05.3-Interpolacion.png'), 
                            dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
       } else {
         mapearPuntosGGPlot(puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=1, escala = escalaResiduos,
-                           titulo = paste('Interpolación - ', params$strFecha), 
-                           nomArchResultados = paste(params$carpetaParaModoDiagnostico, '05.3-Interpolacion.png', sep=''), 
+                           titulo = paste0('Interpolación - ', params$strFecha), 
+                           nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '05.3-Interpolacion.png'), 
                            dibujar = F, dibujarTexto = T)
       }
     }
@@ -793,31 +805,18 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
     if (!is.null(valoresCampoBase) & !is.null(valoresCampoBaseSobreObservaciones)) {
       observaciones$value <- observaciones$value + valoresCampoBaseSobreObservaciones 
     }
-    
-    escalaVariableObjetivo <- darEscala(
-      especificacion = params$especEscalaDiagnostico,
-      valores=c(observaciones$value, valoresCampoBase, interpolacion$predictions@data[,interpolacion$campoMedia]))
-    if (!is.na(params$minimoLVI) && escalaVariableObjetivo$escala[1] < params$minimoLVI) {
-      escalaVariableObjetivo$escala[1] <- params$minimoLVI
-    }
-    
-    # En modo diagnóstico guardo el mapa con las observaciones y uno para cada regresor
-    mapearPuntosGGPlot(puntos = observaciones, shpBase = shpMask$shp, dibujarTexto = T, escala = escalaVariableObjetivo,
-                       titulo = paste('Observaciones -', params$strFecha), zcol = 'value',
-                       nomArchResultados = paste(params$carpetaParaModoDiagnostico, '01-Observaciones.png', sep=''), 
-                       dibujar = F)
-    
+
     if (!is.null(valoresCampoBase)) {
       # Mapa de campo base
       if (gridded(coordsAInterpolar)) {
         spAux <- SpatialPixelsDataFrame(points = coordsAInterpolar, data = data.frame(value=valoresCampoBase))
-        mapearGrillaGGPlot(grilla = spAux, shpBase = shpMask$shp, zcol=1, escala = escalaVariableObjetivo, titulo = paste('Ajuste Regresores - ', params$strFecha, sep=''),  
-                           subtitulo = params$formulaRegresionCC, nomArchResultados = paste(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png', sep=''), 
+        mapearGrillaGGPlot(grilla = spAux, shpBase = shpMask$shp, zcol=1, continuo = params$especEscalaDiagnostico$continuo, titulo = paste0('Ajuste Regresores - ', params$strFecha),  
+                           subtitulo = params$formulaRegresionCC, nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
                            dibujar = F)
       } else {
         spAux <- SpatialPointsDataFrame(coords = coordsAInterpolar, data = data.frame(value=valoresCampoBase))
-        mapearPuntosGGPlot(puntos = spAux, shpBase = shpMask$shp, zcol=1, escala = escalaVariableObjetivo, titulo = paste('Ajuste Regresores - ', params$strFecha, sep=''), 
-                           subtitulo = params$formulaRegresionCC, nomArchResultados = paste(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png', sep=''), 
+        mapearPuntosGGPlot(puntos = spAux, shpBase = shpMask$shp, zcol=1, continuo = params$especEscalaDiagnostico$continuo, titulo = paste0('Ajuste Regresores - ', params$strFecha), 
+                           subtitulo = params$formulaRegresionCC, nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
                            dibujar = F, dibujarTexto = T)
       }
     }
@@ -825,14 +824,14 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
     if (gridded(coordsAInterpolar)) {
       mapearGrillaGGPlot(
         grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-        escala = escalaVariableObjetivo, titulo = paste(params$nombreModelo, ' - ', params$strFecha, sep=''), 
-        nomArchResultados = paste(params$carpetaParaModoDiagnostico, '06-InterpolacionMasCampoBase.png', sep=''), 
+        continuo = params$especEscalaDiagnostico$continuo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '06-InterpolacionMasCampoBase.png'), 
         dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
     } else {
       mapearPuntosGGPlot(
         puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-        escala = escalaVariableObjetivo, titulo = paste(params$nombreModelo, ' - ', params$strFecha, sep=''), 
-        nomArchResultados = paste(params$carpetaParaModoDiagnostico, '06-InterpolacionMasCampoBase.png', sep=''), 
+        continuo = params$especEscalaDiagnostico$continuo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '06-InterpolacionMasCampoBase.png'), 
         dibujar = F, dibujarTexto = T)
     }
   }
@@ -843,47 +842,48 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
     if (params$metodoRemocionDeSesgo != 'ninguno' & gridded(coordsAInterpolar) & params$interpolationMethod == 'automap') {
       interpolacion <- simpleBiasAdjustmentEx(
         observaciones = observaciones, interpolacion = interpolacion, interpolationParams = params, 
-        errorRelativoParaCorregir = 0.15)
+        errorRelativoParaCorregir = 0.15, shpMask=shpMask)
       
       if (params$modoDiagnostico) {
         if (gridded(coordsAInterpolar)) {
           mapearGrillaGGPlot(
             grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-            escala = escalaVariableObjetivo, titulo = paste(params$nombreModelo, ' - ', params$strFecha, sep=''), 
-            nomArchResultados = paste(params$carpetaParaModoDiagnostico, '07-RemocionDeSesgo.png', sep=''), 
+            continuo = params$especEscalaDiagnostico$continuo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+            nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '07-RemocionDeSesgo.png'), 
             dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
         } else {
           mapearPuntosGGPlot(
             puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-            escala = escalaVariableObjetivo, titulo = paste(params$nombreModelo, ' - ', params$strFecha, sep=''), 
-            nomArchResultados = paste(params$carpetaParaModoDiagnostico, '07-RemocionDeSesgo.png', sep=''), 
+            continuo = params$especEscalaDiagnostico$continuo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+            nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '07-RemocionDeSesgo.png'), 
             dibujar = F, dibujarTexto = T)
         }      
       }
     }
 
-    #mapearGrillaGGPlot(grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=1, continuo=F, titulo = paste('Interpolación - ', params$strFecha), 
-    #                   dibujar = F)
-    
     # TO-DO: hay que ver como incluir el campo base en la mascara
-    # el segundo chequeo, equivalente a min(observaciones) = 0 para doubles, verifica que al menos el minimo dato sea
-    # efectivamente 0, sino no tiene sentido aplicar la máscara y si es < 0 además aplicarla puede hacer daño.
-    # agrego el control como robustez para evitar errores de parámetros
+    # el segundo chequeo, equivalente a min(observaciones) = 0 para doubles, verifica que al menos 
+    # el minimo dato sea efectivamente 0, sino no tiene sentido aplicar la máscara y si es < 0 
+    # además aplicarla puede hacer daño. agrego el control como robustez para evitar errores de 
+    # parámetros
     if (params$umbralMascaraCeros > 0 & abs(min(observaciones$value)) < 1E-3) {
-      interpolacion <- aplicarMascaraRnR(interpolacion, params, umbral=params$umbralMascaraCeros)
+      interpolacion <- aplicarMascaraRnR(observaciones = observaciones,
+        interpolacion, valoresCampoBaseSobreObservaciones=valoresCampoBaseSobreObservaciones, 
+        valoresCampoBase=valoresCampoBase, params=params, umbral=params$umbralMascaraCeros, 
+        shpMask=shpMask)
       
       if (params$modoDiagnostico) {
         if (gridded(coordsAInterpolar)) {
           mapearGrillaGGPlot(
             grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-            escala = escalaVariableObjetivo, titulo = paste(params$nombreModelo, ' - ', params$strFecha, sep=''), 
-            nomArchResultados = paste(params$carpetaParaModoDiagnostico, '09-MascaraCerosAplicada.png', sep=''), 
+            continuo = params$especEscalaDiagnostico$continuo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+            nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '09-MascaraCerosAplicada.png'), 
             dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
         } else {
           mapearPuntosGGPlot(
             puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-            escala = escalaVariableObjetivo, titulo = paste(params$nombreModelo, ' - ', params$strFecha, sep=''), 
-            nomArchResultados = paste(params$carpetaParaModoDiagnostico, '09-MascaraCerosAplicada.png', sep=''), 
+            continuo = params$especEscalaDiagnostico$continuo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+            nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '09-MascaraCerosAplicada.png'), 
             dibujar = F, dibujarTexto = T)
         }      
       }
@@ -894,21 +894,34 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
     if (!is.na(params$minVal)) interpolacion$predictions@data[,interpolacion$campoMedia][interpolacion$predictions@data[,interpolacion$campoMedia] < params$minVal] <- params$minVal
     if (!is.na(params$maxVal)) interpolacion$predictions@data[,interpolacion$campoMedia][interpolacion$predictions@data[,interpolacion$campoMedia] > params$maxVal] <- params$maxVal
     
-    if (params$modoDiagnostico && (!is.na(params$minVal) || !is.na(params$minVal)))  {
+    if (params$modoDiagnostico) {
+      escalaVariableObjetivo <- darEscala(
+        especificacion = params$especEscalaDiagnostico,
+        valores=c(observaciones$value, interpolacion$predictions@data[,interpolacion$campoMedia]))
+      
+      # En modo diagnóstico guardo el mapa con las observaciones y uno para cada regresor
+      mapearPuntosGGPlot(
+        # Mapa de observaciones
+        puntos = observaciones, shpBase = shpMask$shp, dibujarTexto = T, 
+        escala = escalaVariableObjetivo, 
+        titulo = paste0('Observaciones - ', params$strFecha), zcol = 'value', 
+        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '01-Observaciones.png'), 
+        dibujar = F)
+      
       if (gridded(coordsAInterpolar)) {
         mapearGrillaGGPlot(
           grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-          escala = escalaVariableObjetivo, titulo = paste(params$nombreModelo, ' - ', params$strFecha, sep=''), 
-          nomArchResultados = paste(params$carpetaParaModoDiagnostico, '10-ProductoFinal.png', sep=''), 
+          escala = escalaVariableObjetivo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+          nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '10-ProductoFinal.png'), 
           dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
       } else {
         mapearPuntosGGPlot(
           puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-          escala = escalaVariableObjetivo, titulo = paste(params$nombreModelo, ' - ', params$strFecha, sep=''), 
-          nomArchResultados = paste(params$carpetaParaModoDiagnostico, '10-ProductoFinal.png', sep=''), 
+          escala = escalaVariableObjetivo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+          nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '10-ProductoFinal.png'), 
           dibujar = F, dibujarTexto = T)
       }      
-    }    
+    }
   }
   
   # mapearPuntosGGPlot(puntos = observaciones, shpBase = shpMask$shp, zcol='value', continuo = T)
@@ -974,8 +987,8 @@ fitSTVariogramModelI <- function(i, modelosVariogramaST,
                                  ndeps, errorLevel) {
   # i <- 5
   require('gstat')
-  source(paste(script.dir.interpolarEx, 'afvmod.r', sep=''))
-  print(paste(i, ' - ', modelosVariogramaST[i], sep=''))
+  source(paste0(script.dir.interpolarEx, 'afvmod.r'))
+  print(paste0(i, ' - ', modelosVariogramaST[i]))
   
   if (modelosVariogramaST[i] == 'Separable') {
     # 1 - Separable
@@ -1228,7 +1241,7 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
     rm(regs)
   }
   
-  if (verbose) print(paste('ti ', ti, ': ', fechasObservaciones[ti], sep=''))
+  if (verbose) print(paste0('ti ', ti, ': ', fechasObservaciones[ti]))
 
   ventana <- getVentana(ti=ti, nT=nrow(valoresObservaciones), tamanioSemiVentana = ventanaIgualacionDistribuciones, tlagsAR=tlagsAR, tlags=tlags)
   tsVentana <- ventana$tsVentana
@@ -1281,8 +1294,8 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
     sptData <- STFDF(sp = geometry(spObservaciones), time = fechasVentana, endTime = fechasVentana + deltaT, data = df)
     # acf(na.omit(as(sptData, 'xts')))
 
-    source(paste(script.dir.interpolarEx, 'afvmod.r', sep=''))
-    source(paste(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r', sep=''))    
+    source(paste0(script.dir.interpolarEx, 'afvmod.r'))
+    source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'))    
     # Space-Time empirical variogram
     boundaries <- getBoundariesPVariogramaEmpiricoV4_MultiTime(formula=fml, input_data = spObservaciones, input_data_t = c(list(value=valoresVentana), regs), cutoff=cutoff)
     empVgm <- variogramST(formula = fml, locations = sptData, tlags = tlags, boundaries = boundaries, progress=verbose)
@@ -1389,7 +1402,7 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
       OptimModelo <- sapply(X=modelos, FUN = function(x) { attr(x, 'optim')$value })[iModelo]
       
       #nVecesModelos[nomModelo] <- nVecesModelos[nomModelo] + 1
-      #print(paste('MejorModelo= ', nomModelo, '. MSE= ', MSEModelo, '. Optim= ', OptimModelo, '. nVecesModelos=', paste(nVecesModelos, collapse = ' '), sep=''))
+      #print(paste0('MejorModelo= ', nomModelo, '. MSE= ', MSEModelo, '. Optim= ', OptimModelo, '. nVecesModelos=', paste(nVecesModelos, collapse = ' ')))
     }
     
     mejorModelo <- modelos[[iModelo]]
@@ -1450,14 +1463,17 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
   if (puedoInterpolar) {
     if (params$metodoRemocionDeSesgo != 'ninguno' & gridded(coordsAInterpolar)) {
       obs <- SpatialPointsDataFrame(coords = spObservaciones, data = data.frame(value=valoresVentana[iTiEnTsVentana, ]), proj4string = proj4string(spObservaciones))
-      interpolacionST <- simpleBiasAdjustmentEx(observaciones = obs, interpolacion = interpolacionST, interpolationParams=params,
-                                                errorRelativoParaCorregir=0.15, inverseDistancePower=3)
+      interpolacionST <- simpleBiasAdjustmentEx(
+        observaciones=obs, interpolacion=interpolacionST, interpolationParams=params,
+        errorRelativoParaCorregir=0.15, inverseDistancePower=3, shpMask=shpMask)
       rm(obs)
     }
     
     # TO-DO: hay que ver como incluir el campo base en la mascara
     if (params$umbralMascaraCeros > 0)
-      interpolacionST <- aplicarMascaraRnR(interpolacion = interpolacionST, params = params, umbral=params$umbralMascaraCeros)
+      interpolacionST <- aplicarMascaraRnR(
+        observaciones=spObservaciones, interpolacion=interpolacionST, params=params, 
+        umbral=params$umbralMascaraCeros, shpMask=shpMask)
   }
   
   # Additional data
@@ -1501,7 +1517,7 @@ universalGridding <- function(ti, coordsObservaciones, fechasObservaciones, valo
         } else if (ext == 'nc') {
           # TO-DO: receive varName as parameter
           evaluarConReintentos(regresor <- netCDFToSP(fname = pathsRegresores[ti, j]))
-        } else { stop(paste('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresores[ti, j], '"')) }
+        } else { stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresores[ti, j], '"')) }
         
         if (!identicalCRS(coordsAInterpolar, regresor)) {
           aux <- spTransform(coordsAInterpolar, CRS(proj4string(regresor)))
@@ -1526,8 +1542,8 @@ universalGridding <- function(ti, coordsObservaciones, fechasObservaciones, valo
             especificacion = params$especEscalaDiagnostico, 
             valores=valoresRegresoresSobreCoordsAInterpolar_ti[, i])
           spAux <- SpatialPixelsDataFrame(points = coordsAInterpolar, data = data.frame(value=valoresRegresoresSobreCoordsAInterpolar_ti[, i]))
-          mapearGrillaGGPlot(grilla = spAux, shpBase = shpMask$shp, zcol=1, escala = escala, titulo = paste(colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], ' - ', params$strFecha), 
-                             nomArchResultados = paste(params$carpetaParaModoDiagnostico, '02.', i, '-Regresor-', colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], '.png', sep=''), 
+          mapearGrillaGGPlot(grilla = spAux, shpBase = shpMask$shp, zcol=1, escala = escala, titulo = paste0(colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], ' - ', params$strFecha), 
+                             nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '02.', i, '-Regresor-', colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], '.png'), 
                              dibujar = F)
         }
       } else {
@@ -1536,8 +1552,8 @@ universalGridding <- function(ti, coordsObservaciones, fechasObservaciones, valo
             especificacion = params$especEscalaDiagnostico, 
             valores=valoresRegresoresSobreCoordsAInterpolar_ti[, i])
           spAux <- SpatialPointsDataFrame(coords = coordsAInterpolar, data = data.frame(value=valoresRegresoresSobreCoordsAInterpolar_ti[, i]))
-          mapearPuntosGGPlot(puntos = spAux, shpBase = shpMask$shp, zcol=1, escala = escala, titulo = paste(colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], '-', params$strFecha), 
-                             nomArchResultados = paste(params$carpetaParaModoDiagnostico, '02.', i, '-Regresor-', colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], '.png', sep=''), 
+          mapearPuntosGGPlot(puntos = spAux, shpBase = shpMask$shp, zcol=1, escala = escala, titulo = paste0(colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], ' - ', params$strFecha), 
+                             nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '02.', i, '-Regresor-', colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], '.png'), 
                              dibujar = F, dibujarTexto = T)
         }
       }
@@ -1571,14 +1587,14 @@ universalGridding <- function(ti, coordsObservaciones, fechasObservaciones, valo
         iNA2 <- is.na(valoresRegresoresSobreCoordsAInterpolar_ti[iObservaciones, 1])
         
         #sp2 <- SpatialPixelsDataFrame(points = coordsAInterpolar, data = data.frame(valoresRegresoresSobreCoordsAInterpolar_ti))
-        #mapearGrillaGGPlot(grilla = sp2, shpBase = shpMask$shp, zcol=1, continuo=T, titulo = paste(fechasObservaciones[ti], ': LST', sep=''), 
+        #mapearGrillaGGPlot(grilla = sp2, shpBase = shpMask$shp, zcol=1, continuo=T, titulo = paste0(fechasObservaciones[ti], ': LST'), 
         #                   nomArchResultados = 'Resultados/Ejemplos/RellenoRegresores/LST_Con_Huecos.png')
         
         valoresRegresoresSobreCoordsAInterpolar_ti[iObservaciones, 1][iNA2] <- regsInvertidos[ventana$iTiEnTsVentana,][iNA2]
         #valoresRegresoresSobreCoordsAInterpolar_ti[iObservaciones, 1] <- regsInvertidos[ventana$iTiEnTsVentana,]
         
         #sp3 <- SpatialPixelsDataFrame(points = coordsAInterpolar, data = data.frame(valoresRegresoresSobreCoordsAInterpolar_ti))
-        #mapearGrillaGGPlot(grilla = sp3, shpBase = shpMask$shp, zcol=1, continuo=T, titulo = paste(fechasObservaciones[ti], ': LST con regresión inversa', sep=''),
+        #mapearGrillaGGPlot(grilla = sp3, shpBase = shpMask$shp, zcol=1, continuo=T, titulo = paste0(fechasObservaciones[ti], ': LST con regresión inversa'),
         #                   nomArchResultados = 'Resultados/Ejemplos/RellenoRegresores/LST_Con_Huecos_RegresionInversa.png')
       }
       
@@ -1696,7 +1712,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
   }
   
   # Regresores estáticos sobre coordenadas a interpolar
-  source(paste(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r', sep=''))
+  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
   pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros = list(coordsAInterpolar, version=2))
   if (!file.exists(pathCacheDatosCoordsAInterpolar) | (file.info(pathCacheDatosCoordsAInterpolar)$size <= 0)) {
     dfDatosCoordsAInterpolar <- list()
@@ -1705,15 +1721,15 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     dfDatosCoordsAInterpolar$x <- cInterp[, 1]
     dfDatosCoordsAInterpolar$y <- cInterp[, 2]
     
-    archiCuerposDeAgua <- paste(script.dir.interpolarEx, 'datasets/cuerposDeAguaUy_25MKm2.shp', sep='')
-    if (!file.exists(archiCuerposDeAgua)) stop(paste('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiCuerposDeAgua, sep =''))
+    archiCuerposDeAgua <- paste0(script.dir.interpolarEx, 'datasets/cuerposDeAguaUy_25MKm2.shp')
+    if (!file.exists(archiCuerposDeAgua)) stop(paste0('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiCuerposDeAgua, sep =''))
     cuerposDeAgua <- cargarSHP(pathSHP = archiCuerposDeAgua)
     if (proj4string(cuerposDeAgua) != proj4string(coordsAInterpolar)) cuerposDeAgua <- spTransform(cuerposDeAgua, CRS(proj4string(coordsAInterpolar)))
     cuerposDeAgua <- gUnaryUnion(cuerposDeAgua)
     dfDatosCoordsAInterpolar$dist <- t(gDistance(spgeom1 = as(coordsAInterpolar, 'SpatialPoints'), spgeom2 = cuerposDeAgua, byid = T))[,1]
 
-    archiAltitud <- paste(script.dir.interpolarEx, 'datasets/GMTED2010_Mean_Uy.tif', sep='')
-    if (!file.exists(archiAltitud)) stop(paste('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiAltitud, sep =''))
+    archiAltitud <- paste0(script.dir.interpolarEx, 'datasets/GMTED2010_Mean_Uy.tif')
+    if (!file.exists(archiAltitud)) stop(paste0('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiAltitud, sep =''))
     altitudTerreno <- readGDAL(archiAltitud, silent=T)
     puntosCoordsAInterpolar <- spTransform(as(coordsAInterpolar, 'SpatialPoints'), CRS(proj4string(altitudTerreno)))
     dfDatosCoordsAInterpolar$alt <- over(puntosCoordsAInterpolar, altitudTerreno)[,1]
@@ -1738,9 +1754,9 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     dfDatosCoordsObservaciones$y <- cObs[, 2]
     
     if (is.null(cuerposDeAgua)) {
-      archiCuerposDeAgua <- paste(script.dir.interpolarEx, 'datasets/cuerposDeAguaUy_25MKm2.shp', sep='')
+      archiCuerposDeAgua <- paste0(script.dir.interpolarEx, 'datasets/cuerposDeAguaUy_25MKm2.shp')
       if (!file.exists(archiCuerposDeAgua))
-        stop(paste('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiCuerposDeAgua, sep =''))
+        stop(paste0('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiCuerposDeAgua, sep =''))
       cuerposDeAgua <- cargarSHP(archiCuerposDeAgua)
     } 
     if (proj4string(cuerposDeAgua) != proj4string(coordsObservaciones)) cuerposDeAgua <- spTransform(cuerposDeAgua, CRS(proj4string(coordsAInterpolar)))
@@ -1748,9 +1764,9 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     dfDatosCoordsObservaciones$dist <- t(gDistance(spgeom1 = as(coordsObservaciones, 'SpatialPoints'), spgeom2 = cuerposDeAgua, byid = T))[,1]
     
     if (is.null(altitudTerreno)) {
-      archiAltitud <- paste(script.dir.interpolarEx, 'datasets/GMTED2010_Mean_Uy.tif', sep='')
+      archiAltitud <- paste0(script.dir.interpolarEx, 'datasets/GMTED2010_Mean_Uy.tif')
       if (!file.exists(archiAltitud))
-        stop(paste('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiAltitud, sep =''))
+        stop(paste0('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiAltitud, sep =''))
       altitudTerreno <- readGDAL(archiAltitud, silent=T)
     }
       
@@ -1775,7 +1791,7 @@ incorporarRegresoresEstaticos <- function(ti, coordsObservaciones, fechasObserva
                                           incorporarAltitud=FALSE, formulaAltitud='alt') {
   #ventana <- getVentana(ti=ti, nT=nrow(valoresObservaciones), tamanioSemiVentana = params$ventanaIgualacionDistribuciones, tlagsAR = params$tlagsAR)
 
-  source(paste(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r', sep=''))
+  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
   # El valor de version es para poder cambiar el código y forzar un recálculo de los caches
   
   geomCoordsInterp <- geometry(coordsAInterpolar)
@@ -1899,7 +1915,7 @@ ajusteRegresores <- function(
     incorporarTiempo=FALSE, formulaTiempo='t',
     incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
     incorporarAltitud=FALSE, formulaAltitud='alt',
-    descartarCoordenadasNoSignificativas=FALSE, 
+    descartarCoordenadasNoSignificativas=FALSE,
     invertir=FALSE, shpMask=NULL) {
   if (invertir && length(valoresRegresoresSobreObservaciones) == 1) {
     aux <- valoresRegresoresSobreObservaciones[[1]]
@@ -1912,9 +1928,14 @@ ajusteRegresores <- function(
                                             'regresionLinealConEliminacionDeOutliers', 'CDFMatching',
                                             'Lasso', 'GLS') == params$metodoIgualacionDistribuciones)
   if (length(metodoIgualacionDistribuciones) == 0) {
-    stop(paste('interpolarEx.r.universalGridding: metodoIgualacionDistribuciones desconocido "', params$metodoIgualacionDistribuciones, '"', sep='')) }
-
+    stop(paste0('interpolarEx.r.universalGridding: metodoIgualacionDistribuciones desconocido "', params$metodoIgualacionDistribuciones, '"')) }
+  
   oldNu <- length(valoresRegresoresSobreObservaciones)
+  origIncorporarCoordenadas <- incorporarCoordenadas
+  if (metodoIgualacionDistribuciones == 7 && !incorporarCoordenadas) {
+    incorporarCoordenadas <- TRUE
+  }
+  
   if (incorporarCoordenadas | incorporarTiempo | incorporarDistanciaAlAgua | incorporarAltitud) {
     regs <- incorporarRegresoresEstaticos(ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
                                           valoresObservaciones = valoresObservaciones, coordsAInterpolar = coordsAInterpolar, params = params, 
@@ -1928,10 +1949,17 @@ ajusteRegresores <- function(
     valoresRegresoresSobreCoordsAInterpolar_ti <- regs$valoresRegresoresSobreCoordsAInterpolar_ti
     
     seleccionRegresores <- descartarCoordenadasNoSignificativas
-    if (seleccionRegresores) { forceIn <- c(rep(TRUE, oldNu), rep(FALSE, ncol(valoresRegresoresSobreCoordsAInterpolar_ti) - oldNu))
-    } else { forceIn <- rep(TRUE, ncol(valoresRegresoresSobreCoordsAInterpolar_ti)) }
+    if (seleccionRegresores) { 
+      forceIn <- c(rep(1, oldNu), rep(0, ncol(valoresRegresoresSobreCoordsAInterpolar_ti) - oldNu))
+    } else { 
+      forceIn <- rep(1, ncol(valoresRegresoresSobreCoordsAInterpolar_ti))
+    }
+    
+    if (!origIncorporarCoordenadas) {
+      forceIn[names(valoresRegresoresSobreObservaciones) %in% c('x', 'y')] <- -1
+    }
   } else { 
-    forceIn <- rep(TRUE, oldNu)
+    forceIn <- rep(1, oldNu)
     seleccionRegresores <- FALSE
   }
   
@@ -1942,16 +1970,16 @@ ajusteRegresores <- function(
       escala <- darEscala(
         especificacion = params$especEscalaDiagnostico, 
         valores=valoresRegresoresSobreCoordsAInterpolar_ti[, i])
-      nomArchResultados <- paste(params$carpetaParaModoDiagnostico, '02.', i, '-Regresor-', 
-                                 gsub(pattern = '*', replacement = '', x = colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], fixed = T), '.png', sep='')
+      nomArchResultados <- paste0(params$carpetaParaModoDiagnostico, '02.', i, '-Regresor-', 
+                                  gsub(pattern = '*', replacement = '', x = colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], fixed = T), '.png')
       if (!file.exists(nomArchResultados)) {
         if (gridded(coordsAInterpolar)) {
           spAux <- SpatialPixelsDataFrame(points = coordsAInterpolar, data = data.frame(value=valoresRegresoresSobreCoordsAInterpolar_ti[, i]))
-          mapearGrillaGGPlot(grilla = spAux, shpBase = shpMask$shp, zcol=1, escala = escala, titulo = paste(colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], '-', params$strFecha), 
+          mapearGrillaGGPlot(grilla = spAux, shpBase = shpMask$shp, zcol=1, escala = escala, titulo = paste0(colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], ' - ', params$strFecha), 
                              nomArchResultados = nomArchResultados, dibujar = F)
         } else {
           spAux <- SpatialPointsDataFrame(coords = coordsAInterpolar, data = data.frame(value=valoresRegresoresSobreCoordsAInterpolar_ti[, i]))
-          mapearPuntosGGPlot(puntos = spAux, shpBase = shpMask$shp, zcol=1, escala = escala, titulo = paste(colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], '-', params$strFecha), 
+          mapearPuntosGGPlot(puntos = spAux, shpBase = shpMask$shp, zcol=1, escala = escala, titulo = paste0(colnames(valoresRegresoresSobreCoordsAInterpolar_ti)[i], ' - ', params$strFecha), 
                              nomArchResultados = nomArchResultados, dibujar = F, dibujarTexto = T)
         }
       }
@@ -1965,21 +1993,31 @@ ajusteRegresores <- function(
   formulaRegresionCC <- ''
   if (nU > 0) {
     # Obtengo la ventana de igualacion de distribuciones
-    ventana <- getVentana(ti=ti, nT=nT, tamanioSemiVentana = params$ventanaIgualacionDistribuciones, tlagsAR = params$tlagsAR)
+    ventana <- getVentana(ti=ti, nT=nT, tamanioSemiVentana = params$ventanaIgualacionDistribuciones, 
+                          tlagsAR = params$tlagsAR)
     iTiEnTsVentana <- ventana$iTiEnTsVentana
     tsVentana <- ventana$tsVentana
     tamanioVentana <- length(tsVentana)
 
     # Obtengo los valores de los regresores sobre las observaciones para las fechas de la ventana
     valsRegresoresObservaciones <- matrix(data=NA, nrow = nO * tamanioVentana, ncol = nU)
-    for (j in seq.int(1, nU, by=1)) valsRegresoresObservaciones[, j] <- as.numeric(valoresRegresoresSobreObservaciones[[j]][tsVentana, ])
+    for (j in seq.int(1, nU, by=1)) { 
+      valsRegresoresObservaciones[, j] <- as.numeric(valoresRegresoresSobreObservaciones[[j]][tsVentana, ])
+    }
     colnames(valsRegresoresObservaciones) <- names(valoresRegresoresSobreObservaciones)
     varianzaRegresores <- apply(X = valsRegresoresObservaciones, MARGIN = 2, FUN = function(x) { return(var(x, na.rm=T)) })
-    iRegresoresConVarianza <- which(!is.na(varianzaRegresores) & varianzaRegresores > 1E-6)
+    bRegresoresConVarianza <- !is.na(varianzaRegresores) & varianzaRegresores > 1E-6
+    if (T) {
+      n <- length(valsRegresoresObservaciones[, !bRegresoresConVarianza])
+      valsRegresoresObservaciones[, !bRegresoresConVarianza] <- valsRegresoresObservaciones[, !bRegresoresConVarianza] + rnorm(n, sd=1e-3)
+      iRegresoresConVarianza <- 1:ncol(valsRegresoresObservaciones)
+    } else {
+      iRegresoresConVarianza <- which(bRegresoresConVarianza)      
+    }
 
     # x <- valoresRegresoresSobreCoordsAInterpolar_ti[,1]
     iRegresoresNoNA_ti <- which(apply(X = valoresRegresoresSobreCoordsAInterpolar_ti, MARGIN = 2, FUN = function(x) { return(!all(is.na(x))) }))
-    
+
     iRegresoresAConservar <- intersect(iRegresoresConVarianza, iRegresoresNoNA_ti)
     if (length(iRegresoresAConservar) < ncol(valsRegresoresObservaciones)) {
       forceIn <- forceIn[iRegresoresAConservar]
@@ -2010,74 +2048,72 @@ ajusteRegresores <- function(
             !apply(valsRegresoresObservaciones, MARGIN = 1, FUN = function(x) { any(is.na(x)) })
 
           # Chequeo que tenga suficientes observaciones no nulas para hacer la regresión
-          if (sum(iFilasCompletas) > nU + 1 && nrow(unique(valsRegresoresObservaciones[iFilasCompletas, , drop=F])) >= nU + 1) {
+          if (sum(iFilasCompletas) > nU + 1 && 
+              nrow(unique(valsRegresoresObservaciones[iFilasCompletas, forceIn >= 0, drop=F])) >= nU + 1) {
             pesos <- getPesosVentana(tamanioVentana = tamanioVentana, iTiEnTsVentana = iTiEnTsVentana, tsVentana = tsVentana, 
                                      ventanaIgualacionDistribuciones = params$ventanaIgualacionDistribuciones, iFilasCompletas = iFilasCompletas, 
                                      nO = nO)
             
             if (metodoIgualacionDistribuciones %in% c(2, 3, 4, 7)) {
               # Regresion lineal
-              if (metodoIgualacionDistribuciones == 7 && !incorporarCoordenadas) {
-                df <- data.frame(value=valoresObservacionesTsVentana[iFilasCompletas],
-                                 valsRegresoresObservaciones[iFilasCompletas, , drop=F],
-                                 x=coordinates(coordsObservaciones)[iFilasCompletas, 1],
-                                 y=coordinates(coordsObservaciones)[iFilasCompletas, 2])
-              } else {
-                df <- data.frame(value=valoresObservacionesTsVentana[iFilasCompletas], 
-                                 valsRegresoresObservaciones[iFilasCompletas, , drop=F])
-              }
-              
+              df <- data.frame(value=valoresObservacionesTsVentana[iFilasCompletas], 
+                               valsRegresoresObservaciones[iFilasCompletas, , drop=F])
+
               if (params$verbose) {
                 nombresFilas <- rownames(valoresObservaciones[tsVentana, , drop=F])
-                if (is.null(nombresFilas)) nombresFilas <- paste('F', tsVentana, sep='')
+                if (is.null(nombresFilas)) nombresFilas <- paste0('F', tsVentana)
                 nombresColumnas <- colnames(valoresObservaciones)
-                if (is.null(nombresColumnas)) nombresColumnas <- paste('C', 1:ncol(valoresObservaciones), sep='')
+                if (is.null(nombresColumnas)) nombresColumnas <- paste0('C', 1:ncol(valoresObservaciones))
                 
                 rownames(df) <- apply(expand.grid(nombresFilas, nombresColumnas),1,function(x) paste(x,collapse=" "))[iFilasCompletas]
                 rm(nombresFilas, nombresColumnas)
               }
-
-              iUnicos <- !duplicated(df)
+              
+              iUnicos <- !duplicated(df[, forceIn >= 0])
               df <- df[iUnicos,]
               pesos <- pesos[iUnicos]
 
               terminoIndependiente='+1'
               if (params$formulaRegresion == '') {
-                formulas <- list(as.formula(paste(colnames(df)[1], '~', paste('+', colnames(df)[2:ncol(df)], collapse=''), terminoIndependiente)))
+                iColsRegresores <- (2:ncol(df))[forceIn >= 0]
+                forceIn <- as.logical(forceIn[forceIn >= 0])
+                formulas <- list(as.formula(
+                  paste(colnames(df)[1], '~', paste('+', colnames(df)[iColsRegresores], collapse=''), 
+                        terminoIndependiente)))
                 
                 if (seleccionRegresores) {
                   require(gtools)
                   terminos <- labels(terms(formulas[[1]]))
                   if (is.null(params$combinacionesDeRegresoresValidas)) {
                     terminosFijos <- paste(terminos[forceIn], collapse = '+')
-                    if (terminosFijos != '') { terminosFijos <- paste(paste(colnames(df)[1], '~', terminosFijos, '+', sep = ''))
-                    } else { terminosFijos <- paste(colnames(df)[1], '~', sep = '') }
+                    if (terminosFijos != '') { terminosFijos <- paste(paste0(colnames(df)[1], '~', terminosFijos, '+', sep = ''))
+                    } else { terminosFijos <- paste0(colnames(df)[1], '~', sep = '') }
                     terminosLibres <- terminos[!forceIn]
                     
-                    #write(x = c('1', terminosLibres, '\n'), file = paste('F:/Tesis/debugThreads/', Sys.getpid(), '.txt', sep=''), append = T)
+                    #write(x = c('1', terminosLibres, '\n'), file = paste0('F:/Tesis/debugThreads/', Sys.getpid(), '.txt'), append = T)
                     
                     formulas <- list()
-                    formulas[[1]] <- paste(terminosFijos, '1', sep='')
+                    formulas[[1]] <- paste0(terminosFijos, '1')
                     for (i in seq_along(terminosLibres)) {
                       formulas <- c(formulas, 
-                                    paste(terminosFijos, apply(X = combinations(n = length(terminosLibres), r = i, v=terminosLibres, repeats.allowed = FALSE), MARGIN = 1, FUN = paste, collapse='+'), 
-                                          terminoIndependiente, sep=''))
+                                    paste0(terminosFijos, apply(X = combinations(n = length(terminosLibres), r = i, v=terminosLibres, repeats.allowed = FALSE), MARGIN = 1, FUN = paste, collapse='+'), 
+                                           terminoIndependiente))
                     }
                   } else {
                     formulas <- list()
                     terminosLibres <- terminos[(oldNu+1):nU]
                     
-                    #write(x = c('2', terminosLibres, '\n'), file = paste('F:/Tesis/debugThreads/', Sys.getpid(), '.txt', sep=''), append = T)
+                    #write(x = c('2', terminosLibres, '\n'), file = paste0('F:/Tesis/debugThreads/', Sys.getpid(), '.txt'), append = T)
                     
                     for (j in seq_along(params$combinacionesDeRegresoresValidas)) {
                       terminosFijos <- paste(terminos[params$combinacionesDeRegresoresValidas[[j]]], collapse = '+')
-                      terminosFijos <- paste(paste(colnames(df)[1], '~', terminosFijos, '+', sep = ''))
+                      terminosFijos <- paste(paste0(colnames(df)[1], '~', terminosFijos, '+', sep = ''))
                       
-                      formulas[[length(formulas) + 1]] <- paste(terminosFijos, '1', sep='')
+                      formulas[[length(formulas) + 1]] <- paste0(terminosFijos, '1')
                       for (i in seq_along(terminosLibres)) {
                         formulas <- c(formulas, 
-                                      paste(terminosFijos, apply(X = combinations(n = length(terminosLibres), r = i, v=terminosLibres, repeats.allowed = FALSE), MARGIN = 1, FUN = paste, collapse='+'), 
-                                            terminoIndependiente, sep=''))
+                                      paste0(terminosFijos, apply(X = combinations(n = length(terminosLibres), r = i, v=terminosLibres, repeats.allowed = FALSE), MARGIN = 1, FUN = paste, collapse='+'), 
+                                             terminoIndependiente))
                       }
                     }
                   }
@@ -2090,7 +2126,7 @@ ajusteRegresores <- function(
                 #  nombresFormula <- colnames(df)[sumSel$which[which.min(sumSel$bic),]]
                 #}
               } else {
-                if (!grepl(pattern='~', x=params$formulaRegresion)) params$formulaRegresion <- paste('y~', params$formulaRegresion, sep='')
+                if (!grepl(pattern='~', x=params$formulaRegresion)) params$formulaRegresion <- paste0('y~', params$formulaRegresion)
                 formulas <- list(as.formula(params$formulaRegresion))
               }
               
@@ -2105,7 +2141,7 @@ ajusteRegresores <- function(
                 })
               } else if (metodoIgualacionDistribuciones == 7) {
                 # test <- leaps(y = lm(formula=formulaModelo, data = df, weights = pesos)$residuals, x = df[,2:ncol(df)], int = TRUE, nbest = 1)
-                # formulaCorStruct <- paste('~',paste(labels(terms(formulaModelo)), collapse = '+'),sep='')
+                # formulaCorStruct <- paste0('~',paste(labels(terms(formulaModelo)), collapse = '+'),sep='')
                 #formulaCorStruct <- as.formula(paste('~', paste('+', colnames(df)[2:ncol(df)], collapse=''), terminoIndependiente))
 
                 modelos <- lapply(X = formulas, FUN = function(x) {
@@ -2225,13 +2261,13 @@ ajusteRegresores <- function(
               # cooks.distance(modelo) > 4 / (length(modelo$residuals) -  modelo$df.residual - 1)
               
               if (params$modoDiagnostico) {
-                png(paste(params$carpetaParaModoDiagnostico, '03.1-Scatterplots.png', sep=''), width = 1080, height = 1080)
+                png(paste0(params$carpetaParaModoDiagnostico, '03.1-Scatterplots.png'), width = 1080, height = 1080)
                 pairs(df)
                 dev.off()
                 
                 if (metodoIgualacionDistribuciones != 7 && modeloAjustado) {
                   tryCatch({
-                    png(paste(params$carpetaParaModoDiagnostico, '03.2-GraficosDiagnosticoLM.png', sep=''), width = 1080, height = 1080)
+                    png(paste0(params$carpetaParaModoDiagnostico, '03.2-GraficosDiagnosticoLM.png'), width = 1080, height = 1080)
                     par(mfrow=c(2,2)) # Change the panel layout to 2 x 2
                     plot(modelo)
                     par(mfrow=c(1,1)) # Change back to 1 x 1
@@ -2240,7 +2276,7 @@ ajusteRegresores <- function(
                     dev.off()
                   })
                   
-                  capture.output(summary(modelo), file = paste(params$carpetaParaModoDiagnostico, '03.3-SummaryLM.txt', sep=''))
+                  capture.output(summary(modelo), file = paste0(params$carpetaParaModoDiagnostico, '03.3-SummaryLM.txt'))
                 }
               }
               
@@ -2456,8 +2492,9 @@ universalGriddingCV_i <- function(iObservacion=1, tIni=1, tFin=nrow(valoresObser
   # Creo una máscara dummy para que no la cree (vacía) todos los pasos de tiempo
   shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP='', proj4strSHP='', grilla=coordsAInterpolar_i)
   
+  
+  # ti <- which(fechasObservaciones==as.POSIXct('2019-07-14', tz=tz(fechasObservaciones[1])))
   # ti <- ts[302]
-  # ti <- which(fechasObservaciones==as.POSIXct('2014-11-27', tz=tz(fechasObservaciones[1])))
   # ti <- 365
   for (ti in ts) {
     print(c(iObservacion, ti))
@@ -2466,7 +2503,7 @@ universalGriddingCV_i <- function(iObservacion=1, tIni=1, tFin=nrow(valoresObser
         for (j in seq_along(along.with = valoresRegresoresSobreObservaciones))
           valoresRegresoresSobreCoordsAInterpolar_ti[1, j] <- valoresRegresoresSobreObservaciones[[j]][ti, iObservacion]
       }
-
+      
       if (!eliminarSerieTemporalCompleta) valoresObservaciones[ti, iObservacion] <- NA
       
       # coordsAInterpolar = coordsAInterpolar_i
@@ -2530,7 +2567,7 @@ universalGriddingCV <- function(
           cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
           clusterExport(cl, varlist = c('script.dir.interpolarEx'))
           clusterEvalQ(cl = cl, expr = { 
-            source(paste(script.dir.interpolarEx, 'interpolarEx.r', sep='')) 
+            source(paste0(script.dir.interpolarEx, 'interpolarEx.r')) 
             if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
           })
           #clusterExport(cl, varlist = c('coordsObservaciones'))
@@ -2542,7 +2579,7 @@ universalGriddingCV <- function(
       cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
       clusterExport(cl, varlist = c('script.dir.interpolarEx'))
       clusterEvalQ(cl = cl, expr = { 
-        source(paste(script.dir.interpolarEx, 'interpolarEx.r', sep='')) 
+        source(paste0(script.dir.interpolarEx, 'interpolarEx.r')) 
         if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
       })
       res <- parSapplyLB(cl=cl, X=iesAEstimar, FUN=universalGriddingCV_i, coordsObservaciones=coordsObservaciones, 
@@ -2555,6 +2592,7 @@ universalGriddingCV <- function(
       res <- valoresObservaciones
       res[,] <- NA
       
+      # iObservacion <- which(colnames(valoresObservaciones) == 'PRESA.BAYGORRIA.RHT')
       # iObservacion <- iesAEstimar[1]
       for (iObservacion in iesAEstimar) {
         res[,iObservacion] <- universalGriddingCV_i(
@@ -2592,7 +2630,7 @@ universalGriddingCV <- function(
       i <- 1
       for (i in 1:length(params$tlagsAR)) {
         valoresRegresoresSobreObservaciones[[nOrig + i]] <- matrix(data=NA, nrow=nrow(valoresObservaciones), ncol=ncol(valoresObservaciones))
-        names(valoresRegresoresSobreObservaciones)[nOrig + i] <- paste('T_', params$tlagsAR[i], sep='')
+        names(valoresRegresoresSobreObservaciones)[nOrig + i] <- paste0('T_', params$tlagsAR[i])
         for (ti in 1:tUltimoValorSinAR + 1) {
           if (ti + params$tlagsAR[i] < nrow(res)) {
             valoresRegresoresSobreObservaciones[[nOrig + i]][ti + params$tlagsAR[i], iesAEstimar] <- res[ti, ]
@@ -2640,7 +2678,7 @@ universalGriddingCV <- function(
       for (i in 1:length(params$tlagsAR)) {
         # Cargo los valores de los pasos de inicialización en la matriz de cada lag temporal
         valoresRegresoresSobreObservaciones[[nOrig + i]] <- matrix(data=NA, nrow=nrow(valoresObservaciones), ncol=ncol(valoresObservaciones))
-        names(valoresRegresoresSobreObservaciones)[nOrig + i] <- paste('T_', params$tlagsAR[i], sep='')
+        names(valoresRegresoresSobreObservaciones)[nOrig + i] <- paste0('T_', params$tlagsAR[i])
         for (ti in 1:tUltimoValorSinAR + 1) {
           if (ti + params$tlagsAR[i] < nrow(res)) {
             valoresRegresoresSobreObservaciones[[nOrig + i]][ti + params$tlagsAR[i], iesAEstimar] <- res[ti, ]
@@ -2675,20 +2713,63 @@ universalGriddingCV <- function(
   return(res)
 }
 
-aplicarMascaraRnR <- function(interpolacion, params, umbral=0.1) {
-  params$modoDiagnostico <- F
-  rango <- range(interpolacion$observations$value, na.rm = T)
+aplicarMascaraRnR <- function(observaciones, interpolacion, valoresCampoBaseSobreObservaciones=NULL, 
+                              valoresCampoBase=NULL, params, umbral=0.1, shpMask) {
+  rango <- range(observaciones$value, na.rm = T)
   if (rango[1] < 1E-3 & rango[2] > 1E-3) {
-    obsBinarias <- crearObservacionesBinarias(observaciones=interpolacion$observations)
-    params$minVal <- 0
-    params$maxVal <- 1
-    params$umbralMascaraCeros <- 0
-    params$metodoRemocionDeSesgo='ninguno'
-    params$interpolationMethod <- 'idw'
-    shpMask <- interpolacion$shpMask
-    if (!is.null(shpMask)) shpMask$mask <- rep(TRUE, length(interpolacion$predictionLocations))
-    interpBinaria <- interpolarEx(observaciones=obsBinarias, coordsAInterpolar=interpolacion$predictionLocations, params=params, shpMask=shpMask)
-    #interpBinaria$predictions$aux <- interpBinaria$predictions@data[,interpBinaria$campoMedia]  >= umbral
+    obsBinarias <- crearObservacionesBinarias(observaciones=observaciones, zcol = 'value')
+    binInterpParams <- params
+    binInterpParams$modoDiagnostico <- F
+    binInterpParams$minVal <- 0
+    binInterpParams$maxVal <- 1
+    binInterpParams$umbralMascaraCeros <- 0
+    binInterpParams$metodoRemocionDeSesgo='ninguno'
+    binInterpParams$interpolationMethod <- 'automap'
+    #binInterpParams$betaSimpleKriging <- 0
+    binInterpShpMask <- interpolacion$shpMask
+    
+    if (!is.null(binInterpShpMask)) binInterpShpMask$mask <- rep(TRUE, length(interpolacion$predictionLocations))
+    interpBinaria <- interpolarEx(
+      observaciones=obsBinarias, coordsAInterpolar=interpolacion$predictionLocations, 
+      params=binInterpParams, shpMask=binInterpShpMask)
+    
+    if (umbral == 'auto') {
+      binCV <- universalGriddingCV(obsBinarias, 1, matrix(obsBinarias$value, ncol = nrow(obsBinarias)), 
+                                   params = binInterpParams)
+      
+      umbrales <- sort(unique(binCV))
+      # umbrales <- sort(unique(over(coordsObservaciones, interpBinaria$predictions)[, 1]))
+      umbrales <- (umbrales[1:(length(umbrales)-1)] + umbrales[2:(length(umbrales))]) * 0.5
+      # umbralI <- 0.3
+      # auc(roc(response = obsBinarias$value, predictor = as.integer(binCV >= umbralI)))
+      aucs <- sapply(umbrales, FUN = function(umbralI) {
+        roc_obj <- roc(response = obsBinarias$value, predictor = as.integer(binCV >= umbralI))
+        #print(plot(roc_obj, print.auc=TRUE, main=umbralI))
+        return(auc(roc_obj))
+      })
+      
+      umbral <- umbrales[which.max(aucs)] + 1e-3
+    }
+    
+    if (params$modoDiagnostico) {
+      if (gridded(interpolacion$predictionLocations)) {
+        mapearGrillaGGPlot(
+          grilla = interpBinaria$predictions, shpBase=shpMask$shp, zcol=1, 
+          titulo = paste0('Máscara de Ceros. Interpolación Binaria - ', params$strFecha),  
+          nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '08.1-MascaraCerosInterpBinaria.png'), 
+          dibujar=F, dibujarPuntosObservaciones=T, coordsObservaciones=obsBinarias)
+      } else {
+        mapearPuntosGGPlot(
+          puntos=interpBinaria$predictions, shpBase=shpMask$shp, zcol=1,
+          titulo = paste0('Máscara de Ceros. Interpolación Binaria - ', params$strFecha),  
+          nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '08.1-MascaraCerosInterpBinaria.png'), 
+          dibujar = F, dibujarTexto = T)
+      }
+    }
+    
+    # mapearGrillaGGPlot(grilla = interpBinaria$predictions, shpBase, dibujar=F, isolineas=T)
+    # interpBinaria$predictions$aux <- as.integer(interpBinaria$predictions@data[,interpBinaria$campoMedia]  >= umbral)
+    # mapearGrillaGGPlot(interpBinaria$predictions, shpBase, continuo = F, zcol='aux', dibujar=F)
     #spplot(interpBinaria$predictions, zcol='aux')
     iValidos <- !is.na(interpolacion$predictions@data[,interpolacion$campoMedia]) & !is.na(interpBinaria$predictions@data[,interpBinaria$campoMedia]) 
     #iValidos <- iValidos & interpolacion$predictions@data[iValidos, interpolacion$campoMedia] <= 0.3
@@ -2698,8 +2779,9 @@ aplicarMascaraRnR <- function(interpolacion, params, umbral=0.1) {
 }
 
 simpleBiasAdjustmentEx <- function(observaciones, interpolacion, interpolationParams, zcol=1, gridIndexes=NULL, 
-                                   errorRelativoParaCorregir=0.15, inverseDistancePower=NA) {
+                                   errorRelativoParaCorregir=0.15, inverseDistancePower=NA, shpMask) {
   if (interpolationParams$metodoRemocionDeSesgo != 'ninguno') {
+    origModoDiagnostico <- interpolationParams$modoDiagnostico
     interpolationParams$modoDiagnostico <- F
     iValidObs <- !is.na(observaciones@data[,zcol])
     observaciones <- observaciones[iValidObs,]
@@ -2732,9 +2814,9 @@ simpleBiasAdjustmentEx <- function(observaciones, interpolacion, interpolationPa
         interpolationParams$interpolationMethod <- 'idw'
         interpolationParams$inverseDistancePower <- inverseDistancePower
       } else {
-        stop(paste('simpleBiasAdjustmentEx: Método de Remoción de Sesgo Desconocido "', interpolationParams$interpolationMethod, '"', sep=''))
+        stop(paste0('simpleBiasAdjustmentEx: Método de Remoción de Sesgo Desconocido "', interpolationParams$interpolationMethod, '"'))
       }
-      #mapearPuntosGGPlot(puntos = spResiduals, shpBase = shpMask$shp, continuo = T)
+      #mapearPuntosGGPlot(puntos = spResiduals, shpBase = shpMask$shp, zcol='value', continuo = T)
       
       iAComparar <- which(observaciones$value[iOverObs] >= maxVal * 0.8)
       errorRelativo <- spResiduals$value[iAComparar] / observaciones$value[iOverObs][iAComparar]
@@ -2744,11 +2826,26 @@ simpleBiasAdjustmentEx <- function(observaciones, interpolacion, interpolationPa
         interpolationParams$maxVal <- max(spResiduals$value, na.rm=T)
         interpolationParams$umbralMascaraCeros <- 0
         interpolationParams$metodoRemocionDeSesgo='ninguno'
-        shpMask <- interpolacion$shpMask
         if (!is.null(shpMask)) shpMask$mask <- rep(TRUE, length(interpolacion$predictionLocations))
         residualInterpolation <- interpolarEx(observaciones=spResiduals, coordsAInterpolar=interpolacion$predictionLocations, params=interpolationParams, shpMask)
+        # mapearGrillaGGPlot(grilla=residualInterpolation$predictions, shpBase = shpBase, continuo=F)
         
         interpolacion$predictions@data[,1] <- interpolacion$predictions@data[,zcol] + residualInterpolation$predictions@data[,zcol]
+        if (origModoDiagnostico) {
+          if (gridded(interpolacion$predictionLocations)) {
+            mapearGrillaGGPlot(
+              grilla = residualInterpolation$predictions, shpBase=shpMask$shp, zcol=1, 
+              titulo = paste0('Remoción de Sesgo - ', interpolationParams$strFecha),  
+              nomArchResultados = paste0(interpolationParams$carpetaParaModoDiagnostico, '07.1-RemocionSesgo.png'), 
+              dibujar=F, dibujarPuntosObservaciones=T, coordsObservaciones=spResiduals)
+          } else {
+            mapearPuntosGGPlot(
+              puntos=residualInterpolation$predictions, shpBase=shpMask$shp, zcol=1,
+              titulo = paste0('Remoción de Sesgo - ', interpolationParams$strFecha),  
+              nomArchResultados = paste0(interpolationParams$carpetaParaModoDiagnostico, '07.1-RemocionSesgo.png'), 
+              dibujar = F, dibujarTexto = T)
+          }
+        }
         #mapearGrillaGGPlot(grilla=interpolacion$predictions, shpBase = shpMask$shp, continuo=F)
         #mapearGrillaGGPlot(grilla=residualInterpolation$predictions, shpBase = shpMask$shp, continuo=T)
       }    
@@ -3130,7 +3227,7 @@ reducirSpatialPointsDataFrame <- function(coordsObservaciones, radioReduccionSer
     rowNames <- row.names(coordsObservaciones)
     coords <- coordinates(coordsObservaciones)
     
-    rowNamesReducidos <- sapply(iesACombinar, FUN = function(x) {return(paste(row.names(coordsObservaciones)[x], sep=',', collapse = ','))})
+    rowNamesReducidos <- sapply(iesACombinar, FUN = function(x) {return(paste0(row.names(coordsObservaciones)[x], sep=',', collapse = ','))})
     coordsReducidas <- t(sapply(iesACombinar, FUN = function(x) { apply(coords[x, , drop=F], MARGIN = 2, FUN = naSiTodosNAFuncSiNo,
                                                                         func=mean, na.rm=T)} ))
     vals <- as.data.frame(coordsObservaciones@data)
@@ -3259,10 +3356,39 @@ calcOutlyingnessMedianaMAD <- function(x, xEstimarMedianaYMAD=x, porFilas=T, ove
   }
 }
 
+deteccionOutliersMediaSD <- function(
+    x, factorSDHaciaAbajo=3.5, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA) {
+  estimados <- as.numeric(rowMeans(x, na.rm = T))
+  stdDifs <- as.numeric(t(apply(x, MARGIN = 1, FUN = outlyingnessMediaSD, sdMin=sdMin)))
+  
+  return(createDFTestsConEstimadosYStdDifs(
+    x, estimados=estimados, stdDifs=stdDifs, factorHaciaAbajo=factorSDHaciaAbajo, 
+    factorHaciaArriba=factorSDHaciaArriba))
+}
+
+deteccionOutliersMedianaMAD <- function(
+    x, factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, 
+    desvMedAbsMin=NA) {
+  
+  estimados <- as.numeric(rowMedians(x, na.rm = T, keep.names = F))
+  stdDifs <- as.numeric(t(apply(
+    x, MARGIN = 1, FUN = outlyingnessMedianaMAD, desvMedAbsMin=desvMedAbsMin)))
+  
+  return(createDFTestsConEstimadosYStdDifs(
+    x, estimados=estimados, stdDifs=stdDifs, factorHaciaAbajo=factorMADHaciaAbajo, 
+    factorHaciaArriba=factorMADHaciaArriba))
+}
+
 deteccionOutliersRLM <- function(
     coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
-    listaMapas, factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, 
-    desvMedAbsMin=NA, returnTestDF=FALSE) {
+    listaMapas, 
+    factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, desvMedAbsMin=NA,
+    factorSDHaciaAbajo=NA, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA, 
+    returnTestDF=FALSE) {
+  if (!is.na(factorMADHaciaAbajo) && !is.na(factorSDHaciaAbajo)) {
+    stop('interpolarEx.deteccionOutliersRLM: only one of factorMADHaciaAbajo and factorSDHaciaAbajo can be specified')
+  }
+  
   paramsAux <- params
   paramsAux$interpolationMethod = 'none'
   paramsAux$metodoIgualacionDistribuciones <- 'regresionLinealRobusta'
@@ -3334,11 +3460,9 @@ deteccionOutliersRLM <- function(
   #mapearGrillaGGPlot(lala, shpBase = shpMask$shp, continuo = T, dibujar = F, zcol=4)
   #lala[!is.na(outlyingness) & abs(outlyingness) > 2.8, ] <- NA
   
-  
   #lala <- SpatialPixelsDataFrame(points = sp, data = sp@data)
   #plot(density(outlyingness, na.rm=T))
   #sum(outlyingness < -2.5, na.rm=T)
-  
   
   #factorMADHaciaAbajo <- 2.5
   #factorMADHaciaArriba <- factorMADHaciaAbajo
@@ -3349,11 +3473,21 @@ deteccionOutliersRLM <- function(
   #lctypeAux <- extract(lctype, coordsObservaciones)
   #cbind(estaciones$Nombre, lctypeAux)
   
-  outlyingness <- t(apply(residuos, MARGIN = 1, FUN = outlyingnessMedianaMAD, 
-                          desvMedAbsMin=desvMedAbsMin))
+  
+  if (!is.na(factorMADHaciaAbajo)) {
+    # outlyingnessMedianaMAD(x = residuos['2019-01-08',])
+    outlyingness <- t(apply(residuos, MARGIN = 1, FUN = outlyingnessMedianaMAD, 
+                            desvMedAbsMin=desvMedAbsMin))
+    factorHaciaAbajo <- factorMADHaciaAbajo
+    factorHaciaArriba <- factorMADHaciaArriba
+  } else {
+    outlyingness <- t(apply(residuos, MARGIN = 1, FUN = outlyingnessMediaSD, sdMin=sdMin))
+    factorHaciaAbajo <- factorSDHaciaAbajo
+    factorHaciaArriba <- factorSDHaciaArriba
+  }
   
   if (!returnTestDF) {
-    iEsAFiltrar <- outlyingness < -factorMADHaciaAbajo | outlyingness > factorMADHaciaArriba
+    iEsAFiltrar <- outlyingness < -factorHaciaAbajo | outlyingness > factorHaciaArriba
     iEsAFiltrar[is.na(outlyingness)] <- FALSE
     iOutliers <- which(iEsAFiltrar)
     
@@ -3385,7 +3519,7 @@ deteccionOutliersRLM <- function(
     dfOutliers <- dfOutliers[order(dfOutliers[,'iFecha'], abs(dfOutliers[,'outlyingness'])), ]
     
     # valoresObservaciones[!iEsAConservar] <- NA
-    # grabarDatos(pathArchivoDatos = paste(pathDatos, 'Estaciones/TempAireMinTodas_SRT_x3_RLM.txt', sep=''), fechas = fechasObservaciones, datos = valoresObservaciones, na = '-99')
+    # grabarDatos(pathArchivoDatos = paste0(pathDatos, 'Estaciones/TempAireMinTodas_SRT_x3_RLM.txt'), fechas = fechasObservaciones, datos = valoresObservaciones, na = '-99')
     return(dfOutliers)
   } else {
     estaciones <- as.character(sapply(colnames(valoresObservaciones), FUN = function(x) { 
@@ -3395,8 +3529,8 @@ deteccionOutliersRLM <- function(
     estimados <- as.numeric(pred)
     stdDifs <- as.numeric(outlyingness)
     tiposOutliers <- rep(TTO_SinProblemasDetectados, length(valores))
-    tiposOutliers[stdDifs < -factorMADHaciaAbajo] <- TTO_OutlierPorLoBajo
-    tiposOutliers[stdDifs > factorMADHaciaAbajo] <- TTO_OutlierPorLoAlto
+    tiposOutliers[stdDifs < -factorHaciaAbajo] <- TTO_OutlierPorLoBajo
+    tiposOutliers[stdDifs > factorHaciaArriba] <- TTO_OutlierPorLoAlto
     
     return(createDFTests(
       estacion = estaciones, fecha = fechas, valor = valores, estimado = estimados, 
@@ -3426,8 +3560,8 @@ deteccionOutliersUniversalGriddingCV <- function(
   iOutliers <- integer(0)
   iOutliersPermanecidos <- integer(0)
   
-  # Busco el mínimo overlap que me permita tener al menos 25 observaciones en todas las fechas para calcular las
-  # medianas y desviaciones
+  # Busco el mínimo overlap que me permita tener al menos 25 observaciones en todas las fechas para 
+  # calcular las medianas y desviaciones
   overlap <- 0
   numDatos <- numeric(nrow(valoresObservaciones))
   repeat {
@@ -3515,8 +3649,9 @@ deteccionOutliersUniversalGriddingCV <- function(
   return(dfOutliers)
 }
 
-getPoligonoBoundingBox <- function(objSP, caja=bbox(objSP), p4string=proj4string(objSP), 
-                                   factorExtensionX=1, factorExtensionY=factorExtensionX) {
+getPoligonoBoundingBox <- function(
+    objSP, caja=bbox(objSP), p4string=proj4string(objSP), outputProj4String=NULL, 
+    factorExtensionX=1, factorExtensionY=factorExtensionX) {
   if (factorExtensionX != 1) {
     # Agrando la caja (factorExtensionX - 1) * 0.5 hacia cada lado
     extX <- diff(caja[1,]) * (factorExtensionX - 1) * 0.5
@@ -3534,11 +3669,19 @@ getPoligonoBoundingBox <- function(objSP, caja=bbox(objSP), p4string=proj4string
                           caja[1,1], caja[2,2], #xMin, yMax
                           caja[1,1], caja[2,1]), ncol = 2, byrow = T)
   boundingBox <- Polygon(coords = boundingBox)
-  return(SpatialPolygons(list(Polygons(list(boundingBox), ID = "BoundingBox")), proj4string = CRS(p4string)))
+  boundingBoxPolygon <- SpatialPolygons(
+    list(Polygons(list(boundingBox), ID = "BoundingBox")), proj4string = CRS(p4string))
+  if (is.null(outputProj4String)) {
+    return(boundingBoxPolygon)
+  } else {
+    return(spTransform(boundingBoxPolygon, CRS(outputProj4String)))
+  }
 }
 
-grillaSobreBoundingBox <- function(objSP, caja=bbox(objSP), p4string=proj4string(objSP), largoDimensiones=diff(t(caja)), nCeldasX=100, 
-                                   nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
+grillaSobreBoundingBox <- function(
+    objSP, caja=bbox(getPoligonoBoundingBox(objSP = objSP, outputProj4String = p4string)), 
+    p4string=proj4string(objSP), largoDimensiones=diff(t(caja)), 
+    nCeldasX=100, nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
   cellsDim <- c(nCeldasX, nCeldasY)
   cellSize <- as.numeric(largoDimensiones / cellsDim)
   cellcentreOffset <- as.numeric(caja[, 1] + cellSize * 0.5)
@@ -3547,9 +3690,12 @@ grillaSobreBoundingBox <- function(objSP, caja=bbox(objSP), p4string=proj4string
                      proj4string = CRS(p4string)))
 }
 
-grillaPixelesSobreBoundingBox <- function(objSP, caja=bbox(objSP), largoDimensiones=diff(t(caja)), nCeldasX=100, 
-                                   nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
-  return(as(grillaSobreBoundingBox(objSP=objSP, caja=caja, largoDimensiones=largoDimensiones, nCeldasX=nCeldasX, 
+grillaPixelesSobreBoundingBox <- function(
+    objSP, caja=bbox(getPoligonoBoundingBox(objSP = objSP, outputProj4String = p4string)), 
+    p4string=proj4string(objSP), largoDimensiones=diff(t(caja)), nCeldasX=100, 
+    nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
+  return(as(grillaSobreBoundingBox(objSP=objSP, caja=caja, p4string = p4string, 
+                                   largoDimensiones=largoDimensiones, nCeldasX=nCeldasX, 
                                    nCeldasY = nCeldasY), 'SpatialPixels'))
 }
 

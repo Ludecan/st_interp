@@ -128,7 +128,7 @@ leerSeriesXLSX <- function(pathArchivoDatos, hojaEstaciones='InfoPluvios', heade
 
 grabarSeriesArchivoUnico <- function(pathArchivoDatos, estaciones, fechas, datos, sep='\t', dec='.', na='-9999',
                                      colsEstacionesAEscribir=1:ncol(estaciones), formatoFechas='%Y-%m-%d') {
-  unlink(pathArchivoDatos)
+  if (file.exists(pathArchivoDatos)) unlink(pathArchivoDatos)
   
   # i <- colsEstacionesAEscribir[1]
   for (i in colsEstacionesAEscribir) {

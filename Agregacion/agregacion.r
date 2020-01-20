@@ -30,11 +30,11 @@ while ((is.null(script.dir.agregacion) || is.na(regexpr('agregacion.r', script.d
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.agregacion)) { script.dir.agregacion <- ''
-} else { script.dir.agregacion <- paste(dirname(script.dir.agregacion), '/', sep='') }
+} else { script.dir.agregacion <- paste0(dirname(script.dir.agregacion), '/') }
 
-source(paste(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(c('stats', 'sp'))
-source(paste(script.dir.agregacion, '../GrADS/ReadGrADS.r', sep=''))
+source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'))
 
 naSiTodosNAFuncSiNo <- function(x, func, ...) {
   x <- x[!is.na(x)]
@@ -58,7 +58,7 @@ ocurrenciaUmbral <- function(x, umbral=0, comparador='=') {
     } else if (comparador == '<') { return (any(x[i] < umbral))
     } else if (comparador == '>=') { return (any(x[i] >= umbral))
     } else if (comparador == '<=') { return (any(x[i] <= umbral))
-    } else { stop(paste('Comparador desconocido', comparador))
+    } else { stop(paste0('Comparador desconocido ', comparador))
     }
   } else { return(FALSE) }
 }
@@ -72,7 +72,7 @@ contarUmbral <- function(x, umbral=0, comparador='=') {
     } else if (comparador == '<') { return (sum(x[i] < umbral))
     } else if (comparador == '>=') { return (sum(x[i] >= umbral))
     } else if (comparador == '<=') { return (sum(x[i] <= umbral))
-    } else { stop(paste('Comparador desconocido', comparador))
+    } else { stop(paste0('Comparador desconocido ', comparador))
     }
   } else { return(0) }
 }
@@ -86,7 +86,7 @@ porcentajeUmbral <- function(x, umbral=0, comparador='=') {
     } else if (comparador == '<') { return (sum(x[i] < umbral) / sum(i) * 100)
     } else if (comparador == '>=') { return (sum(x[i] >= umbral) / sum(i) * 100)
     } else if (comparador == '<=') { return (sum(x[i] <= umbral) / sum(i) * 100)
-    } else { stop(paste('Comparador desconocido', comparador))
+    } else { stop(paste0('Comparador desconocido ', comparador))
     }
   } else { return(FALSE) }
 }
@@ -205,7 +205,7 @@ agregacionTemporalGrillada_ti <- function(
   formatoNomArchivoSalida, paramsCTL, shpBase, iOver, borrarOriginales, overlap, funcEscalado) {
   # fechas <- tempAireMin$fechas
   # pathsRegresor <- pathsRegresores[, 1]
-  # formatoNomArchivoSalida <- paste('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif', sep='')
+  # formatoNomArchivoSalida <- paste0('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif')
   # ti <- which(fechas==as.POSIXct('2002-09-24', tz=tz(fechas[1])))
   # ti <- tSeq[1]
   require('rgdal')
@@ -286,7 +286,7 @@ agregacionTemporalGrillada_ti <- function(
 }
 
 agregacionTemporalGrillada <- function(
-    fechas, pathsRegresor, formatoNomArchivoSalida=paste('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif', sep=''), 
+    fechas, pathsRegresor, formatoNomArchivoSalida=paste0('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif'), 
     nFechasAAgregar=3, minNfechasParaAgregar=max(trunc(nFechasAAgregar/2), 1), tIni=1, 
     tFin=length(pathsRegresor), funcionAgregacion=base::mean, ctl=NULL, shpBase=NULL,
     borrarOriginales=FALSE, overlap=TRUE, funcEscalado=NULL) {
@@ -322,8 +322,8 @@ agregacionTemporalGrillada <- function(
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.agregacion'))
     clusterEvalQ(cl = cl, expr = { 
-      source(paste(script.dir.agregacion, '../GrADS/ReadGrADS.r', sep=''))
-      source(paste(script.dir.agregacion, '../interpolar/interpolarEx.r', sep=''))
+      source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'))
+      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r'))
       if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
     })
 
@@ -344,10 +344,10 @@ agregacionTemporalGrillada <- function(
 }
 
 agregacionTemporalGrillada2_ti <- function(ti=1, fechas, pathsRegresores, nFechasAAgregar=1, minNfechasParaAgregar=max(minNfechasParaAgregar=trunc(nFechasAAgregar/2),1), 
-                                           funcionAgregacion=mean, formatoNomArchivoSalida=paste('%Y-%m-%d_', nFechasAAgregar, '.tif', sep='')) {
+                                           funcionAgregacion=mean, formatoNomArchivoSalida=paste0('%Y-%m-%d_', nFechasAAgregar, '.tif')) {
   # fechas <- tempAireMin$fechas
   # pathsRegresor <- pathsRegresores[, 1]
-  # formatoNomArchivoSalida <- paste('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif', sep='')
+  # formatoNomArchivoSalida <- paste0('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif')
   require('rgdal')
   
   tiMin <- max(1, ti - trunc(nFechasAAgregar / 2))
@@ -388,7 +388,7 @@ agregacionTemporalGrillada2_ti <- function(ti=1, fechas, pathsRegresores, nFecha
     } else { res@data[, 1] <- apply(X = valsPixeles, MARGIN = 1, FUN = funcionAgregacion, na.rm=T) }
     res@data[nNoNulos < minNfechasParaAgregar, 1] <- NA
     
-    source(paste(script.dir.agregacion, '../PathUtils/pathUtils.r', sep=''))
+    source(paste0(script.dir.agregacion, '../PathUtils/pathUtils.r'))
     
     nomArch <- format(x = fechas[ti], formatoNomArchivoSalida)
     writeGDAL(dataset = res, fname = nomArch, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
@@ -397,7 +397,7 @@ agregacionTemporalGrillada2_ti <- function(ti=1, fechas, pathsRegresores, nFecha
   } else { return(NA) }
 }
 
-agregacionTemporalGrillada2 <- function(fechas, pathsRegresores, formatoNomArchivoSalida=paste('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif', sep=''), 
+agregacionTemporalGrillada2 <- function(fechas, pathsRegresores, formatoNomArchivoSalida=paste0('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif'), 
                                         nFechasAAgregar=1, minNfechasParaAgregar=max(trunc(nFechasAAgregar/2), 1),
                                         tIni=1, tFin=nrow(pathsRegresores), funcionAgregacion=base::mean) {
   # Para calcular agregaciones temporales combinando varios rasters de origen
@@ -433,7 +433,7 @@ agregacionTemporalGrillada2 <- function(fechas, pathsRegresores, formatoNomArchi
 }
 
 agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, claseFechaI=1:length(pathsRegresor), clases=sort(unique(claseFechaI)),
-                                               nomArchivosSalidaClaseI=paste(clases, '.tif', sep=''), minNfechasParaAgregar=0, 
+                                               nomArchivosSalidaClaseI=paste0(clases, '.tif'), minNfechasParaAgregar=0, 
                                                funcionAgregacion=base::mean, interpolarFaltantes='No', overlap=0, 
                                                pathShpMask=NULL, proj4stringShpMask=NULL, spSinMascara=NULL, recalcularSiYaExiste=T, ...) {
   #iClase <- 6
@@ -472,7 +472,7 @@ agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, 
     iNA <- is.na(getValues(res))
     if (!is.null(pathShpMask) && file.exists(pathShpMask)) {
       grilla <- as(res, 'SpatialGrid')
-      source(paste(script.dir.agregacion, 'interpolarEx.r', sep=''))
+      source(paste0(script.dir.agregacion, 'interpolarEx.r'))
       shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP = pathShpMask, proj4strSHP = proj4stringShpMask, grilla = grilla, spSinMascara = spSinMascara)
       mascara <- shpMask$mask
     } else if (!is.null(spSinMascara)) {
@@ -507,11 +507,11 @@ agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, 
   }
 }
 
-agregacionTemporalGrillada3 <- function(fechas, pathsRegresor, claseFechaI=1:length(pathsRegresor), clases=sort(unique(claseFechaI)),
-                                        nomArchivosSalidaClaseI=paste(clases, '.tif', sep=''), minNfechasParaAgregar=0, 
-                                        funcionAgregacion=base::mean, interpolarFaltantes='No', overlap=0, 
-                                        pathShpMask=NULL, proj4stringShpMask=NULL, spSinMascara=NULL, recalcularSiYaExiste=T,
-                                        nCoresAUsar=0, ...) {
+agregacionTemporalGrillada3 <- function(
+    fechas, pathsRegresor, claseFechaI=1:length(pathsRegresor), clases=sort(unique(claseFechaI)),
+    nomArchivosSalidaClaseI=paste0(clases, '.tif'), minNfechasParaAgregar=0, 
+    funcionAgregacion=base::mean, interpolarFaltantes='No', overlap=0, pathShpMask=NULL, 
+    proj4stringShpMask=NULL, spSinMascara=NULL, recalcularSiYaExiste=T, nCoresAUsar=0, ...) {
   # Para calcular climatologías.
   # Obtiene el conjunto de fechas F que tengan la misma claseFechaI que la fecha fi a calcular
   # Calcula los píxeles de fi y aplicando funcionAgregacion a los mismos píxelespero para las fechas en F
@@ -526,7 +526,7 @@ agregacionTemporalGrillada3 <- function(fechas, pathsRegresor, claseFechaI=1:len
   #claseFechaI <- yday(fechas)
   #claseFechaI[claseFechaI == 366] <- 365
   #clases=sort(unique(claseFechaI))
-  #nomArchivosSalidaClaseI=paste(pathDatos, 'LST_Night_Combinada_Clim_mean/', clases, '.tif', sep='')
+  #nomArchivosSalidaClaseI=paste0(pathDatos, 'LST_Night_Combinada_Clim_mean/', clases, '.tif')
   #minNfechasParaAgregar <- 5
   #funcionAgregacion=base::mean
   #interpolarFaltantes='idw'
@@ -546,23 +546,26 @@ agregacionTemporalGrillada3 <- function(fechas, pathsRegresor, claseFechaI=1:len
       require('raster')
       require('sp')
       require('rgdal')
-      source(paste(script.dir.agregacion, 'interpolarEx.r', sep=''))
+      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r'))
     })
-    parSapplyLB(cl=cl, X=1:length(clases), FUN=agregacionTemporalGrillada3_claseI,
-                fechas=fechas, pathsRegresor=pathsRegresor, claseFechaI=claseFechaI, clases=clases,
-                nomArchivosSalidaClaseI=nomArchivosSalidaClaseI, minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion, 
-                interpolarFaltantes=interpolarFaltantes, overlap=overlap, pathShpMask=pathShpMask, proj4stringShpMask=proj4stringShpMask, 
-                spSinMascara=spSinMascara, recalcularSiYaExiste=recalcularSiYaExiste, ...=...)
+    parSapplyLB(
+      cl=cl, X=1:length(clases), FUN=agregacionTemporalGrillada3_claseI, fechas=fechas, 
+      pathsRegresor=pathsRegresor, claseFechaI=claseFechaI, clases=clases, 
+      nomArchivosSalidaClaseI=nomArchivosSalidaClaseI, minNfechasParaAgregar=minNfechasParaAgregar, 
+      funcionAgregacion=funcionAgregacion, interpolarFaltantes=interpolarFaltantes, overlap=overlap, 
+      pathShpMask=pathShpMask, proj4stringShpMask=proj4stringShpMask, spSinMascara=spSinMascara, 
+      recalcularSiYaExiste=recalcularSiYaExiste, ...=...)
     stopCluster(cl)
   } else {
-    sapply(X=1:length(clases), FUN=agregacionTemporalGrillada3_claseI,
-           fechas=fechas, pathsRegresor=pathsRegresor, claseFechaI=claseFechaI, clases=clases, nomArchivosSalidaClaseI=nomArchivosSalidaClaseI, 
-           minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion, interpolarFaltantes=interpolarFaltantes, 
-           overlap=overlap, pathShpMask=pathShpMask, proj4stringShpMask=proj4stringShpMask, spSinMascara=spSinMascara, recalcularSiYaExiste=recalcularSiYaExiste, 
-           ...=...)
+    sapply(
+      X=1:length(clases), FUN=agregacionTemporalGrillada3_claseI, fechas=fechas, 
+      pathsRegresor=pathsRegresor, claseFechaI=claseFechaI, clases=clases, 
+      nomArchivosSalidaClaseI=nomArchivosSalidaClaseI, minNfechasParaAgregar=minNfechasParaAgregar, 
+      funcionAgregacion=funcionAgregacion, interpolarFaltantes=interpolarFaltantes, overlap=overlap,
+      pathShpMask=pathShpMask, proj4stringShpMask=proj4stringShpMask, spSinMascara=spSinMascara, 
+      recalcularSiYaExiste=recalcularSiYaExiste, ...=...)
     
     #for (i in 1:length(clases)) {
-    #  print(i)
     #  agregacionTemporalGrillada3_claseI(iClase = i, fechas=fechas, pathsRegresor=pathsRegresor, claseFechaI=claseFechaI, clases=clases,
     #                                nomArchivosSalidaClaseI=nomArchivosSalidaClaseI, minNfechasParaAgregar=minNfechasParaAgregar, 
     #                                funcionAgregacion=funcionAgregacion, interpolarFaltantes=interpolarFaltantes, overlap=overlap,

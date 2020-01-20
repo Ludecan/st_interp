@@ -32,7 +32,7 @@ while ((is.null(script.dir.getBoundariesPVariogramaEmpirico) || is.na(regexpr('g
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.getBoundariesPVariogramaEmpirico)) { script.dir.getBoundariesPVariogramaEmpirico <- ''
-} else { script.dir.getBoundariesPVariogramaEmpirico <- paste(dirname(script.dir.getBoundariesPVariogramaEmpirico), '/', sep='') }
+} else { script.dir.getBoundariesPVariogramaEmpirico <- paste0(dirname(script.dir.getBoundariesPVariogramaEmpirico), '/') }
 
 getProporcionDeLaDiagonalValida <- function(nObservaciones) {
   if (nObservaciones <= 8) { return(1)
@@ -46,7 +46,7 @@ getProporcionDeLaDiagonalValida <- function(nObservaciones) {
 getBoundariesPVariogramaEmpirico <- function(fml, observaciones, minDivDist=5, 
                                              maxDivDist=14, proporcionDeLaDiagonalValida=0) {
   require(gstat)
-  source(paste(script.dir.getBoundariesPVariogramaEmpirico, 'funcsCalidadVariogramasEmpiricos.r', sep=''))
+  source(paste0(script.dir.getBoundariesPVariogramaEmpirico, 'funcsCalidadVariogramasEmpiricos.r'))
   
   if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(observaciones)) }
   

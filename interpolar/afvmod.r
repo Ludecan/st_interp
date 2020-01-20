@@ -67,7 +67,7 @@ annotatedplot <- function(krigeobj, xlab = "Distance", ylab = "Semi-variance",
   require("lattice")
   if ('variogramCloud' %in% class(krigeobj$exp_var)) {
     vdf <- as.data.frame(krigeobj$exp_var)
-    pointLabels <- paste(vdf$left, ',', vdf$right, sep='')
+    pointLabels <- paste0(vdf$left, ',', vdf$right)
   } else {
     pointLabels <- as.character(krigeobj$exp_var$np)
   }
@@ -1118,7 +1118,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   } else { fixNugget <- 0 }
 
   for (i in 1:length(model)) {
-    if (verbose) print(paste(i, ': ', model[[i]], sep=''))
+    if (verbose) print(paste0(i, ': ', model[[i]]))
     vgIni <- afvmod(
       formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, 
       miscFitOptions=list(orig.behavior=F), fix.values=c(fixNugget, NA, NA), verbose=verbose, 
@@ -1197,7 +1197,7 @@ afvGLSV2 <- function(formula, input_data, model, cutoff=NA, verbose=FALSE, useNu
   mses <- rep(NA, length(model))
   
   for (i in 1:length(model)) {
-    if (verbose) print(paste(i, ': ', model[[i]], sep=''))
+    if (verbose) print(paste0(i, ': ', model[[i]]))
     if (useNugget) { vgIni <- vgm(psill = 1, model = model[[i]], range = 1, nugget = 0.01)
     } else { vgIni <- vgm(psill = 1, model = model[[i]], range = 1) }
     

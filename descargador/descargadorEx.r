@@ -32,10 +32,10 @@ while ((is.null(script.dir.descargadorEx) || is.na(regexpr('descargadorEx.r', sc
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.descargadorEx)) { script.dir.descargadorEx <- ''
-} else { script.dir.descargadorEx <- paste(dirname(script.dir.descargadorEx), '/', sep='') }
+} else { script.dir.descargadorEx <- paste0(dirname(script.dir.descargadorEx), '/') }
 
-source(paste(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r', sep=''))
-source(paste(script.dir.descargadorEx, '../PathUtils/pathUtils.r', sep=''))
+source(paste0(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.descargadorEx, '../PathUtils/pathUtils.r'))
 instant_pkgs(c('RCurl', 'parallel', 'digest', 'data.table', 'lubridate'))
 
 threadHandle <- getCurlHandle()
@@ -67,7 +67,7 @@ extraerEnlaces <- function(urls, patronEnlaces='href="[[:print:]]"', concatenarU
   if (concatenarUrlBase) {
     urlsBase <- unlist(lapply(seq_along(textoshtmls), FUN = function(x) { rep(names(textoshtmls)[x], length(textoshtmls[[x]]))}))
     urlsBase <- urlsBase[res > 0]
-    urls <- paste(urlsBase, urls, sep='')
+    urls <- paste0(urlsBase, urls)
   }
   return(urls)
 }
@@ -86,13 +86,13 @@ generarNombresArchivo_CHIRP <- function(fechaMin, fechaMax=fechaMin,
   anioMax <- year(fechaMax)
   anios <- anioMin:anioMax
   
-  urls <- paste(urlBaseCHIRP, anios, '/', sep = '')
+  urls <- paste0(urlBaseCHIRP, anios, '/', sep = '')
   
   urls <- extraerEnlaces(urls = urls, 
                          patronEnlaces = 'chirp\\.[[:digit:]]{4}\\.[[:digit:]]{2}\\.[[:digit:]]{2}\\.tif[\\.gz]?',
                          concatenarUrlBase = TRUE)
   
-  nombresArchivosDestino <- paste(carpetaSalida, basename(urls), sep='')
+  nombresArchivosDestino <- paste0(carpetaSalida, basename(urls))
 
   pathArchivo <- nombresArchivosDestino[1]
   procesarArchivoTifGz <- function(pathArchivo, path7Zip='\"C:/Program Files/7-Zip/7z.exe\"',
@@ -101,7 +101,7 @@ generarNombresArchivo_CHIRP <- function(fechaMin, fechaMax=fechaMin,
     oldwd <- getwd()
     setwd(dirname(pathArchivo))
 
-    system(paste(path7Zip, ' e -aoa ', pathArchivo, sep=''))
+    system(paste0(path7Zip, ' e -aoa ', pathArchivo))
     pathArchivoDescomprimido <- substr(pathArchivo, 1, nchar(pathArchivo) - 3)
     
     require(raster)
@@ -141,17 +141,18 @@ generarNombresArchivo_RAMMB <- function(fechaEjecucion=Sys.time(),
     # Para pruebas
     #textohtml <- unlist(strsplit(x = getURLAsynchronous(url = 'http://rammb.cira.colostate.edu/ramsdis/online/archive.asp?data_folder=rmtc/rmtcsasec1vis04&width=640&height=480'), 
     #                                                    split = '\r*\n'))
-    textohtml <- unlist(strsplit(x = getURLAsynchronous(url = paste(urlBaseRAMMB, 
-                                                                    c('archive.asp?data_folder=rmtc/rmtcsasec1vis04&width=640&height=480',
-                                                                      'archive.asp?data_folder=rmtc/rmtcsasec1ir304&width=640&height=480',
-                                                                      'archive.asp?data_folder=rmtc/rmtcsasec1ir404&width=640&height=480',
-                                                                      'archive.asp?data_folder=rmtc/rmtcsasec1ir204&width=640&height=480'), sep = '')),
+    textohtml <- unlist(strsplit(x = getURLAsynchronous(
+      url = paste0(urlBaseRAMMB, 
+                  c('archive.asp?data_folder=rmtc/rmtcsasec1vis04&width=640&height=480',
+                    'archive.asp?data_folder=rmtc/rmtcsasec1ir304&width=640&height=480',
+                    'archive.asp?data_folder=rmtc/rmtcsasec1ir404&width=640&height=480',
+                    'archive.asp?data_folder=rmtc/rmtcsasec1ir204&width=640&height=480'), sep = '')),
                                  split = '\r*\n'))
     
     urls <- regmatches(textohtml, regexpr('images/rmtc/[[:print:]]+.gif', textohtml))
     if (length(urls) > 0) {
-      urls <- paste(urlBaseRAMMB, urls, sep='')
-      nombresArchivosDestino <- paste(carpetaSalida, 'RAMMB/', pathDesdeUltimaCarpeta(urls), sep='')
+      urls <- paste0(urlBaseRAMMB, urls)
+      nombresArchivosDestino <- paste0(carpetaSalida, 'RAMMB/', pathDesdeUltimaCarpeta(urls))
     } else { nombresArchivosDestino <- character(0) }
     return(list(urls=urls, nombresArchivosDestino=nombresArchivosDestino))
   } else return(NULL)
@@ -161,11 +162,12 @@ generarNombresArchivo_SMN_Satelite <- function(fechaEjecucion=Sys.time(),
                                                urlBaseSMN='http://www.smn.gov.ar/vmsr/',
                                                carpetaSalida='D:/testsMCH/descargador/') {
   if (minute(fechaEjecucion) %% 2 == 0) {
-    textohtml <- unlist(strsplit(x = getURLAsynchronous(url = paste(urlBaseSMN, 
-                                                                    c('general.php?dir=YVcxaFoyVnVaWE12WVhKblpXNTBhVzVoTDJsdVpnPT0=',
-                                                                      'general.php?dir=YVcxaFoyVnVaWE12WVhKblpXNTBhVzVoTDNSdQ==',
-                                                                      'general.php?dir=YVcxaFoyVnVaWE12WVhKblpXNTBhVzVoTDNaaA==',
-                                                                      'general.php?dir=YVcxaFoyVnVaWE12WVhKblpXNTBhVzVoTDNacGN3PT0='), sep = '')),
+    textohtml <- unlist(strsplit(x = getURLAsynchronous(
+      url = paste0(urlBaseSMN, 
+                  c('general.php?dir=YVcxaFoyVnVaWE12WVhKblpXNTBhVzVoTDJsdVpnPT0=',
+                    'general.php?dir=YVcxaFoyVnVaWE12WVhKblpXNTBhVzVoTDNSdQ==',
+                    'general.php?dir=YVcxaFoyVnVaWE12WVhKblpXNTBhVzVoTDNaaA==',
+                    'general.php?dir=YVcxaFoyVnVaWE12WVhKblpXNTBhVzVoTDNacGN3PT0='), sep = '')),
                                  split = '\r*\n'))
     
     prefix = '<script language="javascript" type="text/javascript">'
@@ -173,16 +175,16 @@ generarNombresArchivo_SMN_Satelite <- function(fechaEjecucion=Sys.time(),
     
     #textohtml <- textohtml[startsWith(textohtml, prefix = '<script language="javascript" type="text/javascript">')]
     
-    varDirs <- paste(gsub(x=gsub(x = regmatches(textohtml, regexpr('var dir=\"[[:print:]]+\";</script> ', textohtml)), pattern = 'var dir=\"', replacement = '', fixed = T),
-                     pattern = '\";</script> ', replacement = '', fixed = T), '/', sep='')
+    varDirs <- paste0(gsub(x=gsub(x = regmatches(textohtml, regexpr('var dir=\"[[:print:]]+\";</script> ', textohtml)), pattern = 'var dir=\"', replacement = '', fixed = T),
+                     pattern = '\";</script> ', replacement = '', fixed = T), '/')
     
     textohtml <- gsub(x=gsub(x = textohtml, pattern = '<script language=\"javascript\" type=\"text/javascript\"> var img=\"', replacement = '', fixed = T),
                       pattern = '|\"; var dir=\"imagenes/argentina/[[:alpha:]]{2,3}\";</script> ', replacement = '')
     urls <- strsplit(x = textohtml, split = '|', fixed=T)
     if (length(urls) > 0) {
-      urls <- unlist(lapply(seq_along(urls), FUN = function(x, urls, varDirs) {return(paste(varDirs[x], urls[[x]], sep=''))}, urls=urls, varDirs=varDirs))
-      urls <- paste(urlBaseSMN, urls, sep='')
-      nombresArchivosDestino <- paste(carpetaSalida, 'SMN/satelite/', pathDesdeUltimaCarpeta(urls), sep='')
+      urls <- unlist(lapply(seq_along(urls), FUN = function(x, urls, varDirs) {return(paste0(varDirs[x], urls[[x]]))}, urls=urls, varDirs=varDirs))
+      urls <- paste0(urlBaseSMN, urls)
+      nombresArchivosDestino <- paste0(carpetaSalida, 'SMN/satelite/', pathDesdeUltimaCarpeta(urls))
     } else { nombresArchivosDestino <- character(0) }
     
     return(list(urls=urls, nombresArchivosDestino=nombresArchivosDestino))
@@ -193,13 +195,13 @@ generarNombresArchivo_SMN_Radar <- function(fechaEjecucion=Sys.time(),
                                             urlBaseSMNRadar='http://www.smn.gov.ar/radar/',
                                             carpetaSalida='D:/testsMCH/descargador/') {
   if (minute(fechaEjecucion) %% 5 == 0) {
-    urls <- c(paste(urlBaseSMNRadar, 'CMAX_240_ZE_1_01.png', sep=''),
-              paste(urlBaseSMNRadar, 'ETOP_240_ZE_1_01.png', sep=''),
-              paste(urlBaseSMNRadar, 'CMAX_480_ZE_1_01.png', sep=''),
-              paste(urlBaseSMNRadar, 'PPI1_120_VE_1_01.png', sep=''))
+    urls <- c(paste0(urlBaseSMNRadar, 'CMAX_240_ZE_1_01.png'),
+              paste0(urlBaseSMNRadar, 'ETOP_240_ZE_1_01.png'),
+              paste0(urlBaseSMNRadar, 'CMAX_480_ZE_1_01.png'),
+              paste0(urlBaseSMNRadar, 'PPI1_120_VE_1_01.png'))
     
     strFechaDescarga <- format(x = Sys.time(), "_%Y%m%d_%H%M%S")
-    nombresArchivosDestino <- paste(carpetaSalida, 'SMN/', appendToFileName(pathDesdeUltimaCarpeta(urls), strFechaDescarga), sep='')
+    nombresArchivosDestino <- paste0(carpetaSalida, 'SMN/', appendToFileName(pathDesdeUltimaCarpeta(urls), strFechaDescarga))
     return(list(urls=urls, nombresArchivosDestino=nombresArchivosDestino))
   } else return(NULL)
 }
@@ -208,10 +210,10 @@ generarNombresArchivo_DatosMCH2_Horarios <- function(fechaEjecucion=Sys.time(),
                                             urlBaseDatosMCH2='https://www.inumet.gub.uy/reportes/estadoActual/',
                                             carpetaSalida='D:/testsMCH/descargador/') {
   if (minute(fechaEjecucion) %% 5 == 0) {
-    urls <- c(paste(urlBaseDatosMCH2, 'estadoActualDatosHorarios.mch', sep=''))
+    urls <- c(paste0(urlBaseDatosMCH2, 'estadoActualDatosHorarios.mch'))
     
-    strFechaDescarga <- paste(format(x = fechaEjecucion, "%Y%m%d_%H"), '0000_', sep='')
-    nombresArchivosDestino <- paste(carpetaSalida, 'MCH2/', prependToFileName(filename = pathDesdeUltimaCarpeta(urls), strFechaDescarga), sep='')
+    strFechaDescarga <- paste0(format(x = fechaEjecucion, "%Y%m%d_%H"), '0000_')
+    nombresArchivosDestino <- paste0(carpetaSalida, 'MCH2/', prependToFileName(filename = pathDesdeUltimaCarpeta(urls), strFechaDescarga))
     return(list(urls=urls, nombresArchivosDestino=nombresArchivosDestino))
   } else return(NULL)
 }
@@ -220,10 +222,10 @@ generarNombresArchivo_DatosMCH2_12Horarios <- function(fechaEjecucion=Sys.time()
                                                        urlBaseDatosMCH2='https://www.inumet.gub.uy/reportes/estadoActual/',
                                                        carpetaSalida='D:/testsMCH/descargador/') {
   if (hour(fechaEjecucion) %in% c(0, 12) && minute(fechaEjecucion) %% 5 == 0) {
-    urls <- c(paste(urlBaseDatosMCH2, 'estadoActualDatosDiariosUltimaSemana.mch', sep=''))
+    urls <- c(paste0(urlBaseDatosMCH2, 'estadoActualDatosDiariosUltimaSemana.mch'))
     
-    strFechaDescarga <- paste(format(x = fechaEjecucion, "%Y%m%d_%H"), '0000_', sep='')
-    nombresArchivosDestino <- paste(carpetaSalida, 'MCH2/', prependToFileName(filename = pathDesdeUltimaCarpeta(urls), strFechaDescarga), sep='')
+    strFechaDescarga <- paste0(format(x = fechaEjecucion, "%Y%m%d_%H"), '0000_')
+    nombresArchivosDestino <- paste0(carpetaSalida, 'MCH2/', prependToFileName(filename = pathDesdeUltimaCarpeta(urls), strFechaDescarga))
     return(list(urls=urls, nombresArchivosDestino=nombresArchivosDestino))
   } else return(NULL)
 }
@@ -233,10 +235,10 @@ generarNombresArchivo_DatosMCH2_Diarios <- function(fechaEjecucion=Sys.time(),
                                                     carpetaSalida='D:/testsMCH/descargador/') {
   # Por ahora solo se suben diarios los datos de R3, cuando se suban más datos ajustar las fechas de descarga
   if (hour(fechaEjecucion) %in% c(13, 14) && minute(fechaEjecucion) > 30 && minute(fechaEjecucion) %% 5 == 0) {
-    urls <- c(paste(urlBaseDatosMCH2, 'estadoActualDatosDiariosUltimaSemanaR3.mch', sep=''))
+    urls <- c(paste0(urlBaseDatosMCH2, 'estadoActualDatosDiariosUltimaSemanaR3.mch'))
     
-    strFechaDescarga <- paste(format(x = fechaEjecucion, "%Y%m%d"), '_000000_', sep='')
-    nombresArchivosDestino <- paste(carpetaSalida, 'MCH2/', prependToFileName(filename = pathDesdeUltimaCarpeta(urls), strFechaDescarga), sep='')
+    strFechaDescarga <- paste0(format(x = fechaEjecucion, "%Y%m%d"), '_000000_')
+    nombresArchivosDestino <- paste0(carpetaSalida, 'MCH2/', prependToFileName(filename = pathDesdeUltimaCarpeta(urls), strFechaDescarga))
     return(list(urls=urls, nombresArchivosDestino=nombresArchivosDestino))
   } else return(NULL)
 }
@@ -245,8 +247,8 @@ generarNombresArchivo_WWLLN <- function(fechaEjecucion=Sys.time(),
                                         urlBaseWWLLN='http://webflash.ess.washington.edu/',
                                         carpetaSalida='D:/testsMCH/descargador/') {
   if (minute(fechaEjecucion) %% 5 == 0) {
-    urls <- paste(urlBaseWWLLN, 'AmericaL_plot_weather_map.jpg', sep='')
-    nombresArchivosDestino <- paste(carpetaSalida, 'WWLLN/', appendToFileName(filename = basename(urls), postFijo = format(x = Sys.time(), "_%Y%m%d_%H%M%S")), sep='')
+    urls <- paste0(urlBaseWWLLN, 'AmericaL_plot_weather_map.jpg')
+    nombresArchivosDestino <- paste0(carpetaSalida, 'WWLLN/', appendToFileName(filename = basename(urls), postFijo = format(x = Sys.time(), "_%Y%m%d_%H%M%S")))
     return(list(urls=urls, nombresArchivosDestino=nombresArchivosDestino))
   } else return(NULL)
 }
@@ -268,9 +270,9 @@ generarNombresArchivo_PrecipGFS <- function(fechaEjecucion=Sys.time(),
       if (horasPrecip == 1) { horasPron <- sprintf('%03d', seq.int(from=1, to=72, by=1))
       } else { horasPron <- sprintf('%03d', seq.int(from=horasPrecip, to=72, by=3)) }
       
-      nuevosUrls <- paste(urlBaseGFS, horaEjec, '/', zonaGFS, '/precip_p', strHorasPrecip, '/gfs_', zonaGFS, '_', horasPron, '_precip_p', strHorasPrecip, '.gif', sep='')
+      nuevosUrls <- paste0(urlBaseGFS, horaEjec, '/', zonaGFS, '/precip_p', strHorasPrecip, '/gfs_', zonaGFS, '_', horasPron, '_precip_p', strHorasPrecip, '.gif')
       urls <- c(urls, nuevosUrls)
-      nombresArchivosDestino <- c(nombresArchivosDestino, paste(carpetaSalida, 'GFS/precip/', format(fechaEjecucionUTC, '%Y%m%d_%H'), '/precip_p', strHorasPrecip, '/', basename(nuevosUrls), sep=''))
+      nombresArchivosDestino <- c(nombresArchivosDestino, paste0(carpetaSalida, 'GFS/precip/', format(fechaEjecucionUTC, '%Y%m%d_%H'), '/precip_p', strHorasPrecip, '/', basename(nuevosUrls)))
     }
     return(list(urls=urls, nombresArchivosDestino=nombresArchivosDestino))
   } else return(NULL)
@@ -283,18 +285,18 @@ postprocesarArchivosSinFecha <- function(nombresArchivosDestino) {
     archivosEnCarpeta <- setdiff(dir(carpetas[[i]], full.names = F, recursive = F, include.dirs = F, 
                                      no.. = T), 'hashes.csv')
     
-    archiHashes <- paste(carpetas[[i]], '/hashes.csv', sep='')
+    archiHashes <- paste0(carpetas[[i]], '/hashes.csv')
     if (file.exists(archiHashes)) {
       hashes <- fread(archiHashes, sep = ',', header = T, stringsAsFactors = F, key = 'hash', data.table = T)
       iNuevos <- which(!archivosEnCarpeta %in% hashes$filename)
       #archivosEnCarpeta[iNuevos]
       if (length(iNuevos) > 0) {
-        hashesNuevos <- sapply(X = paste(carpetas[[i]], '/', archivosEnCarpeta[iNuevos], sep=''), FUN = digest, algo = 'md5', file = TRUE)
+        hashesNuevos <- sapply(X = paste0(carpetas[[i]], '/', archivosEnCarpeta[iNuevos]), FUN = digest, algo = 'md5', file = TRUE)
         hashesNoRepetidos <- !hashesNuevos %in% hashes$hash
         iHashesRepetidos <- which(!hashesNoRepetidos)
         
         if (length(iHashesRepetidos) > 0) {
-          file.remove(paste(carpetas[[i]], '/', archivosEnCarpeta[iNuevos[iHashesRepetidos]], sep=''))
+          file.remove(paste0(carpetas[[i]], '/', archivosEnCarpeta[iNuevos[iHashesRepetidos]]))
           iNuevos <- iNuevos[hashesNoRepetidos]
           hashesNuevos <- hashesNuevos[hashesNoRepetidos]
         }
@@ -313,12 +315,12 @@ postprocesarArchivosSinFecha <- function(nombresArchivosDestino) {
       }
     } else {
       hashes <- data.table(filename=archivosEnCarpeta, 
-                           hash=sapply(X = paste(carpetas[[i]], '/', archivosEnCarpeta, sep=''), FUN = digest, algo = 'md5', file = TRUE),
+                           hash=sapply(X = paste0(carpetas[[i]], '/', archivosEnCarpeta), FUN = digest, algo = 'md5', file = TRUE),
                            key='hash')
       
       iDuplicados <- duplicated(hashes, by = 'hash')
       if (any(iDuplicados)) {
-        file.remove(paste(carpetas[[i]], '/', archivosEnCarpeta[iDuplicados], sep=''))
+        file.remove(paste0(carpetas[[i]], '/', archivosEnCarpeta[iDuplicados]))
         hashes <- hashes[!iDuplicados]
       }
       hayNuevos <- T
@@ -436,7 +438,7 @@ descargarArchivo_curl <- function(i, urls, nombresArchivosDestino, maxRetries=5,
   return(success)
 }
 
-descargarArchivos <- function(urls, nombresArchivosDestino=paste(pathSalida, basename(urls), sep=''), 
+descargarArchivos <- function(urls, nombresArchivosDestino=paste0(pathSalida, basename(urls)), 
                               nConexionesSimultaneas=4, forzarReDescarga=FALSE, curlOpts=NULL, 
                               pathSalida='', do_unzip=isCompressed(nombresArchivosDestino)) {
   # Retorna:
@@ -460,7 +462,7 @@ descargarArchivos <- function(urls, nombresArchivosDestino=paste(pathSalida, bas
       cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
       clusterExport(cl, varlist = c('curlOpts', 'script.dir.descargadorEx'), envir = environment())
       clusterEvalQ(cl, expr = {
-        source(paste(script.dir.descargadorEx, '../PathUtils/pathUtils.r', sep=''))
+        source(paste0(script.dir.descargadorEx, '../PathUtils/pathUtils.r'))
         require('RCurl')
         threadHandle <- getCurlHandle(.opts = curlOpts)
       })

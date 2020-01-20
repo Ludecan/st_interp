@@ -657,9 +657,9 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
 mapearPuntosGGPlot <- function(
     puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEjes=T, zcol=1, DPI=90, 
     widthPx=630, heightPx=630, tamaniosPuntos=5, dibujarTexto=F, tamanioFuentePuntos=3, 
-    tamanioFuenteEjes=15, nDigitos=1, escala=NULL, dibujar=interactive(), titulo='', subtitulo='', 
-    colorFillSHPBase=NA, contornearPuntos=FALSE, continuo, alturaEscalaContinua=unit(0.1, 'npc'), 
-    escalaGraficos = 1, puntosAResaltar=NULL) {
+    tamanioFuenteEjes=15, tamanioFuenteTitulo=14, nDigitos=1, escala=NULL, dibujar=interactive(), 
+    titulo='', subtitulo='', colorFillSHPBase=NA, contornearPuntos=FALSE, continuo, 
+    alturaEscalaContinua=unit(0.1, 'npc'), escalaGraficos = 1, puntosAResaltar=NULL) {
   oldSciPen <- getOption("scipen")
   options(scipen=15)
   if (is.null(xyLims)) {
@@ -709,6 +709,8 @@ mapearPuntosGGPlot <- function(
               #labs(x = "Este[m]", y = "Norte[m]", fill = "") + 
               theme(panel.background=element_blank())
   
+  # Quito transparencia a los colores
+  escala$colores <- rgb(t(col2rgb(escala$colores)), maxColorValue = 255L)
   if (continuo && nEscala > 1) {
     vals <- ggplot2:::rescale01(escala$escala)
     alturaEscalaContinuaEscalada <- unit(x=as.numeric(alturaEscalaContinua) * escalaGraficos, units = attr(alturaEscalaContinua, 'unit'))
@@ -745,9 +747,11 @@ mapearPuntosGGPlot <- function(
   # Dibujar escala no se usa, se pasa con true para que no haga nada
   #dibujarEjes <- T
   #subtitulo <- ''
-  p <- aplicarOpcionesAMapa(p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=T, dibujarEjes=dibujarEjes, 
-                            tamanioFuenteEjes=tamanioFuenteEjes * escalaGraficos, titulo=titulo, subtitulo=subtitulo,
-                            colorFillSHPBase=colorFillSHPBase, puntosAResaltar = puntosAResaltar, widthPx = widthPx)
+  p <- aplicarOpcionesAMapa(
+    p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=T, dibujarEjes=dibujarEjes, 
+    tamanioFuenteEjes=tamanioFuenteEjes * escalaGraficos, 
+    tamanioFuenteTitulo=tamanioFuenteTitulo * escalaGraficos, titulo=titulo, subtitulo=subtitulo,
+    colorFillSHPBase=colorFillSHPBase, puntosAResaltar = puntosAResaltar, widthPx = widthPx)
 
   if (dibujar) print(p)
   if (!is.null(nomArchResultados)) {
@@ -769,12 +773,12 @@ map_aspect = function(x, y) {
   y.dist / x.dist
 }
 
-mapearGrillaGGPlot <- function(grilla, shpBase=NULL, escala=NULL, nomArchResultados=NULL, xyLims=NULL,
-                               dibujarEscala=TRUE, dibujarEjes=TRUE, zcol=1, isolineas=FALSE, DPI=90,
-                               widthPx=630, heightPx=630, dibujar=interactive(), titulo='',
-                               subtitulo = '', continuo, alturaEscalaContinua=unit(0.1, 'npc'),
-                               dibujarPuntosObservaciones=FALSE, coordsObservaciones=NULL, 
-                               tamaniosPuntos = 0.8, tamanioFuentePuntos = 3, puntosAResaltar=NULL) {
+mapearGrillaGGPlot <- function(
+    grilla, shpBase=NULL, escala=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEscala=TRUE, 
+    dibujarEjes=TRUE, zcol=1, isolineas=FALSE, DPI=90, widthPx=630, heightPx=630, 
+    dibujar=interactive(), titulo='', subtitulo = '', continuo, 
+    alturaEscalaContinua=unit(0.1, 'npc'), dibujarPuntosObservaciones=FALSE, 
+    coordsObservaciones=NULL, tamaniosPuntos = 0.8, tamanioFuentePuntos = 3, puntosAResaltar=NULL) {
   #grilla <- coarsenGrid(grilla, coarse = 6)
   if (!is.null(shpBase) & !identicalCRS(grilla, shpBase)) { 
     shpBase <- spTransform(shpBase, proj4string(grilla))
@@ -834,18 +838,23 @@ mapearGrillaGGPlot <- function(grilla, shpBase=NULL, escala=NULL, nomArchResulta
   }
   
   if (!todosNA){
+    print(1)
+    # Isolineas
     if (continuo && isolineas && nrow(df) > 0 && var(grilla@data[iNoNa,zcol]) > 1E-6) {
+      print(2)
       if (length(escala$iniciosIntervalosIsoLineas) > 0) { cortesIsolineas <- escala$iniciosIntervalosIsoLineas
       } else  { 
         nPuntos <- 7
         cortesIsolineas <- unique(round(quantile(df$value, seq(from = 1/nPuntos, to = 1 -1/nPuntos, length.out = nPuntos - 2)), 1))
       }
         
+      print(3)
       p <- p + geom_contour(aes(colour = ..level..), breaks=cortesIsolineas, color='gray30', na.rm=T, show.legend=T)# + scale_colour_gradient(guide = 'none')
       instant_pkgs("directlabels")
       #p <- direct.label(p, list("far.from.others.borders", "calc.boxes", "enlarge.box", 
       #                  hjust = 1, vjust = 1, box.color = NA, fill = "transparent", "draw.rects"))
       p <- direct.label(p, list("bottom.pieces", colour='gray30', size=3))
+      print(4)
     }
   }
   

@@ -32,13 +32,13 @@ while ((is.null(script.dir.cacheFunciones) || is.na(regexpr('mapearEx.r', script
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.cacheFunciones)) { script.dir.cacheFunciones <- ''
-} else { script.dir.cacheFunciones <- paste(dirname(script.dir.cacheFunciones), '/', sep='') }
+} else { script.dir.cacheFunciones <- paste0(dirname(script.dir.cacheFunciones), '/') }
 
-source(paste(script.dir.cacheFunciones, '../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste0(script.dir.cacheFunciones, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(c('digest'))
 
 getPathCache <- function(objParametros, dirEjecucion='', prefijoNombreArchivoCache='') {
-  return (paste(dirEjecucion, 'RCache/', prefijoNombreArchivoCache, digest(objParametros), '.rds', sep=''))
+  return (paste0(dirEjecucion, 'RCache/', prefijoNombreArchivoCache, digest(objParametros), '.rds'))
 }
 
 guardarCache <- function(pathCache, obj) {

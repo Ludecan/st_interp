@@ -30,9 +30,9 @@ while ((is.null(script.dir.ReadGrADS) || is.na(regexpr('ReadGrADS.r', script.dir
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.ReadGrADS)) { script.dir.ReadGrADS <- ''
-} else { script.dir.ReadGrADS <- paste(dirname(script.dir.ReadGrADS), '/', sep='') }
+} else { script.dir.ReadGrADS <- paste0(dirname(script.dir.ReadGrADS), '/') }
 
-source(paste(script.dir.ReadGrADS, '../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste0(script.dir.ReadGrADS, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(c('stringi', 'rgdal', 'sp', 'akima', 'RANN'))
 
 formaWGS84 <- '+ellps=WGS84 +datum=WGS84 +units=m'
@@ -56,23 +56,23 @@ parsePDef <- function(PDef, formaTierra=formaDeLaTierra) {
     dy <- as.numeric(PDef[13]);
     # WRF no usa el datum  WGS84 sino que usa un datum esférico
     # Más información acá: http://www.pkrc.net/wrf-lambert.html
-    proj4string <- paste('+proj=lcc +lat_1=', STrueLat, ' +lat_2=', NTrueLat, 
+    proj4string <- paste0('+proj=lcc +lat_1=', STrueLat, ' +lat_2=', NTrueLat, 
                          ' +lat_0=', latRef, ' ', ' +lon_0=', sLon, ' ', 
-                         formaTierra, ' +no_defs', sep='')
+                         formaTierra, ' +no_defs')
     
     puntoRef <- SpatialPoints(coords = matrix(c(lonRef, latRef), nrow = 1), 
-                              proj4string = CRS(paste('+proj=longlat ', formaTierra, ' +no_defs', sep='')))
+                              proj4string = CRS(paste0('+proj=longlat ', formaTierra, ' +no_defs')))
     puntoRef <- spTransform(puntoRef, proj4string)
-    proj4string <- paste('+proj=lcc +lat_1=', STrueLat, ' +lat_2=', NTrueLat, 
+    proj4string <- paste0('+proj=lcc +lat_1=', STrueLat, ' +lat_2=', NTrueLat, 
                          ' +lat_0=', latRef, ' ', ' +lon_0=', sLon, ' ', formaTierra, 
                          ' +x_0=', -coordinates(puntoRef)[1,1], 
-                         ' +y_0=', -coordinates(puntoRef)[1,2], ' +no_defs', sep='')
+                         ' +y_0=', -coordinates(puntoRef)[1,2], ' +no_defs')
     
     return (list(tipoProyeccion=tipoProyeccion, iSize=iSize, jSize=jSize, latRef=latRef, lonRef=lonRef, 
                  iRef=iRef, jRef=jRef, STrueLat=STrueLat, NTrueLat=NTrueLat, sLon=sLon, dx=dx, dy=dy, 
                  proj4string=proj4string))
   } else {
-    stop(paste('Error leyendo el campo PDEF. Tipo de proyección no implementada "', tipoProyeccion, '"', sep=''))
+    stop(paste0('Error leyendo el campo PDEF. Tipo de proyección no implementada "', tipoProyeccion, '"'))
   }
 }
 
@@ -91,7 +91,7 @@ parseDimDef <- function(dimDef, allowGaussian = FALSE) {
     return (res)    
   } else {
     # implement other types
-    stop(paste('parseDimDef: Error unknown dimdef type "', dimDef[3], '"', sep=''))
+    stop(paste0('parseDimDef: Error unknown dimdef type "', dimDef[3], '"'))
   }
 }
 
@@ -111,7 +111,7 @@ parseGradsAbsoluteTime <- function(s) {
       # 123
       hora <- as.numeric(substring(s, 1, 2))
       minuto <- 0
-    } else { stop(paste('Fecha inválida: "', s, '"', sep='')) }
+    } else { stop(paste0('Fecha inválida: "', s, '"')) }
   } else  {
     hora <- 0
     minuto <- 0
@@ -177,7 +177,7 @@ parseTDef <- function(TDef) {
   } else if (unit == 'dy') { deltaDT <- increment * 60 * 60 * 24
   } else {
     deltaDT <- 0
-    stop(paste('parseTDef: Error unknown unit "', unit, '"', sep=''))
+    stop(paste0('parseTDef: Error unknown unit "', unit, '"'))
   }
   
   res$from <- from
@@ -224,9 +224,9 @@ readXYGrid <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1) 
   if (is.na(dsetOverride)) {
     if (startsWith(ctl$dset, '^')) { 
       if (.Platform$OS.type == "windows") {
-        binFile <- paste(dirname(ctl$ctlFile), '/', gsub(pattern = ':', x = substr(ctl$dset, 2, nchar(ctl$dset)), replacement = '', fixed = T), sep='', collapse='')
+        binFile <- paste0(dirname(ctl$ctlFile), '/', gsub(pattern = ':', x = substr(ctl$dset, 2, nchar(ctl$dset)), replacement = '', fixed = T), collapse='')
       } else {
-        binFile <- paste(dirname(ctl$ctlFile), '/', substr(ctl$dset, 2, nchar(ctl$dset)), sep='', collapse='')  
+        binFile <- paste0(dirname(ctl$ctlFile), '/', substr(ctl$dset, 2, nchar(ctl$dset)), collapse='')  
       }
     } else { 
       if(.Platform$OS.type == "windows") {
@@ -282,7 +282,7 @@ getGrillaNativa <- function(ctl) {
       
       return(SpatialGrid(grid = grilla, proj4string = CRS(ctl$pDef$proj4string)))
     } else
-      stop(paste('getGrillaNativa: Error unimplemented GrADS PDef type "', ctl$pDef$tipoProyeccion, '"', sep=''))
+      stop(paste0('getGrillaNativa: Error unimplemented GrADS PDef type "', ctl$pDef$tipoProyeccion, '"'))
   } else return(getGrillaRectilineaLatLong(ctl))
 }
 
@@ -293,7 +293,7 @@ getGrillaRectilineaLatLong <- function(ctl, formaTierra=formaDeLaTierra) {
   # proj4string <- CRS('+proj=longlat +ellps=WGS84 +no_defs')
   # WRF no usa el datum  WGS84 sino que usa un datum esférico
   # Más información acá: http://www.pkrc.net/wrf-lambert.html
-  return(SpatialGrid(grid = grilla, proj4string = CRS(paste('+proj=longlat ', formaTierra, ' +no_defs', sep=''))))
+  return(SpatialGrid(grid = grilla, proj4string = CRS(paste0('+proj=longlat ', formaTierra, ' +no_defs'))))
 }
 
 sampleSP <- function(origSP_DF, newSP_DF, samplingMethod = c('NearestNeighbor', 'Bilinear', 'Bicubic'), 
@@ -416,7 +416,7 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
   } else if (is(grillaXY, 'SpatialPixels')) {
     res <- SpatialPixelsDataFrame(points = grillaXY, data = data.frame(value=as.numeric(datos)))
   } else {
-    stop(paste('ReadGrADS.readXYGridSP: unknown grid class ', class(grillaXY), sep=''))
+    stop(paste0('ReadGrADS.readXYGridSP: unknown grid class ', class(grillaXY)))
   }
 dim(datos)
   return(res)
@@ -430,7 +430,7 @@ dim(datos)
       lats <- readXYGrid(ctl = ctl, dsetOverride = dsetOverride, idxFecha = idxFecha, idxVar = 1, idxNivelZ = idxNivelZ)
       longs <- readXYGrid(ctl = ctl, dsetOverride = dsetOverride, idxFecha = idxFecha, idxVar = 2, idxNivelZ = idxNivelZ)
       
-      prjLongLatWRF <- paste('+proj=longlat ', formaDeLaTierra, ' +no_defs', sep='')
+      prjLongLatWRF <- paste0('+proj=longlat ', formaDeLaTierra, ' +no_defs')
       
       puntosGrillaNativa <- spTransform(puntosGrillaNativa, CRS(prjLongLatWRF))
       coordinates(puntosGrillaNativa)[c(1, 174), ]
@@ -500,8 +500,8 @@ dim(datos)
     shpBase <- cargarSHP('C:/mch/ArchivosProcesosLocales/MapaUruguayVacio/uruguay_departamentos.shp')
     shpBase <- spTransform(shpBase, CRS(proj4string(g)))
     mapearGrillaGGPlot(grilla = g, shpBase = shpBase, escala = escala, dibujar=F, 
-                       titulo = paste('GLL:', proj4string(g)), 
-                       subtitulo = paste('GN:',proj4string(grillaXY)))
+                       titulo = paste0('GLL: ', proj4string(g)), 
+                       subtitulo = paste0('GN: ',proj4string(grillaXY)))
     
     mapearGrillaGGPlot(grillaLatLongDF, shpBase = shpBase, escala = escala, dibujar=F)
     mapearGrillaGGPlot(grillaLatLongDF, shpBase = shpBase, continuo = T, isolineas = T, dibujar=F)
@@ -558,7 +558,7 @@ parseCTL <- function(ctlFile, convert360to180=FALSE, verbose=FALSE) {
   ctl <- readChar(con = ctlFile, nchars = file.info(ctlFile)$size)
   
   atributosGrADS <- 'dset|chsub|dtype|index|stnmap|title|undef|unpack|fileheader|xyheader|xytrailer|theader|headerbytes|trailerbytes|xvar|yvar|zvar|stid|tvar|toffvar|cachesize|options|pdef|xdef|ydef|zdef|tdef|edef|vectorpairs|vars|endvars|\\@|\\*'
-  expresionReg <- paste(paste('(\n|^)', unlist(strsplit(atributosGrADS, split = '|', fixed = T)), sep=''), collapse = '|')
+  expresionReg <- paste(paste0('(\n|^)', unlist(strsplit(atributosGrADS, split = '|', fixed = T))), collapse = '|')
   
   matches <- gregexpr(pattern = expresionReg, text = ctl, ignore.case = T)
   textoAtributos <- gsub(unlist(regmatches(x = ctl, m = matches)), pattern = '\n', replacement = '')
@@ -594,7 +594,7 @@ parseCTL <- function(ctlFile, convert360to180=FALSE, verbose=FALSE) {
   while (i <= length(textoAtributos)) {
     # lower case to check without case sensitivity
     param <- tolower(textoAtributos[i])
-    if (verbose) print(paste(i, ': ', param, '-', valoresAtributos[i]))
+    if (verbose) print(paste(i, ': ', param, ' - ', valoresAtributos[i]))
     
     # ignore comments for now
     if (!startsWith(x = param, prefix = '*')) {
@@ -623,8 +623,8 @@ parseCTL <- function(ctlFile, convert360to180=FALSE, verbose=FALSE) {
             res$xdef$from <- res$xdef$from - 180
             res$xdef$vals <- res$xdef$vals - 180
           } else {
-            stop(paste(
-              'readGrADS.parseCTL: convert360to180 not implemented for xdef$type==', res$xdef$type, sep=''))
+            stop(paste0(
+              'readGrADS.parseCTL: convert360to180 not implemented for xdef$type==', res$xdef$type))
           }
         }
       } else if (param == 'ydef') {
@@ -651,7 +651,7 @@ parseCTL <- function(ctlFile, convert360to180=FALSE, verbose=FALSE) {
         # no processing done for now
         res$attributes[[length(res$attributes)+1]] <- valoresAtributos[i]
       }else {
-        stop(paste('parseCTL: Error unknown GrADS Data Descriptor File Component in line ', i, ': "', ctl[[i]], '"', sep=''))
+        stop(paste0('parseCTL: Error unknown GrADS Data Descriptor File Component in line ', i, ': "', ctl[[i]], '"'))
       }
     }
     i <- i + 1
