@@ -32,14 +32,14 @@ while ((is.null(script.dir.GetMODISEx) || is.na(regexpr('mapearEx.r', script.dir
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.GetMODISEx)) { script.dir.GetMODISEx <- ''
-} else { script.dir.GetMODISEx <- paste(dirname(script.dir.GetMODISEx), '/', sep='') }
+} else { script.dir.GetMODISEx <- paste0(dirname(script.dir.GetMODISEx), '/') }
 
 # check for uninstalled dependencies, install them and load them
-source(paste(script.dir.GetMODISEx, '../parsearParams/parsearParamsUtils.r', sep=''))
-source(paste(script.dir.GetMODISEx, '../instalarPaquetes/instant_pkgs.r', sep=''))
-source(paste(script.dir.GetMODISEx, '../PathUtils/pathUtils.r', sep=''))
-source(paste(script.dir.GetMODISEx, '../cacheFunciones/cacheFunciones.r', sep=''))
-source(paste(script.dir.GetMODISEx, '../tryUtils/tryUtils.r', sep=''))
+source(paste0(script.dir.GetMODISEx, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.GetMODISEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.GetMODISEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.GetMODISEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.GetMODISEx, '../tryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c("digest", "sp", "rgdal", "raster", "RCurl", "lubridate", 'doParallel', 'rts'))
 # source(paste(script.dir.GetMODISEx, 'ModisDownload.r', sep=''))
 #shpGrillaMODISSinusoidalV5 <- readOGR('modis_sinusoidal', 'modis_sinusoidal_grid_world')
@@ -311,7 +311,7 @@ getMODISEx <- function(producto='MOD09Q1',
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
     clusterExport(cl, varlist = c('appendToFileName','getFileExt'))
-    clusterEvalQ(cl, expr = { 
+    clusterEvalQ(cl, expr = {
       require('rgdal')
       #require('flock')
     })

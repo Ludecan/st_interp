@@ -32,11 +32,11 @@ while ((is.null(script.dir.interpolarYMapearEx) || is.na(regexpr('interpolarYMap
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.interpolarYMapearEx)) { script.dir.interpolarYMapearEx <- ''
-} else { script.dir.interpolarYMapearEx <- paste(dirname(script.dir.interpolarYMapearEx), '/', sep='') }
-source(paste(script.dir.interpolarYMapearEx, 'interpolarEx.r', sep=''))
-source(paste(script.dir.interpolarYMapearEx, "mapearEx.r", sep=''))
-source(paste(script.dir.interpolarYMapearEx, 'funcionesAuxiliares.r', sep=''))
-source(paste(script.dir.interpolarYMapearEx, 'leerEscalas.r', sep=''))
+} else { script.dir.interpolarYMapearEx <- paste0(dirname(script.dir.interpolarYMapearEx), '/') }
+source(paste0(script.dir.interpolarYMapearEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarYMapearEx, "mapearEx.r"), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarYMapearEx, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarYMapearEx, 'leerEscalas.r'), encoding = 'WINDOWS-1252')
 
 createDefaultListaMapas <- function(paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
                                     dibujarObservacionesEscalaFija=F, dibujarEscalaFija=T,
@@ -210,11 +210,9 @@ interpolarYMapearI <- function(
     espEscalaAdaptada=NULL) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   # iTi <- 1
-  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-10-27')
+  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2019-03-12')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
-  source(paste(script.dir.interpolarYMapearEx, 'interpolarEx.r', sep=''))
-  source(paste(script.dir.interpolarYMapearEx, 'interpolarYMapearEx.r', sep=''))
 
   nomArchGeoTiff <- changeFileExt(listaMapas$nombreArchivo[ti], '.tif')
   dir.create(dirname(listaMapas$nombreArchivo[ti]), showWarnings = F, recursive = T)
@@ -285,7 +283,7 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
                               espEscalaFija=NULL, espEscalaAdaptada=NULL, tsAInterpolar=1:nrow(valoresObservaciones)) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   if (is.null(listaMapas)) listaMapas <- createDefaultListaMapas(paramsIyM = paramsIyM, fechasObservaciones = fechasObservaciones)
-
+  
   # Preprocesamiento de los datos
   if (length(coordsObservaciones) <= 500 | !(paramsIyM$incorporarCoordenadas | paramsIyM$incorporarDistanciaAlAgua | paramsIyM$incorporarAltitud | paramsIyM$incorporarTiempo)) {
     # Elimino estaciones que no tengan ninguna observación para mejorar performance, sobre todo de la CV
@@ -413,7 +411,11 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
     if (nCoresAUsar > 1) {
       cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
       clusterExport(cl, varlist = c('script.dir.interpolarYMapearEx'))
-      clusterEvalQ(cl, set.seed(31))
+      clusterEvalQ(cl, {
+        set.seed(31)
+        source(paste0(script.dir.interpolarYMapearEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252')
+        source(paste0(script.dir.interpolarYMapearEx, 'interpolarYMapearEx.r'), encoding = 'WINDOWS-1252')
+      })
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       
       res <- parLapplyLB(

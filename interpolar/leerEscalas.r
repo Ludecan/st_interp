@@ -32,8 +32,8 @@ while ((is.null(script.dir.leerEscalas) || is.na(regexpr('leerEscalas.r', script
 if (is.null(script.dir.leerEscalas)) { script.dir.leerEscalas <- ''
 } else { script.dir.leerEscalas <- paste(dirname(script.dir.leerEscalas), '/', sep='') }
 
-source(paste(script.dir.leerEscalas, 'mapearEx.r', sep=''))
-source(paste(script.dir.leerEscalas, '../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste0(script.dir.leerEscalas, 'mapearEx.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.leerEscalas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 
 instant_pkgs(c('jsonlite'))
 

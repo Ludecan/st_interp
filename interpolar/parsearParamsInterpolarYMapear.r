@@ -32,8 +32,8 @@ while ((is.null(script.dir.parsearParamsInterpolarYMapear) || is.na(regexpr('par
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.parsearParamsInterpolarYMapear)) { script.dir.parsearParamsInterpolarYMapear <- ''
-} else { script.dir.parsearParamsInterpolarYMapear <- paste(dirname(script.dir.parsearParamsInterpolarYMapear), '/', sep='') }
-source(paste(script.dir.parsearParamsInterpolarYMapear, '../parsearParams/parsearParamsUtils.r', sep=''))
+} else { script.dir.parsearParamsInterpolarYMapear <- paste0(dirname(script.dir.parsearParamsInterpolarYMapear), '/') }
+source(paste0(script.dir.parsearParamsInterpolarYMapear, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
 # require('jsonlite')
 
 createParamsInterpolarYMapear <- function(baseNomArchResultados='',
@@ -88,7 +88,8 @@ createParamsInterpolarYMapear <- function(baseNomArchResultados='',
                                           modoDiagnostico=FALSE,
                                           imitarSurfer=FALSE,
                                           simpleKrigingEnRK=TRUE,
-                                          betaSimpleKriging=NULL) {
+                                          betaSimpleKriging=NULL,
+                                          preECDFMatching=FALSE) {
   res <- list(pathEjecucion=pathEjecucion, pathProceso=pathProceso, baseNomArchResultados=baseNomArchResultados, proj4StringObservaciones=proj4StringObservaciones, 
               proj4StringAInterpolar=proj4StringAInterpolar, coordsAInterpolarSonGrilla=coordsAInterpolarSonGrilla, interpolationMethod=interpolationMethod, 
               mLimitarValoresInterpolados=mLimitarValoresInterpolados,minimoLVI=minimoLVI, maximoLVI=maximoLVI, factorDesvEstLVI=factorDesvEstLVI, 
@@ -105,7 +106,7 @@ createParamsInterpolarYMapear <- function(baseNomArchResultados='',
               funcionReduccionSeries=funcionReduccionSeries, difMaxFiltradoDeOutliersRLM=difMaxFiltradoDeOutliersRLM,
               difMaxFiltradoDeOutliersCV=difMaxFiltradoDeOutliersCV, modoDiagnostico=modoDiagnostico, 
               imitarSurfer=imitarSurfer, simpleKrigingEnRK=simpleKrigingEnRK,
-              betaSimpleKriging=betaSimpleKriging)
+              betaSimpleKriging=betaSimpleKriging, preECDFMatching=preECDFMatching)
   if (res$usarNugget) { res$fixNugget <- NA
   } else { res$fixNugget <- 0 }
   return(res)

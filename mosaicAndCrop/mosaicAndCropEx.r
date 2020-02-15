@@ -32,9 +32,9 @@ while ((is.null(script.dir.parsearParamsMosaicAndClip) || is.na(regexpr('parsear
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.parsearParamsMosaicAndClip)) { script.dir.parsearParamsMosaicAndClip <- ''
-} else { script.dir.parsearParamsMosaicAndClip <- paste(dirname(script.dir.parsearParamsMosaicAndClip), '/', sep='') }
+} else { script.dir.parsearParamsMosaicAndClip <- paste0(dirname(script.dir.parsearParamsMosaicAndClip), '/') }
 
-source(paste(script.dir.parsearParamsMosaicAndClip, '../parsearParams/parsearParamsUtils.r', sep=''))
+source(paste0(script.dir.parsearParamsMosaicAndClip, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
 
 createParamsMosaic <- function(pathEjecucion='./',
                                pathProceso='',

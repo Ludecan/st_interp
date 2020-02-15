@@ -34,17 +34,17 @@ while ((is.null(script.dir.interpolarEx) || is.na(regexpr('interpolarEx.r', scri
 if (is.null(script.dir.interpolarEx)) { script.dir.interpolarEx <- ''
 } else { script.dir.interpolarEx <- paste0(dirname(script.dir.interpolarEx), '/') }
 
-source(paste0(script.dir.interpolarEx, '../instalarPaquetes/instant_pkgs.r'))
-source(paste0(script.dir.interpolarEx, '../PathUtils/pathUtils.r'))
-source(paste0(script.dir.interpolarEx, '../IO/uIOMatrices.r'))
-source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'))
-source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
-source(paste0(script.dir.interpolarEx, './mapearEx.r'))
-source(paste0(script.dir.interpolarEx, 'funcionesAuxiliares.r'))
-source(paste0(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r'))
-source(paste0(script.dir.interpolarEx, '../Agregacion/agregacion.r'))
+source(paste0(script.dir.interpolarEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, '../IO/uIOMatrices.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, './mapearEx.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, '../agregacion/agregacion.r'), encoding = 'WINDOWS-1252')
 
-instant_pkgs(pkgs = c('unmarked', 'VGAM'), silent = TRUE, doCargarPaquetes=FALSE)
+instant_pkgs(pkgs = c('unmarked', 'VGAM', 'cli', 'devtools'), silent = TRUE, doCargarPaquetes=FALSE)
 instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'raster', 
                       'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 'rms',
                       'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
@@ -230,10 +230,6 @@ netCDFToSP <- function(fname, varName='rfe', p4string="+proj=longlat +datum=WGS8
 
 extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1, silent=T, ...) {
   # i <- 1
-  source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'))
-  source(paste0(script.dir.interpolarEx, '../PathUtils/pathUtils.r'))
-  require(rgdal)
-  require(sp)
   if (!silent) print(i)
 
   if (!is.na(pathsRegresor[i]) && file.exists(pathsRegresor[i])) {
@@ -271,6 +267,12 @@ extraerValoresRegresorSobreSP <- function(
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.interpolarEx'))
+    clusterEvalQ(cl = cl, {
+      source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.interpolarEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+      require(rgdal)
+      require(sp)
+    })
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
     valoresSobreSP <- parSapplyLB(
       cl = cl, X=1:length(pathsUnicos), FUN = extraerValorRegresorSobreSP, objSP=objSP, 
@@ -485,6 +487,27 @@ getVentana <- function(ti, nT, tamanioSemiVentana, tlagsAR=NULL, tlags=NULL) {
   return(list(tsVentana=tsVentana, iTiEnTsVentana=iTiEnTsVentana))
 }
 
+prepIDWEstimator <- function(interpolacion, params, objParameters) {
+  interpolacion$campoMedia <- 'var1.pred'
+  interpolacion$campoVarianza <- NULL
+  if (is.null(objParameters)) {
+    if (!is.na(params$inverseDistancePower)) { interpolacion$inverseDistancePower <- params$inverseDistancePower
+    } else { 
+      # estimateParameters for idw uses n-fold cross validation which uses random numbers for 
+      # sampling. Either set the random seed to achieve consistent results or use 
+      # nfolds=length(observaciones) for LOOCV
+      # set.seed(31)
+      interpolacion <- estimateParameters(
+        interpolacion, idpRange=seq(1.5, 4, 0.25), nfolds=length(interpolacion$observations))
+      # source(paste0(script.dir.interpolarEx, 'afvmod.r'))
+      # interpolacion <- estimateParameters.idw_mod(interpolacion, idpRange=seq(1.5, 4, 0.25), nfolds=length(observaciones))
+    }
+  } else {
+    interpolacion$inverseDistancePower <- objParameters$inverseDistancePower
+  }
+  return(interpolacion)
+}
+
 interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL, longitudesEnColumnas=T, 
                          objParameters=NULL, valoresCampoBaseSobreObservaciones=NULL, valoresCampoBase=NULL) {
   proj4StringAInterpolar <- proj4string(coordsAInterpolar)
@@ -580,7 +603,7 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
       
       if (is.null(objParameters)) {
         # Variograma
-        source(paste0(script.dir.interpolarEx, 'afvmod.r'))
+        source(paste0(script.dir.interpolarEx, 'afvmod.r'), encoding = 'WINDOWS-1252')
         require('gstat')
         
         if (params$imitarSurfer) {
@@ -594,7 +617,7 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
           variogramas$var_model$range <- maxDist
         } else {
           usarAFVGLS <- (params$usarFitVariogramGLS == 'auto' && length(interpolacion$observations) <= 50) || (is.logical(params$usarFitVariogramGLS) && as.logical(params$usarFitVariogramGLS))
-          source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'))
+          source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'), encoding = 'WINDOWS-1252')
           
           if (usarAFVGLS) {
             variogramas <- afvGLS(
@@ -689,24 +712,8 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
         interpolacion <- estimateAnisotropy(interpolacion)
       }
     } else if (params$interpolationMethod == 'idw') {
-      source(paste0(script.dir.interpolarEx, 'afvmod.r'))
-      #intamap:::spatialPredict.automap
-      #intamap:::estimateParameters.automap
-      #intamap:::estimateParameters.idw
-      interpolacion$campoMedia <- 'var1.pred'
-      interpolacion$campoVarianza <- NULL
-      if (is.null(objParameters)) {
-        if (!is.na(params$inverseDistancePower)) { interpolacion$inverseDistancePower <- params$inverseDistancePower
-        } else { 
-          # estimateParameters for idw uses n-fold cross validation which uses random numbers for sampling. 
-          # Set the random seed to achieve the same results everytime or use nfolds=length(observaciones)
-          # set.seed(31)
-          interpolacion <- estimateParameters(interpolacion, idpRange=seq(1.5, 4, 0.25), nfolds=length(observaciones))
-          #interpolacion <- estimateParameters.idw_mod(interpolacion, idpRange=seq(1.5, 4, 0.25), nfolds=length(observaciones))
-        }
-      } else {
-        interpolacion$inverseDistancePower <- objParameters$inverseDistancePower
-      }
+      interpolacion <- prepIDWEstimator(
+        interpolacion=interpolacion, params=params, objParameters=objParameters)
     } else if (params$interpolationMethod == 'copula') {
       interpolacion$campoMedia <- 'mean'
       interpolacion$campoVarianza <- 'variance'
@@ -986,8 +993,6 @@ fitSTVariogramModelI <- function(i, modelosVariogramaST,
                                  fml, tlags, modelosVariograma, fixNugget, tryFixNugget, estJointSill, cutoff, nPuntosIniciales, fit.method, 
                                  ndeps, errorLevel) {
   # i <- 5
-  require('gstat')
-  source(paste0(script.dir.interpolarEx, 'afvmod.r'))
   print(paste0(i, ' - ', modelosVariogramaST[i]))
   
   if (modelosVariogramaST[i] == 'Separable') {
@@ -1294,8 +1299,8 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
     sptData <- STFDF(sp = geometry(spObservaciones), time = fechasVentana, endTime = fechasVentana + deltaT, data = df)
     # acf(na.omit(as(sptData, 'xts')))
 
-    source(paste0(script.dir.interpolarEx, 'afvmod.r'))
-    source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'))    
+    source(paste0(script.dir.interpolarEx, 'afvmod.r'), encoding = 'WINDOWS-1252')
+    source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'), encoding = 'WINDOWS-1252')    
     # Space-Time empirical variogram
     boundaries <- getBoundariesPVariogramaEmpiricoV4_MultiTime(formula=fml, input_data = spObservaciones, input_data_t = c(list(value=valoresVentana), regs), cutoff=cutoff)
     empVgm <- variogramST(formula = fml, locations = sptData, tlags = tlags, boundaries = boundaries, progress=verbose)
@@ -1370,6 +1375,10 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
     if (nCoresAUsar > 1) {
       cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
       clusterExport(cl, varlist = c('script.dir.interpolarEx'))
+      clusterEvalQ(cl = cl, {
+        require('gstat')
+        source(paste0(script.dir.interpolarEx, 'afvmod.r'), encoding = 'WINDOWS-1252')
+      })
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       modelos  <- parSapplyLB(cl = cl, X = 1:length(modelosVariogramaST), FUN = fitSTVariogramModelI, modelosVariogramaST=modelosVariogramaST, 
                               empVgm=empVgm, spatialEmpVgm=spatialEmpVgm, temporalEmpVgm=temporalEmpVgm, estSpaceVgm=estSpaceVgm, 
@@ -1699,7 +1708,9 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     
     if (nCoresAUsar > 1) {
       cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
-      clusterEvalQ(cl, {require('rgeos')})
+      clusterEvalQ(cl, {
+        require('rgeos')}
+      )
       iSplit <- clusterSplit(cl, 1:length(spgeom1))
       #rm(resultado)
       #resultado <- clusterApply(cl = cl, x = iSplit, fun = auxFunc, spgeom1=spgeom1, spgeom2=spgeom2, 
@@ -1712,7 +1723,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
   }
   
   # Regresores estáticos sobre coordenadas a interpolar
-  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
+  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
   pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros = list(coordsAInterpolar, version=2))
   if (!file.exists(pathCacheDatosCoordsAInterpolar) | (file.info(pathCacheDatosCoordsAInterpolar)$size <= 0)) {
     dfDatosCoordsAInterpolar <- list()
@@ -1791,7 +1802,7 @@ incorporarRegresoresEstaticos <- function(ti, coordsObservaciones, fechasObserva
                                           incorporarAltitud=FALSE, formulaAltitud='alt') {
   #ventana <- getVentana(ti=ti, nT=nrow(valoresObservaciones), tamanioSemiVentana = params$ventanaIgualacionDistribuciones, tlagsAR = params$tlagsAR)
 
-  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
+  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
   # El valor de version es para poder cambiar el código y forzar un recálculo de los caches
   
   geomCoordsInterp <- geometry(coordsAInterpolar)
@@ -2005,6 +2016,7 @@ ajusteRegresores <- function(
       valsRegresoresObservaciones[, j] <- as.numeric(valoresRegresoresSobreObservaciones[[j]][tsVentana, ])
     }
     colnames(valsRegresoresObservaciones) <- names(valoresRegresoresSobreObservaciones)
+    
     varianzaRegresores <- apply(X = valsRegresoresObservaciones, MARGIN = 2, FUN = function(x) { return(var(x, na.rm=T)) })
     bRegresoresConVarianza <- !is.na(varianzaRegresores) & varianzaRegresores > 1E-6
     if (T) {
@@ -2012,7 +2024,7 @@ ajusteRegresores <- function(
       valsRegresoresObservaciones[, !bRegresoresConVarianza] <- valsRegresoresObservaciones[, !bRegresoresConVarianza] + rnorm(n, sd=1e-3)
       iRegresoresConVarianza <- 1:ncol(valsRegresoresObservaciones)
     } else {
-      iRegresoresConVarianza <- which(bRegresoresConVarianza)      
+      iRegresoresConVarianza <- which(bRegresoresConVarianza)
     }
 
     # x <- valoresRegresoresSobreCoordsAInterpolar_ti[,1]
@@ -2037,6 +2049,21 @@ ajusteRegresores <- function(
         # Obtengo un vector concatenando los valores de las observaciones de cada estacion para cada fecha en la ventana 
         # algo como c(obsEst1, obsEst2, ..., obsEstN) donde obsEsti son los valores de todas las fechas en una estacion
         valoresObservacionesTsVentana <- as.numeric(valoresObservaciones[tsVentana, ])
+        
+        
+        if (params$preECDFMatching && 
+            max(valoresRegresoresSobreCoordsAInterpolar_ti, na.rm=T) / max(valoresObservacionesTsVentana, na.rm=T) >= 2) {
+          regECDF <- ecdf(valoresRegresoresSobreCoordsAInterpolar_ti[, 1])
+          valsRegresoresObservaciones[, 1] <- quantile(
+            valoresObservacionesTsVentana, probs=regECDF(valsRegresoresObservaciones[, 1]), na.rm=T)
+          iesVals <- iTiEnTsVentana + seq.int(from=0, to=nO-1, by=1) * tamanioVentana
+          if (!invertir) {
+            valoresRegresoresSobreCoordsAInterpolar_ti[, 1] <- quantile(
+              valoresObservacionesTsVentana, 
+              probs=regECDF(valoresRegresoresSobreCoordsAInterpolar_ti[, 1]), 
+              na.rm = T)
+          }  
+        }
         
         # plot(x=coordinates(coordsObservaciones)[,1], y=as.numeric(valoresObservaciones[ti, ]))
         # plot(x=coordinates(coordsObservaciones)[,2], y=as.numeric(valoresObservaciones[ti, ]))
@@ -2129,7 +2156,6 @@ ajusteRegresores <- function(
                 if (!grepl(pattern='~', x=params$formulaRegresion)) params$formulaRegresion <- paste0('y~', params$formulaRegresion)
                 formulas <- list(as.formula(params$formulaRegresion))
               }
-              
               
               if (metodoIgualacionDistribuciones == 2) {
                 modelos <- lapply(X = formulas, FUN = function(x) { return(lm(formula = as.formula(x), data = df, weights = pesos)) })
@@ -2318,10 +2344,29 @@ ajusteRegresores <- function(
           }
         } else { # if (metodoIgualacionDistribuciones == 5) {
           # CDF Matching. El 1 es porque para CDF matching solo se usa el primer regresor
-          regECDF <- ecdf(valsRegresoresObservaciones[,1])
-          valoresCampoBaseSobreObservaciones <- quantile(valoresObservacionesTsVentana, probs=regECDF(valsRegresoresObservaciones[,1]), na.rm=T)
+          iPrimerRegresor <- iRegresoresNoNA_ti[1]
+          iNoNA <- !is.na(valoresObservacionesTsVentana)
+        
+          #cdfMatching <- function(target_obs, source_obs) {
+          #  sourceECDF <- ecdf(source_obs)
+          #  return(quantile(target_obs, sourceECDF(source_obs), na.rm=T))
+          #}
+          
+          # regECDF <- ecdf(valsRegresoresObservaciones[, iPrimerRegresor])
+          regECDF <- ecdf(valoresRegresoresSobreCoordsAInterpolar_ti[, iPrimerRegresor])
+          valoresCampoBaseSobreObservaciones <- quantile(
+            valoresObservacionesTsVentana, probs=regECDF(valsRegresoresObservaciones[, iPrimerRegresor]), na.rm=T)
           iesVals <- iTiEnTsVentana + seq.int(from=0, to=nO-1, by=1) * tamanioVentana
-          if (!invertir) valoresCampoBase <- quantile(valoresObservacionesTsVentana, probs=regECDF(valsRegresoresObservaciones[iesVals, 1]), na.rm = T)
+          if (!invertir) {
+            valoresCampoBase <- quantile(
+              valoresObservacionesTsVentana, 
+              probs=regECDF(valoresRegresoresSobreCoordsAInterpolar_ti[, iPrimerRegresor]), 
+              na.rm = T)
+          }
+          
+          #plot(x=valoresRegresoresSobreCoordsAInterpolar_ti[, iPrimerRegresor], y=valoresCampoBase)
+          #plot(x=valoresCampoBaseSobreObservaciones, y=valoresObservacionesTsVentana)
+            
           rm(regECDF, iesVals)
         }
         rm(valoresObservacionesTsVentana)
@@ -2567,7 +2612,7 @@ universalGriddingCV <- function(
           cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
           clusterExport(cl, varlist = c('script.dir.interpolarEx'))
           clusterEvalQ(cl = cl, expr = { 
-            source(paste0(script.dir.interpolarEx, 'interpolarEx.r')) 
+            source(paste0(script.dir.interpolarEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252') 
             if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
           })
           #clusterExport(cl, varlist = c('coordsObservaciones'))
@@ -2579,7 +2624,7 @@ universalGriddingCV <- function(
       cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
       clusterExport(cl, varlist = c('script.dir.interpolarEx'))
       clusterEvalQ(cl = cl, expr = { 
-        source(paste0(script.dir.interpolarEx, 'interpolarEx.r')) 
+        source(paste0(script.dir.interpolarEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252') 
         if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
       })
       res <- parSapplyLB(cl=cl, X=iesAEstimar, FUN=universalGriddingCV_i, coordsObservaciones=coordsObservaciones, 
@@ -2724,6 +2769,10 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, valoresCampoBaseSobr
     binInterpParams$maxVal <- 1
     binInterpParams$umbralMascaraCeros <- 0
     binInterpParams$metodoRemocionDeSesgo='ninguno'
+    binInterpParams$metodoIgualacionDistribuciones <- 'GLS'
+    binInterpParams$ventanaIgualacionDistribuciones <- 1
+    binInterpParams$incorporarCoordenadas <- TRUE
+    binInterpParams$descartarCoordenadasNoSignificativas <- TRUE
     binInterpParams$interpolationMethod <- 'automap'
     #binInterpParams$betaSimpleKriging <- 0
     binInterpShpMask <- interpolacion$shpMask
@@ -2935,10 +2984,8 @@ salvarInterpolacion <- function(baseNomArchResultados, interpolacion, formatoSal
     stop('salvarInterpolacion: formatoSalida "netCDF" no implementado')
   } else if (formatoSalida == 'GeoTiff') {
     #if (i==9) { #para guardar el IBH en raster
-    source('../grillas/uIOGrillas.r')
-    #  source('../PathUtils/pathUtils.r')
-	guardarGrillaGDAL(changeFileExt(baseNomArchResultados, '.tif'), interpolacion$predictions)
-    #guardarGrillaGDAL(changeFileExt(archivoI, '.tif'), datosAMapear)
+    source('../grillas/uIOGrillas.r', encoding = 'WINDOWS-1252')
+	  guardarGrillaGDAL(changeFileExt(baseNomArchResultados, '.tif'), interpolacion$predictions)
   }
 }
 

@@ -32,7 +32,7 @@ while ((is.null(script.dir.uIOGrillas) || is.na(regexpr('uIOGrillas.r', script.d
 if (is.null(script.dir.uIOGrillas)) { script.dir.uIOGrillas <- ''
 } else { script.dir.uIOGrillas <- paste(dirname(script.dir.uIOGrillas), '/', sep='') }
 
-source(paste(script.dir.uIOGrillas, '../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste0(script.dir.uIOGrillas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('sp', 'rgdal'))
 
 # para todas las funciones grilla tiene que ser un objeto spatialPixelsDataFrame

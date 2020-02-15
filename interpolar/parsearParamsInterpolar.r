@@ -34,7 +34,7 @@ while ((is.null(script.dir.parsearParamsInterpolar) || is.na(regexpr('parsearPar
 if (is.null(script.dir.parsearParamsInterpolar)) { script.dir.parsearParamsInterpolar <- ''
 } else { script.dir.parsearParamsInterpolar <- paste(dirname(script.dir.parsearParamsInterpolar), '/', sep='') }
 
-source(paste(script.dir.parsearParamsInterpolar, '../parsearParams/parsearParamsUtils.r', sep=''))
+source(paste0(script.dir.parsearParamsInterpolar, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
 
 # ----------------------------------------- Interpolar ----------------------------------------------------------
 createParamsInterpolar <- function(pathEjecucion='./',
@@ -195,7 +195,8 @@ createParamsInterpolarFaltantesMultiObservaciones <- function(pathEjecucion,
                                                               modoDiagnostico=FALSE,
                                                               imitarSurfer=FALSE,
                                                               simpleKrigingEnRK=TRUE,
-                                                              betaSimpleKriging=NULL) {
+                                                              betaSimpleKriging=NULL,
+                                                              preECDFMatching=FALSE) {
   return(list(pathEjecucion=pathEjecucion,
               pathProceso=pathProceso,
               incluyeNombresObservaciones=incluyeNombresObservaciones,
@@ -239,7 +240,8 @@ createParamsInterpolarFaltantesMultiObservaciones <- function(pathEjecucion,
               modoDiagnostico=modoDiagnostico,
               imitarSurfer=imitarSurfer,
               simpleKrigingEnRK=simpleKrigingEnRK,
-              betaSimpleKriging=betaSimpleKriging))
+              betaSimpleKriging=betaSimpleKriging,
+              preECDFMatching=preECDFMatching))
 }
 
 parsearParamsInterpolarFaltantesMultiObservaciones <- function(params) {

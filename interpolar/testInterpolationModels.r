@@ -32,9 +32,9 @@ while ((is.null(script.dir.testInterpolationModels) || is.na(regexpr('testInterp
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.testInterpolationModels)) { script.dir.testInterpolationModels <- ''
-} else { script.dir.testInterpolationModels <- paste(dirname(script.dir.testInterpolationModels), '/', sep='') }
+} else { script.dir.testInterpolationModels <- paste0(dirname(script.dir.testInterpolationModels), '/') }
 
-source(paste(script.dir.testInterpolationModels, '../verificacionPronosticos/verificacionPronosticos.r', sep=''))
+source(paste0(script.dir.testInterpolationModels, '../verificacionPronosticos/verificacionPronosticos.r'), encoding = 'WINDOWS-1252')
 
 getTSeqs <- function(fechasObservaciones) {
   anios <- sort(unique(year(fechasObservaciones)), decreasing = T)

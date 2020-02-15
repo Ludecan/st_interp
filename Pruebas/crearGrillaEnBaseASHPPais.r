@@ -39,8 +39,8 @@ length(unique(coordinates(grillaUy)[,1]))
 length(unique(coordinates(grillaUy)[,2]))
 length(unique(coordinates(grillaUy)[,1]))*length(unique(coordinates(grillaUy)[,2]))
 
-source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/interpolarEx.r')
-source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/mapearEx.r')
+source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/interpolarEx.r', encoding = 'WINDOWS-1252')
+source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/mapearEx.r', encoding = 'WINDOWS-1252')
 
 shp <- cargarSHP('C:/mch/ArchivosProcesosLocales/MapaUruguayVacio/uruguay_departamentos.shp', '+proj=longlat +datum=WGS84')
 

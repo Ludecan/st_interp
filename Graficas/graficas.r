@@ -70,7 +70,7 @@ colores269 <- c('#000000','#FFFF00','#1CE6FF','#FF34FF','#FF4A46',
                 '#D83D66','#2F5D9B','#6C5E46','#D25B88','#5B656C','#00B57F','#545C46','#866097','#365D25','#252F99',
                 '#00CCFF','#674E60','#FC009C','#92896B')
 
-source(paste0(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 #instant_pkgs(c("sp", "RColorBrewer", "rgeos", "maptools", "rgdal", "proj4", "scales", "ggplot2"))
 instant_pkgs(c("colorspace", "ggplot2", "Cairo", 'reshape'))
 

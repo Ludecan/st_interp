@@ -6,9 +6,9 @@ while ((is.null(script.dir.PathUtils) || is.na(regexpr('pathUtils.r', script.dir
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.PathUtils)) { script.dir.PathUtils <- ''
-} else { script.dir.PathUtils <- paste(dirname(script.dir.PathUtils), '/', sep='') }
+} else { script.dir.PathUtils <- paste0(dirname(script.dir.PathUtils), '/') }
 
-# source(paste(script.dir.PathUtils, '../instalarPaquetes/instant_pkgs.r', sep=''))
+# source(paste0(script.dir.PathUtils, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 
 # instant_pkgs("tools")
 # funciones útiles que ya vienen en R

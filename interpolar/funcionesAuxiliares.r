@@ -34,9 +34,9 @@ while ((is.null(script.dir.funcionesAuxiliares) || is.na(regexpr('funcionesAuxil
 if (is.null(script.dir.funcionesAuxiliares)) { script.dir.funcionesAuxiliares <- ''
 } else { script.dir.funcionesAuxiliares <- paste(dirname(script.dir.funcionesAuxiliares), '/', sep='') }
 
-source(paste(script.dir.funcionesAuxiliares, '../instalarPaquetes/instant_pkgs.r',sep=''))
-source(paste(script.dir.funcionesAuxiliares, '../cacheFunciones/cacheFunciones.r', sep=''))
-source(paste(script.dir.funcionesAuxiliares, '../graficas/graficas.r', sep=''))
+source(paste0(script.dir.funcionesAuxiliares, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.funcionesAuxiliares, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.funcionesAuxiliares, '../Graficas/graficas.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(pkgs = c('matrixStats', 'lubridate', 'gridExtra', 'sp', 'rgdal', 'Rmisc', 'gstat', 'grid'))
 
 graficarEstaciones <- function(estaciones, serieComparacion, tempAireMin, tempAireMax, fechaMin=NA, fechaMax=NA, 
@@ -185,7 +185,10 @@ nombreModelo <- function(params, pathsRegresores=NULL) {
   } else { strInterpolacion <- params$interpolationMethod
   }
   
-  strMetodo <- paste(strMetodoIgualacion, strInterpolacion, sep='')
+  if (params$preECDFMatching) { strECDF <- '_ECDF'
+  } else { strECDF <- '' }
+  
+  strMetodo <- paste0(strMetodoIgualacion, strInterpolacion)
   
   if (strMetodo != '') {
     if (any(strRegresores != '')) { return(paste(strMetodo, paste(strRegresores, collapse = '+'), sep='-'))
@@ -601,10 +604,10 @@ plotRasters <- function(pathsRaster, shpBase=NULL, carpetaSalida=paste(dirname(p
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl = cl, expr = {    
+    clusterEvalQ(cl = cl, expr = {
       require(rgdal)
-      source(paste(script.dir.funcionesAuxiliares, '/mapearEx.r', sep=''))
-      source(paste(script.dir.funcionesAuxiliares, '../PathUtils/pathUtils.r', sep=''))
+      source(paste0(script.dir.funcionesAuxiliares, '/mapearEx.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
     })
     parSapplyLB(cl=cl, X=1:length(pathsRaster), FUN=plotRasterI, pathsRaster=pathsRaster, shpBase=shpBase, escala=escala, 
                 carpetaSalida=carpetaSalida, titulos=titulos, replot=replot, widthPx=widthPx, heightPx=heightPx, 
@@ -811,8 +814,8 @@ plotMultiRastersEnPaneles <- function(pathsRasters, fechasRasters, carpetaSalida
     clusterEvalQ(cl = cl, expr = {
       require(rgdal)
       require(Rmisc)
-      source(paste(script.dir.funcionesAuxiliares, '/funcionesAuxiliares.r', sep=''))
-      source(paste(script.dir.funcionesAuxiliares, '/mapearEx.r', sep=''))
+      source(paste0(script.dir.funcionesAuxiliares, '/funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, '/mapearEx.r'), encoding = 'WINDOWS-1252')
     })
     parSapplyLB(cl=cl, X=1:nrow(pathsRasters), FUN=plotMultiRastersEnPanelesI, pathsRasters=pathsRasters, fechasRasters=fechasRasters, shpBase=shpBase, escalas=escalas, 
                 carpetaSalida=carpetaSalida, postFijoNomArchSalida=postFijoNomArchSalida, replot=replot, nCols=nCols, widthPx=widthPx, heightPx=heightPx,
@@ -856,7 +859,7 @@ filtrarRasters <- function(pathsRasters, minVal=NA, maxVal=NA, carpetaSalida='fi
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl = cl, expr = {    
+    clusterEvalQ(cl = cl, expr = {
       require(rgdal)
     })
     parSapplyLB(cl=cl, X=1:length(pathsRasters), FUN=filtrarRasterI, pathsRasters=pathsRasters, minVal=minVal, maxVal=maxVal, carpetaSalida=carpetaSalida, 
@@ -907,8 +910,7 @@ crearDFLeonardo <- function() {
 rellenarRegresor_ti <- function(ti=1, pathsRegresor, carpetaSalida, shpMask, metodo='fastTps', zcol=1) {
   #ti <- 6
   #print(ti)
-  require('rgdal')
-  source(paste(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r', sep=''))
+
   sp <- readGDAL(pathsRegresor[ti])
   sp <- rellenarSP(sp=sp, shpMask = shpMask, metodo = metodo, zcol=zcol)
   writeGDAL(dataset = sp, fname = paste(carpetaSalida, basename(pathsRegresor[ti]), sep=''), options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
@@ -932,6 +934,10 @@ rellenarRegresores <- function(pathsRegresores, carpetasSalida=paste(apply(X = p
     if (nCoresAUsar > 1) {
       cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
       clusterExport(cl, varlist = c('script.dir.funcionesAuxiliares'))
+      clusterEvalQ(cl = cl, expr = {
+        require('rgdal')
+        source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
+      })
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       parSapplyLB(cl=cl, X=1:length(pathsRegresores[, i]), FUN=rellenarRegresor_ti, 
                   pathsRegresor=pathsRegresores[, i], carpetaSalida=carpetasSalida[i], shpMask=shpMask, metodo=metodo, zcol=zcols[i])
@@ -1354,8 +1360,10 @@ contarNoNulosPorCuadrantes <- function(pathsGeoTiffs, nCuadrantesX=2, nCuadrante
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.funcionesAuxiliares'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl, { require('rgdal')
-                       source(paste(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r', sep='')) })
+    clusterEvalQ(cl, {
+      require('rgdal')
+      source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
+    })
     disponiblesPorCuadrantes <- parSapplyLB(cl = cl, X=as.vector(pathsGeoTiffs), FUN = contarNoNulosPorCuadrantesTi, objCuadrantes=objCuadrantes, shpMask=shpMask)
     stopCluster(cl)
   } else {
@@ -1552,7 +1560,7 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
   print(i)
   if (!is.na(pathsRasters[i])) {
     nomArchSalida <- paste(carpetaSalida, basename(pathsRasters[i]), sep='')
-    source(paste(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r', sep=''))
+    source(paste0(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
     
     run <- reRun || !file.exists(nomArchSalida) || file.info(nomArchSalida)$size <= 0 || !evaluarConReintentos(readGDAL(fname = nomArchSalida, silent = T), maxNIntentos = 1)
   
@@ -1858,7 +1866,7 @@ filtrarRastersGradienteAbrupto <- function(pathsRasters, pathsRastersCentrado=NU
       require(rgdal)
       require(sp)
       require(Rmisc)
-      source(paste(script.dir.funcionesAuxiliares, 'mapearEx.r', sep=''))
+      source(paste0(script.dir.funcionesAuxiliares, 'mapearEx.r'), encoding = 'WINDOWS-1252')
     })
     parSapplyLB(cl=cl, X=1:length(pathsRasters), FUN=filtrarRasterIGradienteAbrupto, pathsRasters=pathsRasters, pathsRastersCentrado=pathsRastersCentrado, 
                 pathsRastersEscalado=pathsRastersEscalado, minValAbs=minValAbs, maxValAbs=maxValAbs, carpetaSalida=carpetaSalida, zcol=zcol, 
@@ -2283,9 +2291,9 @@ mapearRastersCentradoYEscalado <- function(pathsRasters, pathsRastersCentrado, p
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.funcionesAuxiliares'))
     clusterEvalQ(cl = cl, expr = {
-      source(paste(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r', sep=''))
-      source(paste(script.dir.funcionesAuxiliares, 'mapearEx.r', sep=''))
-      source(paste(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r', sep=''))
+      source(paste0(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, 'mapearEx.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
     })
     
     res <- parSapplyLB(cl = cl, X=1:nrow(pathsRasters), FUN = mapearRastersCentradoYEscaladoI, pathsRasters=pathsRasters, 

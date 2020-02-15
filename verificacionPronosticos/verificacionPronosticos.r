@@ -32,9 +32,9 @@ while ((is.null(script.dir.verificacionPronosticos) || is.na(regexpr('verificaci
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.verificacionPronosticos)) { script.dir.verificacionPronosticos <- ''
-} else { script.dir.verificacionPronosticos <- paste(dirname(script.dir.verificacionPronosticos), '/', sep='') }
+} else { script.dir.verificacionPronosticos <- paste0(dirname(script.dir.verificacionPronosticos), '/') }
 
-source(paste(script.dir.verificacionPronosticos, '../Graficas/graficas.r', sep=''))
+source(paste0(script.dir.verificacionPronosticos, '../Graficas/graficas.r'), encoding = 'WINDOWS-1252')
 
 # "Constantes"
 StatNames <- c('ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos')

@@ -78,7 +78,11 @@ instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), sil
 
     if (length(paquetesAInstalar) > 0) {
       # write('IP3', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
-      utils::install.packages(paquetesAInstalar, repos = 'https://cran.rstudio.com/', dependencies = TRUE, type='binary')
+      if (.Platform$OS.type == "windows") {
+        utils::install.packages(paquetesAInstalar, repos = 'https://cran.rstudio.com/', dependencies = TRUE, type='binary')
+      } else {
+        utils::install.packages(paquetesAInstalar, repos = 'https://cran.rstudio.com/', dependencies = TRUE)
+      }
       # write('IP4', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
     }
     if (doCargarPaquetes) cargarPaquetes(pkgs, silent = silent)

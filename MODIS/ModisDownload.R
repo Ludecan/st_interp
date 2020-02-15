@@ -272,7 +272,7 @@ getNativeTemporalResolution <- function(product) {
       
       return(m)
     }
-
+    
     # Browse the directories using multiple concurrent connections to mitigate TCP Slow Start Problems
     nCoresAUsar <- min(length(dirs), MD_MaxNCores)
     if (nCoresAUsar > 1) {
@@ -337,7 +337,7 @@ getNativeTemporalResolution <- function(product) {
   #  </body></html>
   # In those cases we redownload the file
   serverErrorsPattern <- '503 Service Unavailable|500 Internal Server Error'
-
+  
   # palfaro @ 2017-01-02
   # Added forceReDownload parameter to avoid downloading file again if it already exists
   # the filesize check is a minimal check to see if the file has been downloaded correctly
@@ -345,7 +345,7 @@ getNativeTemporalResolution <- function(product) {
   # and has a larger size than 1024 bytes or it's smaller but it doesn't contain serverErrorsPattern 
   # in it's lines.
   success <- !forceReDownload && file.exists(filename) && 
-             (file.info(filename)$size > 1024 || length(grep(pattern = serverErrorsPattern, readLines(filename))) == 0)
+    (file.info(filename)$size > 1024 || length(grep(pattern = serverErrorsPattern, readLines(filename))) == 0)
   # Also, adding a few retries if the file can't be downloaded
   # there are several momentary interruptions in connections that 
   # abort downloads but can be addressed by trying again.
@@ -357,14 +357,14 @@ getNativeTemporalResolution <- function(product) {
     f = RCurl::CFILE(filename, mode="wb")
     er2 <- try(er <- RCurl::curlPerform(url = x, curl=MD_curlHandle, writedata = f@ref, .opts = opt))
     RCurl::close(f)
-
+    
     # palfaro @ 2017-01-02
     # Here if we get the service unavailable error we treat the download as an error, wait a little and try again later
     if (!file.exists(filename) || 
         (file.info(filename)$size < 1024 && length(grep(pattern = serverErrorsPattern, readLines(filename))) > 0)) {
       class(er2) <- "try-error"
     }
-
+    
     if (class(er2) == "try-error" || er != 0) {
       nRetries <- nRetries + 1
       Sys.sleep(secondsBetweenRetries)

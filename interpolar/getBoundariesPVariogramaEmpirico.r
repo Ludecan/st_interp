@@ -46,7 +46,9 @@ getProporcionDeLaDiagonalValida <- function(nObservaciones) {
 getBoundariesPVariogramaEmpirico <- function(fml, observaciones, minDivDist=5, 
                                              maxDivDist=14, proporcionDeLaDiagonalValida=0) {
   require(gstat)
-  source(paste0(script.dir.getBoundariesPVariogramaEmpirico, 'funcsCalidadVariogramasEmpiricos.r'))
+  source(paste0(
+    script.dir.getBoundariesPVariogramaEmpirico, 'funcsCalidadVariogramasEmpiricos.r'), 
+    encoding = 'WINDOWS-1252')
   
   if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(observaciones)) }
   

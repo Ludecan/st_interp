@@ -30,9 +30,9 @@ while ((is.null(script.dir.lecturaDatos) || is.na(regexpr('lecturaDatos.r', scri
   iFrame <- iFrame - 1
 }
 if (is.null(script.dir.lecturaDatos)) { script.dir.lecturaDatos <- ''
-} else { script.dir.lecturaDatos <- paste(dirname(script.dir.lecturaDatos), '/', sep='') }
+} else { script.dir.lecturaDatos <- paste0(dirname(script.dir.lecturaDatos), '/') }
 
-source(paste(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r', sep=''))
+source(paste0(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(pkgs = c('Rcpp', 'stringi', 'lubridate', 'jsonlite', 'openxlsx'))
 
 setIdsEstaciones <- function(dfEstaciones, colId=1) {
@@ -89,7 +89,10 @@ grabarDatos <- function(pathArchivoDatos, fechas, datos, sep='\t', dec='.', na='
   write.table(x=data.frame(Fechas=format(fechas, format = formatoFechas), datos), file=pathArchivoDatos, append=append, sep=sep, dec=dec, na=na, row.names=F, col.names=col.names)
 }
 
-leerSeriesArchivoUnico <- function(pathArchivoDatos, nFilasEstaciones=10, filaId=1, skip=0, formatoFechas='YmdHMS', truncated=5, tzFechas='UTC', headerDatos=F, sep='\t', dec='.', na.strings=c('-9999','NA'), fileEncoding = '') {
+leerSeriesArchivoUnico <- function(
+    pathArchivoDatos, nFilasEstaciones=10, filaId=1, skip=0, formatoFechas='YmdHMS', truncated=5, 
+    tzFechas='UTC', headerDatos=F, sep='\t', dec='.', na.strings=c('-9999','NA'), 
+    fileEncoding = 'WINDOWS-1252') {
   estaciones <- read.table(pathArchivoDatos, header=F, sep=sep, dec=dec, na.strings=na.strings, nrows=nFilasEstaciones, skip=skip, stringsAsFactors=F, fileEncoding = fileEncoding, row.names = 1)
   estaciones <- as.data.frame(t(estaciones), stringsAsFactors=F, sep=sep)
   for (i in 1:ncol(estaciones)) {
@@ -126,19 +129,23 @@ leerSeriesXLSX <- function(pathArchivoDatos, hojaEstaciones='InfoPluvios', heade
   return(list(estaciones=dfEstaciones, fechas=dfDatos$fechas, datos=dfDatos$datos))
 }
 
-grabarSeriesArchivoUnico <- function(pathArchivoDatos, estaciones, fechas, datos, sep='\t', dec='.', na='-9999',
-                                     colsEstacionesAEscribir=1:ncol(estaciones), formatoFechas='%Y-%m-%d') {
+grabarSeriesArchivoUnico <- function(
+    pathArchivoDatos, estaciones, fechas, datos, sep='\t', dec='.', na='-9999', 
+    colsEstacionesAEscribir=1:ncol(estaciones), formatoFechas='%Y-%m-%d', 
+    fileEncoding = 'WINDOWS-1252') {
   if (file.exists(pathArchivoDatos)) unlink(pathArchivoDatos)
   
   # i <- colsEstacionesAEscribir[1]
   for (i in colsEstacionesAEscribir) {
     x <- t(estaciones[, i])
     rownames(x) <- colnames(estaciones)[i]
-    write.table(x=x, file=pathArchivoDatos, sep=sep, dec=dec,na=na, row.names=T, col.names=F, append = (i != colsEstacionesAEscribir[1]))
+    write.table(x=x, file=pathArchivoDatos, sep=sep, dec=dec,na=na, row.names=T, col.names=F, 
+                append = (i != colsEstacionesAEscribir[1]), fileEncoding = fileEncoding)
   }
   
   rownames(datos) <- format(fechas, format=formatoFechas)
-  write.table(x=datos, file=pathArchivoDatos, append=T, sep=sep, dec=dec, na=na, row.names=T, col.names=F)
+  write.table(x=datos, file=pathArchivoDatos, append=T, sep=sep, dec=dec, na=na, row.names=T, 
+              col.names=F, fileEncoding = fileEncoding)
 }
 
 recolectarSalidasCDT <- function(carpetaSalidaCDT='F:/Tesis/CDT/QcTemp_DatosEstacionesCorreccionCoords_ParaCDT/CorrectedData',

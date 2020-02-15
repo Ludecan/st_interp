@@ -32,9 +32,9 @@ while ((is.null(script.dir.agregacion) || is.na(regexpr('agregacion.r', script.d
 if (is.null(script.dir.agregacion)) { script.dir.agregacion <- ''
 } else { script.dir.agregacion <- paste0(dirname(script.dir.agregacion), '/') }
 
-source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('stats', 'sp'))
-source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'))
+source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'), encoding = 'WINDOWS-1252')
 
 naSiTodosNAFuncSiNo <- function(x, func, ...) {
   x <- x[!is.na(x)]
@@ -208,7 +208,6 @@ agregacionTemporalGrillada_ti <- function(
   # formatoNomArchivoSalida <- paste0('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif')
   # ti <- which(fechas==as.POSIXct('2002-09-24', tz=tz(fechas[1])))
   # ti <- tSeq[1]
-  require('rgdal')
 
   if (overlap) {
     tiMin <- max(1, ti - trunc(nFechasAAgregar / 2))
@@ -317,13 +316,14 @@ agregacionTemporalGrillada <- function(
     iOver <- which(!is.na(over(regresorAux, bbaux)))
     rm(iAux, regresorAux, shpBaseAux, bbaux)
   }
-  
+
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.agregacion'))
-    clusterEvalQ(cl = cl, expr = { 
-      source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'))
-      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r'))
+    clusterEvalQ(cl = cl, expr = {
+      require('rgdal')
+      source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r'), encoding = 'WINDOWS-1252')
       if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
     })
 
@@ -348,7 +348,6 @@ agregacionTemporalGrillada2_ti <- function(ti=1, fechas, pathsRegresores, nFecha
   # fechas <- tempAireMin$fechas
   # pathsRegresor <- pathsRegresores[, 1]
   # formatoNomArchivoSalida <- paste0('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif')
-  require('rgdal')
   
   tiMin <- max(1, ti - trunc(nFechasAAgregar / 2))
   tiMax <- min(nrow(pathsRegresores), ti + trunc(nFechasAAgregar / 2))
@@ -388,7 +387,7 @@ agregacionTemporalGrillada2_ti <- function(ti=1, fechas, pathsRegresores, nFecha
     } else { res@data[, 1] <- apply(X = valsPixeles, MARGIN = 1, FUN = funcionAgregacion, na.rm=T) }
     res@data[nNoNulos < minNfechasParaAgregar, 1] <- NA
     
-    source(paste0(script.dir.agregacion, '../PathUtils/pathUtils.r'))
+    source(paste0(script.dir.agregacion, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
     
     nomArch <- format(x = fechas[ti], formatoNomArchivoSalida)
     writeGDAL(dataset = res, fname = nomArch, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
@@ -411,6 +410,7 @@ agregacionTemporalGrillada2 <- function(fechas, pathsRegresores, formatoNomArchi
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.agregacion'))
+    clusterEvalQ(cl = cl, expr = require('rgdal'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
     parSapplyLB(cl=cl, X=tIni:tFin, FUN=agregacionTemporalGrillada2_ti,
                 fechas=fechas, pathsRegresores=pathsRegresores, nFechasAAgregar=nFechasAAgregar, 
@@ -472,7 +472,7 @@ agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, 
     iNA <- is.na(getValues(res))
     if (!is.null(pathShpMask) && file.exists(pathShpMask)) {
       grilla <- as(res, 'SpatialGrid')
-      source(paste0(script.dir.agregacion, 'interpolarEx.r'))
+      source(paste0(script.dir.agregacion, 'interpolarEx.r'), encoding = 'WINDOWS-1252')
       shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP = pathShpMask, proj4strSHP = proj4stringShpMask, grilla = grilla, spSinMascara = spSinMascara)
       mascara <- shpMask$mask
     } else if (!is.null(spSinMascara)) {
@@ -546,7 +546,7 @@ agregacionTemporalGrillada3 <- function(
       require('raster')
       require('sp')
       require('rgdal')
-      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r'))
+      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r', encoding = 'WINDOWS-1252'))
     })
     parSapplyLB(
       cl=cl, X=1:length(clases), FUN=agregacionTemporalGrillada3_claseI, fechas=fechas, 

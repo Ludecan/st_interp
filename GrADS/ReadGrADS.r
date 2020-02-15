@@ -32,7 +32,7 @@ while ((is.null(script.dir.ReadGrADS) || is.na(regexpr('ReadGrADS.r', script.dir
 if (is.null(script.dir.ReadGrADS)) { script.dir.ReadGrADS <- ''
 } else { script.dir.ReadGrADS <- paste0(dirname(script.dir.ReadGrADS), '/') }
 
-source(paste0(script.dir.ReadGrADS, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.ReadGrADS, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('stringi', 'rgdal', 'sp', 'akima', 'RANN'))
 
 formaWGS84 <- '+ellps=WGS84 +datum=WGS84 +units=m'
@@ -163,7 +163,6 @@ parseGradsAbsoluteTime <- function(s) {
 }
 
 parseTDef <- function(TDef) {
-  #source('parseCTL.r')
   # 1    2    3      4            5
   # tdef 9999 linear 21Z23sep2006 3hr
   res <- list(type='linear')

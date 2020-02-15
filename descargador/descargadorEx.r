@@ -34,8 +34,8 @@ while ((is.null(script.dir.descargadorEx) || is.na(regexpr('descargadorEx.r', sc
 if (is.null(script.dir.descargadorEx)) { script.dir.descargadorEx <- ''
 } else { script.dir.descargadorEx <- paste0(dirname(script.dir.descargadorEx), '/') }
 
-source(paste0(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r'))
-source(paste0(script.dir.descargadorEx, '../PathUtils/pathUtils.r'))
+source(paste0(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('RCurl', 'parallel', 'digest', 'data.table', 'lubridate'))
 
 threadHandle <- getCurlHandle()
@@ -47,7 +47,7 @@ extraerEnlaces <- function(urls, patronEnlaces='href="[[:print:]]"', concatenarU
   maxNConexiones <- min(maxNConexiones, length(urls))
   if (maxNConexiones > 1) {
     cl <- makeCluster(getOption("cl.cores", maxNConexiones))
-    clusterEvalQ(cl, expr = { 
+    clusterEvalQ(cl, expr = {
       require('RCurl')
       curlHandle <- getCurlHandle()
     })
@@ -462,7 +462,7 @@ descargarArchivos <- function(urls, nombresArchivosDestino=paste0(pathSalida, ba
       cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
       clusterExport(cl, varlist = c('curlOpts', 'script.dir.descargadorEx'), envir = environment())
       clusterEvalQ(cl, expr = {
-        source(paste0(script.dir.descargadorEx, '../PathUtils/pathUtils.r'))
+        source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
         require('RCurl')
         threadHandle <- getCurlHandle(.opts = curlOpts)
       })
@@ -480,7 +480,7 @@ descargarArchivos <- function(urls, nombresArchivosDestino=paste0(pathSalida, ba
     # descargas secuenciales con Keepalive usando RCurl
     #cl <- makeCluster(getOption('cl.cores', 1))
     #system.time({
-    #  clusterEvalQ(cl, expr = { 
+    #  clusterEvalQ(cl, expr = {
     #    require('RCurl')
     #    threadHandle <- getCurlHandle() })
     #  parLapplyLB(cl = cl, X=seq_along(urls), fun = descargarArchivo, urls=urls, nombresArchivosDestino=nombresArchivosDestino, 
