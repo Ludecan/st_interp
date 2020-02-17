@@ -1390,3 +1390,45 @@ testEspacialPrecipitacion <- function(
   
   return(test)
 }
+
+testMaxToMeanRatios <- function(valoresObservaciones, minMaxVal=20, maxRatio=30, nCoresAUsar=0) {
+  testMaxToMeanRatios_i <- function(i, valoresObservaciones, minMaxVal, maxRatio) {
+    estimados <- rep(NA_real_, ncol(valoresObservaciones))
+    stdDifs <- rep(NA_real_, ncol(valoresObservaciones))
+    
+    jRowMax <- which.max(valoresObservaciones[i, ])
+    if (length(jRowMax) > 0) {
+      max_i <- valoresObservaciones[i, jRowMax]
+      mean_i <- mean(valoresObservaciones[i, -jRowMax], na.rm=T)
+      
+      if (max_i >= minMaxVal) {
+        estimados[jRowMax] <- mean_i
+        stdDifs[jRowMax] <- max_i / mean_i
+      }
+    }
+    return(createDFTestsConEstimadosYStdDifs(
+      valoresObservaciones[i, , drop=F], estimados = estimados, stdDifs = stdDifs, 
+      factorHaciaAbajo = Inf, factorHaciaArriba = maxRatio))
+  }
+  
+  if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones))
+  if (nCoresAUsar > 1) {
+    cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
+    clusterExport(cl, varlist = c('script.dir.qcTests'))
+    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r'), encoding = 'WINDOWS-1252'))
+    if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
+    test <- parLapplyLB(
+      cl = cl, X=1:nrow(valoresObservaciones), fun = testMaxToMeanRatios_i,
+      valoresObservaciones=valoresObservaciones, minMaxVal=minMaxVal, maxRatio=maxRatio)
+    stopCluster(cl)    
+  } else {
+    test <- lapply(
+      X=1:nrow(valoresObservaciones), fun = testMaxToMeanRatios_i, 
+      valoresObservaciones=valoresObservaciones, minMaxVal=minMaxVal, maxRatio=maxRatio)
+  }
+  
+  test <- do.call(rbind, test)
+  row.names(test) <- paste(make.names(test$estacion), test$fecha, sep='_')
+  
+  return(test)
+}
