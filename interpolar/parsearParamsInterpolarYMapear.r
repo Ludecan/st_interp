@@ -89,7 +89,9 @@ createParamsInterpolarYMapear <- function(baseNomArchResultados='',
                                           imitarSurfer=FALSE,
                                           simpleKrigingEnRK=TRUE,
                                           betaSimpleKriging=NULL,
-                                          preECDFMatching=FALSE) {
+                                          preECDFMatching=FALSE,
+                                          minRatioRangosParaExtrapolacion=2/3,
+                                          proporcionNuevasMuestras=0.25) {
   res <- list(pathEjecucion=pathEjecucion, pathProceso=pathProceso, baseNomArchResultados=baseNomArchResultados, proj4StringObservaciones=proj4StringObservaciones, 
               proj4StringAInterpolar=proj4StringAInterpolar, coordsAInterpolarSonGrilla=coordsAInterpolarSonGrilla, interpolationMethod=interpolationMethod, 
               mLimitarValoresInterpolados=mLimitarValoresInterpolados,minimoLVI=minimoLVI, maximoLVI=maximoLVI, factorDesvEstLVI=factorDesvEstLVI, 
@@ -106,7 +108,9 @@ createParamsInterpolarYMapear <- function(baseNomArchResultados='',
               funcionReduccionSeries=funcionReduccionSeries, difMaxFiltradoDeOutliersRLM=difMaxFiltradoDeOutliersRLM,
               difMaxFiltradoDeOutliersCV=difMaxFiltradoDeOutliersCV, modoDiagnostico=modoDiagnostico, 
               imitarSurfer=imitarSurfer, simpleKrigingEnRK=simpleKrigingEnRK,
-              betaSimpleKriging=betaSimpleKriging, preECDFMatching=preECDFMatching)
+              betaSimpleKriging=betaSimpleKriging, preECDFMatching=preECDFMatching,
+              minRatioRangosParaExtrapolacion=minRatioRangosParaExtrapolacion,
+              proporcionNuevasMuestras=proporcionNuevasMuestras)
   if (res$usarNugget) { res$fixNugget <- NA
   } else { res$fixNugget <- 0 }
   return(res)

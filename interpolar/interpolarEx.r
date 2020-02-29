@@ -1644,12 +1644,13 @@ universalGridding <- function(ti, coordsObservaciones, fechasObservaciones, valo
     }
   }
 
-  return(universalGriddingEx(ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-                             valoresObservaciones = valoresObservaciones, coordsAInterpolar = coordsAInterpolar, 
-                             params=params, valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones,
-                             valoresRegresoresSobreCoordsAInterpolar_ti=valoresRegresoresSobreCoordsAInterpolar_ti, 
-                             iObservacionesEnCoordsAInterpolar=iObservacionesEnCoordsAInterpolar, shpMask=shpMask, 
-                             longitudesEnColumnas = longitudesEnColumnas))
+  return(universalGriddingEx(
+    ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+    valoresObservaciones = valoresObservaciones, coordsAInterpolar = coordsAInterpolar, 
+    params=params, valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones,
+    valoresRegresoresSobreCoordsAInterpolar_ti=valoresRegresoresSobreCoordsAInterpolar_ti, 
+    iObservacionesEnCoordsAInterpolar=iObservacionesEnCoordsAInterpolar, shpMask=shpMask, 
+    longitudesEnColumnas = longitudesEnColumnas))
 }
 
 getPesosVentana <- function(tamanioVentana, iTiEnTsVentana, tsVentana, ventanaIgualacionDistribuciones, 
@@ -1794,12 +1795,13 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
   return(NULL)
 }
 
-incorporarRegresoresEstaticos <- function(ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
-                                          valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL,
-                                          incorporarCoordenadas=FALSE, formulaCoordenadas='x + y',
-                                          incorporarTiempo=FALSE, formulaTiempo='t',
-                                          incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
-                                          incorporarAltitud=FALSE, formulaAltitud='alt') {
+incorporarRegresoresEstaticos <- function(
+    ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
+    valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL,
+    incorporarCoordenadas=FALSE, formulaCoordenadas='x + y',
+    incorporarTiempo=FALSE, formulaTiempo='t',
+    incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
+    incorporarAltitud=FALSE, formulaAltitud='alt') {
   #ventana <- getVentana(ti=ti, nT=nrow(valoresObservaciones), tamanioSemiVentana = params$ventanaIgualacionDistribuciones, tlagsAR = params$tlagsAR)
 
   source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
@@ -1943,19 +1945,20 @@ ajusteRegresores <- function(
   
   oldNu <- length(valoresRegresoresSobreObservaciones)
   origIncorporarCoordenadas <- incorporarCoordenadas
-  if (metodoIgualacionDistribuciones == 7 && !incorporarCoordenadas) {
+  if (metodoIgualacionDistribuciones == 7) {
     incorporarCoordenadas <- TRUE
   }
   
   if (incorporarCoordenadas | incorporarTiempo | incorporarDistanciaAlAgua | incorporarAltitud) {
-    regs <- incorporarRegresoresEstaticos(ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-                                          valoresObservaciones = valoresObservaciones, coordsAInterpolar = coordsAInterpolar, params = params, 
-                                          valoresRegresoresSobreObservaciones = valoresRegresoresSobreObservaciones, 
-                                          valoresRegresoresSobreCoordsAInterpolar_ti = valoresRegresoresSobreCoordsAInterpolar_ti,
-                                          incorporarCoordenadas = incorporarCoordenadas, formulaCoordenadas = formulaCoordenadas, 
-                                          incorporarTiempo = incorporarTiempo, formulaTiempo = formulaTiempo,
-                                          incorporarDistanciaAlAgua = incorporarDistanciaAlAgua, formulaDistanciaAlAgua = formulaDistanciaAlAgua,
-                                          incorporarAltitud = incorporarAltitud, formulaAltitud = formulaAltitud)
+    regs <- incorporarRegresoresEstaticos(
+      ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
+      valoresObservaciones = valoresObservaciones, coordsAInterpolar = coordsAInterpolar, 
+      params = params, valoresRegresoresSobreObservaciones = valoresRegresoresSobreObservaciones, 
+      valoresRegresoresSobreCoordsAInterpolar_ti = valoresRegresoresSobreCoordsAInterpolar_ti,
+      incorporarCoordenadas = incorporarCoordenadas, formulaCoordenadas = formulaCoordenadas, 
+      incorporarTiempo = incorporarTiempo, formulaTiempo = formulaTiempo,
+      incorporarDistanciaAlAgua = incorporarDistanciaAlAgua, formulaDistanciaAlAgua = formulaDistanciaAlAgua,
+      incorporarAltitud = incorporarAltitud, formulaAltitud = formulaAltitud)
     valoresRegresoresSobreObservaciones <- regs$valoresRegresoresSobreObservaciones
     valoresRegresoresSobreCoordsAInterpolar_ti <- regs$valoresRegresoresSobreCoordsAInterpolar_ti
     
@@ -2050,7 +2053,6 @@ ajusteRegresores <- function(
         # algo como c(obsEst1, obsEst2, ..., obsEstN) donde obsEsti son los valores de todas las fechas en una estacion
         valoresObservacionesTsVentana <- as.numeric(valoresObservaciones[tsVentana, ])
         
-        
         if (params$preECDFMatching && 
             max(valoresRegresoresSobreCoordsAInterpolar_ti, na.rm=T) / max(valoresObservacionesTsVentana, na.rm=T) >= 2) {
           regECDF <- ecdf(valoresRegresoresSobreCoordsAInterpolar_ti[, 1])
@@ -2096,8 +2098,50 @@ ajusteRegresores <- function(
                 rm(nombresFilas, nombresColumnas)
               }
               
+              if (oldNu == 1) {
+                # Avoid extrapolation when adjusting regression.
+                # If we've sampled less than params$minRatioRangosParaExtrapolacion of the (only)
+                # regressors range, we'll add artificial samples with 0 error, taken straight from
+                # the regressors unsampled values
+                rSobreObs <- range(df[, 2])
+                rSobreCoordsAInterpolar <- range(range(valoresRegresoresSobreCoordsAInterpolar_ti[, 1]))
+                
+                # Compare how much of the range of the regressor we have covered with the samples
+                # at the observation locations. If we haven't covered at least
+                # params$minRatioRangosParaExtrapolacion, complete the range trusting the regressor
+                # ie, we'll add half as many samples as we already have aligned with the x = y line
+                
+                ratioMuestreado <- diff(rSobreObs) / diff(rSobreCoordsAInterpolar)
+                if (ratioMuestreado < params$minRatioRangosParaExtrapolacion) {
+                  iNoMuestreados <- which(
+                      rSobreObs[1] > valoresRegresoresSobreCoordsAInterpolar_ti[, 1] |
+                      rSobreObs[2] < valoresRegresoresSobreCoordsAInterpolar_ti[, 1])
+                
+                  ordenNoMuestreados <- order(valoresRegresoresSobreCoordsAInterpolar_ti[iNoMuestreados])
+                  
+                  nNuevasMuestras <- min(round(params$proporcionNuevasMuestras * (1 - ratioMuestreado) * nrow(df)), 
+                                         length(iNoMuestreados))
+                  iNuevasMuestras <- iNoMuestreados[ordenNoMuestreados[
+                    as.integer(round(seq(0, 1, length.out = nNuevasMuestras) * (length(iNoMuestreados)-1) + 1))]]
+                  
+                  valsNuevasMuestras <- valoresRegresoresSobreCoordsAInterpolar_ti[
+                    iNuevasMuestras, 
+                    c(1, seq.int(1, ncol(valoresRegresoresSobreCoordsAInterpolar_ti))), 
+                    drop=F]
+                  colnames(valsNuevasMuestras) <- colnames(df)
+                  df <- rbind(df, valsNuevasMuestras)
+                  
+                  #mapearPuntosGGPlot(puntos = SpatialPointsDataFrame(coords = coordsAInterpolar[iNoMuestreados,], data=data.frame(value=valoresRegresoresSobreCoordsAInterpolar_ti[iNoMuestreados, 1])), shpBase = shpBase)
+                  #mapearPuntosGGPlot(puntos = SpatialPointsDataFrame(coords = coordsAInterpolar[iNuevasMuestras,], data=data.frame(value=valoresRegresoresSobreCoordsAInterpolar_ti[iNuevasMuestras, 1])), shpBase = shpBase)
+                  #plot(x=df[,2], y=df[,1])
+                  # TODO: calculate pesos for the actual time window, this assumes 
+                  # params$ventanaIgualacionDistribuciones == 0
+                  pesos <- c(pesos, rep(1, nNuevasMuestras))
+                }
+              }
+              
               iUnicos <- !duplicated(df[, forceIn >= 0])
-              df <- df[iUnicos,]
+              df <- df[iUnicos, ]
               pesos <- pesos[iUnicos]
 
               terminoIndependiente='+1'
@@ -2345,7 +2389,7 @@ ajusteRegresores <- function(
         } else { # if (metodoIgualacionDistribuciones == 5) {
           # CDF Matching. El 1 es porque para CDF matching solo se usa el primer regresor
           iPrimerRegresor <- iRegresoresNoNA_ti[1]
-          iNoNA <- !is.na(valoresObservacionesTsVentana)
+          # iNoNA <- !is.na(valoresObservacionesTsVentana)
         
           #cdfMatching <- function(target_obs, source_obs) {
           #  sourceECDF <- ecdf(source_obs)
@@ -2445,6 +2489,7 @@ universalGriddingEx <- function(ti, coordsObservaciones, fechasObservaciones, va
     # con la proyeccion y las coordenadas de los puntos a interpolar
     # params debe ser un objeto creado con createParamsUniversalGridding
     # params$descartarCoordenadasNoSignificativas <- FALSE
+
     regs <- ajusteRegresores(
       ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
       valoresObservaciones = valoresObservaciones, coordsAInterpolar=coordsAInterpolar, 
@@ -2459,6 +2504,7 @@ universalGriddingEx <- function(ti, coordsObservaciones, fechasObservaciones, va
       incorporarAltitud = params$incorporarAltitud,
       formulaAltitud = params$formulaAltitud, 
       descartarCoordenadasNoSignificativas = params$descartarCoordenadasNoSignificativas,
+      invertir = FALSE,
       shpMask = shpMask)
     # mean(valoresObservaciones, na.rm = T) + c(-3, 3) * sd(valoresObservaciones, na.rm = T)
     # range(valoresObservaciones, na.rm = T)

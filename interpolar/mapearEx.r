@@ -710,7 +710,8 @@ mapearPuntosGGPlot <- function(
               theme(panel.background=element_blank())
   
   # Quito transparencia a los colores
-  escala$colores <- rgb(t(col2rgb(escala$colores)), maxColorValue = 255L)
+  iNoBlancos <- escala$colores != ""
+  escala$colores[iNoBlancos] <- rgb(t(col2rgb(escala$colores[iNoBlancos])), maxColorValue = 255L)
   if (continuo && nEscala > 1) {
     vals <- ggplot2:::rescale01(escala$escala)
     alturaEscalaContinuaEscalada <- unit(x=as.numeric(alturaEscalaContinua) * escalaGraficos, units = attr(alturaEscalaContinua, 'unit'))
