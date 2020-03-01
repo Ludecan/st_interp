@@ -34,7 +34,93 @@ while ((is.null(script.dir.parsearParamsInterpolarYMapear) || is.na(regexpr('par
 if (is.null(script.dir.parsearParamsInterpolarYMapear)) { script.dir.parsearParamsInterpolarYMapear <- ''
 } else { script.dir.parsearParamsInterpolarYMapear <- paste0(dirname(script.dir.parsearParamsInterpolarYMapear), '/') }
 source(paste0(script.dir.parsearParamsInterpolarYMapear, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
-# require('jsonlite')
+
+#' Helper function for creating a parameter object that specifies an interpolation job.
+#' These get passed to the interpolarYMapear function, found in the
+#' st_interp/interpolar/interpolarYMapearEx.r script, which in turn uses the universalGridding 
+#' function in the st_interp/interpolar/interpolarEx.r script.
+#' universalGridding implements the "master equation"  that models Hengl's universal model of 
+#' variation:
+#' Z(s, t) = 
+#'    F(U1(s, t), U2(s, t), ... Un(s, t)) + 
+#'    Z*({Zi(s,t) - F(U1(s, t), U2(s, t), ... Un(s, t))}, s, t) + 
+#'    eps"(s, t)
+#' Where:
+#' - Z is the target variable
+#' - Ui are the available gridded regressors
+#' - F is a function for calibrating the regressors
+#' - Z* is an interpolation function for the spatially correlated errors Zi - F(U1, U2, ..., Un).
+#' - eps" is uncorrelated noise.
+#' 
+#' The actual functions F and Z*, as wel as several other parameters, are specified in this object.
+#' "metodoIgualacionDistribuciones" para F e "interpolationMethod" para Z*
+#' Los valores de metodoIgualacionDistribuciones que venimos manejando en la tesis son:
+#' 1- 'ninguna'  sin ajuste de distribuciones, F(s, t) = U1(s, t), los demás regresores se ignoran
+#' 2- 'regresionLineal' regresión con MCO  F(s, t) = a0 + a1 * U1(s, t) + a2 * U2(s, t) + ... + an * Un(s, t) 
+#' 3- 'regresionLinealRobusta' regresión robusta, igual que arriba pero con RLM
+#' @param baseNomArchResultados. default=''. Used by the createDefaultListaMapas function as prefix
+#' of the resulting interpolation files. Dates will be appended to this for each time period to be 
+#' interpolated.
+#' @param pathEjecucion. Deprecated. Used to specify a path as root for execution of the script.
+#' @param pathProceso. default=''. Used to run multiple RScript instances in parallel. To make sure
+#' each RScript outputs results in a separate folder pass the pid running the RScript in pathProceso
+#' @param proj4StringObservaciones='+proj=longlat +datum=WGS84',
+#' @param proj4StringAInterpolar='+proj=utm +zone=21 +south +ellps=WGS84 +datum=WGS84 +towgs84=0,0,0 +units=m +no_defs',
+#' @param coordsAInterpolarSonGrilla=TRUE, 
+#' @param interpolationMethod='automap', # 'none'(sin interpolación), 'idw' (inverse distance weighting), 'automap' (kriging), 'copula' o 'stUniversalKriging' (Kriging Espacio - Temporal)
+#' @param mLimitarValoresInterpolados='UsarPromDesvEst', #'NoLimitar', 'LimitarMinimo', 'LimitarMaximo', 'LimitarMinimoyMaximo', 'UsarPromDesvEst' o 'UsarPromDesvEstYMinimoYMaximo'
+#' @param minimoLVI=NA, maximoLVI=NA,
+#' @param factorDesvEstLVI=3.5,
+#' @param metodoIgualacionDistribuciones='regresionLineal', # 'ninguna', 'regresionLineal', 'regresionLinealRobusta', 'regresionLinealConEliminacionDeOutliers', 'CDFMatching' o 'GLS'
+#' @param formulaRegresion='',
+#' @param ventanaIgualacionDistribuciones=1,
+#' @param incorporarCoordenadas=FALSE, 
+#' @param formulaCoordenadas='x + y',
+#' @param incorporarTiempo=FALSE, 
+#' @param formulaTiempo='t',
+#' @param incorporarDistanciaAlAgua=FALSE, 
+#' @param formulaDistanciaAlAgua='I(dist^0.125)',
+#' @param incorporarAltitud=FALSE, 
+#' @param formulaAltitud='alt',
+#' @param descartarCoordenadasNoSignificativas=FALSE,
+#' @param rellenarRegresores=FALSE,
+#' @param invertirAjusteRegresores=FALSE,
+#' @param usarNugget=FALSE,
+#' @param block=NA,
+#' @param nmin=0,
+#' @param nmax=Inf,
+#' @param maxdist=Inf,
+#' @param inverseDistancePower=NA,
+#' @param umbralMascaraCeros=0,
+#' @param metodoRemocionDeSesgo='ninguno', # 'ninguno', 'IDW_ResiduosNegativos', 'IDW_ResiduosPositivos', 'IDW_ResiduosNegativosYPositivos'
+#' @param modelosVariograma=c('Exp', 'Sph', 'Pow', 'Cir', 'Pen'),
+#' @param cutoff=Inf,
+#' @param tlags=0:5, 
+#' @param nTsST=5,#max(tlags), 
+#' @param tlagsAR=NULL,
+#' @param tryFixNugget=FALSE,
+#' @param nPuntosIniciales=2,
+#' @param usarFitVariogramGLS='auto',
+#' @param modelosVariogramaST=c('Separable', 'ProductSum', 'Metric', 'SimpleSumMetric', 'SumMetric'),
+#' @param fit.methodST=6, 
+#' @param verbose=FALSE,
+#' @param pathSHPMapaBase='',
+#' @param nCoresAUsar=0,
+#' @param radioReduccionSeriesKm=0,
+#' @param funcionReduccionSeries='mean',
+#' @param difMaxFiltradoDeOutliersRLM=0,
+#' @param difMaxFiltradoDeOutliersCV=0,
+#' @param modoDiagnostico=FALSE,
+#' @param imitarSurfer=FALSE,
+#' @param simpleKrigingEnRK=TRUE,
+#' @param betaSimpleKriging=NULL,
+#' @param preECDFMatching=FALSE,
+#' @param minRatioRangosParaExtrapolacion=2/3,
+#' @param proporcionNuevasMuestras=0.25
+
+#' @return a dataframe of test results containing for each observation: station name, date, value,
+#' neighbourhood based estimate, test result (tipoOutlier), standardized difference (difference 
+#' between observation and estimate divided by amplitude).
 
 createParamsInterpolarYMapear <- function(baseNomArchResultados='',
                                           pathEjecucion='', 
@@ -172,5 +258,8 @@ createParamsInterpolarYMapearPInterpolarFaltantesMultiObservaciones <- function(
     difMaxFiltradoDeOutliersCV=paramsMultiObservaciones$difMaxFiltradoDeOutliersCV,
     imitarSurfer=paramsMultiObservaciones$imitarSurfer,
     simpleKrigingEnRK=paramsMultiObservaciones$simpleKrigingEnRK,
-    betaSimpleKriging=paramsMultiObservaciones$betaSimpleKriging))
+    betaSimpleKriging=paramsMultiObservaciones$betaSimpleKriging, 
+    preECDFMatching=paramsMultiObservaciones$preECDFMatching,
+    minRatioRangosParaExtrapolacion=paramsMultiObservaciones$minRatioRangosParaExtrapolacion,
+    proporcionNuevasMuestras=paramsMultiObservaciones$proporcionNuevasMuestras))
 }

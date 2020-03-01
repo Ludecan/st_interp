@@ -2826,7 +2826,9 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, valoresCampoBaseSobr
     if (!is.null(binInterpShpMask)) binInterpShpMask$mask <- rep(TRUE, length(interpolacion$predictionLocations))
     interpBinaria <- interpolarEx(
       observaciones=obsBinarias, coordsAInterpolar=interpolacion$predictionLocations, 
-      params=binInterpParams, shpMask=binInterpShpMask)
+      params=binInterpParams, shpMask=binInterpShpMask, 
+      valoresCampoBaseSobreObservaciones=valoresCampoBaseSobreObservaciones,
+      valoresCampoBase=valoresCampoBase)
     
     if (umbral == 'auto') {
       binCV <- universalGriddingCV(obsBinarias, 1, matrix(obsBinarias$value, ncol = nrow(obsBinarias)), 

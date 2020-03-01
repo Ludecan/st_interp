@@ -38,13 +38,15 @@ source(paste0(script.dir.interpolarYMapearEx, "mapearEx.r"), encoding = 'WINDOWS
 source(paste0(script.dir.interpolarYMapearEx, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.interpolarYMapearEx, 'leerEscalas.r'), encoding = 'WINDOWS-1252')
 
-createDefaultListaMapas <- function(paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
-                                    dibujarObservacionesEscalaFija=F, dibujarEscalaFija=T,
-                                    dibujarObservacionesEscalaAdaptada=F, dibujarEscalaAdaptada=F, generarThumbnailFija=F, 
-                                    generarThumbnailAdaptada=F, incluirIsolineaFija=F, incluirIsolineaAdaptada=F,
-                                    dibujarPuntosObservacionesFija=F, dibujarPuntosObservacionesAdaptada=F,
-                                    salvarGeoTiff=!is.null(paramsIyM$tlagsAR), salvarBin=F, titulo='', 
-                                    incluirSubtitulo=F, recalcularSiYaExiste=T) {
+createDefaultListaMapas <- function(
+    paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
+    dibujarObservacionesEscalaFija=F, dibujarEscalaFija=T, 
+    dibujarObservacionesEscalaAdaptada=F, dibujarEscalaAdaptada=F, 
+    generarThumbnailFija=F, generarThumbnailAdaptada=F, 
+    incluirIsolineaFija=F, incluirIsolineaAdaptada=F,
+    dibujarPuntosObservacionesFija=F, dibujarPuntosObservacionesAdaptada=F,
+    salvarGeoTiff=!is.null(paramsIyM$tlagsAR), salvarBin=F, titulo='', incluirSubtitulo=F, 
+    recalcularSiYaExiste=T) {
   if (!is.null(fechasObservaciones)) {
     if (any(format(fechasObservaciones, format = "%H:%M") != "00:00")) { 
       formatoFechasArchivo <- "%Y_%m_%d_%H_%M"
@@ -210,7 +212,9 @@ interpolarYMapearI <- function(
     espEscalaAdaptada=NULL) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   # iTi <- 90
-  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-11-10')
+  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2019-03-12')
+  valoresObservaciones[iTi, ]
+  
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
 

@@ -144,6 +144,9 @@ st_interpCrossValidation <- function(
     #params$nCoresAUsar <- 1
     #estimarNAs=FALSE
     
+    # La función universalGriddingCV retorna una matriz de las mismas dimensiones que 
+    # valoresObservaciones, con cv[i, j] el valor de la LOOCV de la estacion j en la fecha i. 
+    # Es decir el valor de cv[i, j] es la estimación LOOCV de valoresObservaciones[i, j]
     cv <- universalGriddingCV(
       coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
       valoresObservaciones = valoresObservaciones, params = params, pathsRegresores = pathsRegresores,
