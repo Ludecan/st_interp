@@ -2673,11 +2673,13 @@ universalGriddingCV <- function(
         source(paste0(script.dir.interpolarEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252') 
         if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
       })
-      res <- parSapplyLB(cl=cl, X=iesAEstimar, FUN=universalGriddingCV_i, coordsObservaciones=coordsObservaciones, 
-                         fechasObservaciones=fechasObservaciones, valoresObservaciones=valoresObservaciones, params=params, 
-                         valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
-                         longitudesEnColumnas=longitudesEnColumnas, eliminarSerieTemporalCompleta=eliminarSerieTemporalCompleta,
-                         estimarNAs=estimarNAs)
+      res <- valoresObservaciones
+      res[,] <- parSapplyLB(
+          cl=cl, X=iesAEstimar, FUN=universalGriddingCV_i, coordsObservaciones=coordsObservaciones, 
+          fechasObservaciones=fechasObservaciones, valoresObservaciones=valoresObservaciones, params=params, 
+          valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
+          longitudesEnColumnas=longitudesEnColumnas, eliminarSerieTemporalCompleta=eliminarSerieTemporalCompleta,
+          estimarNAs=estimarNAs)
       stopCluster(cl)
     } else {
       res <- valoresObservaciones
@@ -3516,7 +3518,8 @@ deteccionOutliersRLM <- function(
     # params = paramsAux
     pred <- universalGriddingCV(
       coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-      valoresObservaciones = valoresObservaciones, params = paramsAux, pathsRegresores=pathsRegresores)
+      valoresObservaciones = valoresObservaciones, params = paramsAux, 
+      pathsRegresores=pathsRegresores)
   } else {
     #coordsAInterpolar = coordsObservaciones
     #paramsIyM = paramsAux
