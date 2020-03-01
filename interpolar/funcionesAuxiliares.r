@@ -37,7 +37,8 @@ if (is.null(script.dir.funcionesAuxiliares)) { script.dir.funcionesAuxiliares <-
 source(paste0(script.dir.funcionesAuxiliares, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.funcionesAuxiliares, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.funcionesAuxiliares, '../Graficas/graficas.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(pkgs = c('matrixStats', 'lubridate', 'gridExtra', 'sp', 'rgdal', 'Rmisc', 'gstat', 'grid'))
+instant_pkgs(pkgs = c('matrixStats', 'stringi', 'stringr', 'lubridate', 'gridExtra', 'sp', 'rgdal', 
+                      'Rmisc', 'gstat', 'grid'))
 
 graficarEstaciones <- function(estaciones, serieComparacion, tempAireMin, tempAireMax, fechaMin=NA, fechaMax=NA, 
                                lWidth=0.5, carpetaSalida='Resultados/Graficos/', prefijoArchivos='', nombresSeries=c('MODIS', 'TMin', 'TMax'),
