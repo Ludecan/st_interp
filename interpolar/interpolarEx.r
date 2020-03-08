@@ -508,8 +508,9 @@ prepIDWEstimator <- function(interpolacion, params, objParameters) {
   return(interpolacion)
 }
 
-interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL, longitudesEnColumnas=T, 
-                         objParameters=NULL, valoresCampoBaseSobreObservaciones=NULL, valoresCampoBase=NULL) {
+interpolarEx <- function(
+    observaciones, coordsAInterpolar, params, shpMask=NULL, longitudesEnColumnas=T, 
+    objParameters=NULL, valoresCampoBaseSobreObservaciones=NULL, valoresCampoBase=NULL) {
   proj4StringAInterpolar <- proj4string(coordsAInterpolar)
 
   # Saco las observaciones NA y las coordenadas duplicadas
@@ -517,14 +518,30 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
     i <- !is.na(observaciones$value) & !is.na(valoresCampoBaseSobreObservaciones)
     observaciones <- observaciones[i, ]
     valoresCampoBaseSobreObservaciones <- valoresCampoBaseSobreObservaciones[i]
+    if (!is.null(params$valoresRegresoresSobreObservaciones)) {
+      params$valoresRegresoresSobreObservaciones <- lapply(
+        params$valoresRegresoresSobreObservaciones, function(x) return(x[, i, drop=F]))
+    }
     i <- !duplicated(coordinates(observaciones))
     observaciones <- observaciones[i, ]
     valoresCampoBaseSobreObservaciones <- valoresCampoBaseSobreObservaciones[i]
+    if (!is.null(params$valoresRegresoresSobreObservaciones)) {
+      params$valoresRegresoresSobreObservaciones <- lapply(
+        params$valoresRegresoresSobreObservaciones, function(x) return(x[, i, drop=F]))
+    }
   } else {
     i <- !is.na(observaciones$value)
     observaciones <- observaciones[i,]
+    if (!is.null(params$valoresRegresoresSobreObservaciones)) {
+      params$valoresRegresoresSobreObservaciones <- lapply(
+        params$valoresRegresoresSobreObservaciones, function(x) return(x[, i, drop=F]))
+    }
     i <- !duplicated(coordinates(observaciones))
     observaciones <- observaciones[i,]
+    if (!is.null(params$valoresRegresoresSobreObservaciones)) {
+      params$valoresRegresoresSobreObservaciones <- lapply(
+        params$valoresRegresoresSobreObservaciones, function(x) return(x[, i, drop=F]))
+    }
   }
   
   # Shapefile con el contorno del país / Shapefile for the country boundaries
@@ -868,16 +885,13 @@ interpolarEx <- function(observaciones, coordsAInterpolar, params, shpMask=NULL,
       }
     }
 
-    # TO-DO: hay que ver como incluir el campo base en la mascara
     # el segundo chequeo, equivalente a min(observaciones) = 0 para doubles, verifica que al menos 
     # el minimo dato sea efectivamente 0, sino no tiene sentido aplicar la máscara y si es < 0 
     # además aplicarla puede hacer daño. agrego el control como robustez para evitar errores de 
     # parámetros
     if (params$umbralMascaraCeros > 0 & abs(min(observaciones$value)) < 1E-3) {
-      interpolacion <- aplicarMascaraRnR(observaciones = observaciones,
-        interpolacion, valoresCampoBaseSobreObservaciones=valoresCampoBaseSobreObservaciones, 
-        valoresCampoBase=valoresCampoBase, params=params, umbral=params$umbralMascaraCeros, 
-        shpMask=shpMask)
+      interpolacion <- aplicarMascaraRnR(
+        observaciones=observaciones, interpolacion=interpolacion, params=params, shpMask=shpMask)
       
       if (params$modoDiagnostico) {
         if (gridded(coordsAInterpolar)) {
@@ -1482,7 +1496,7 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
     if (params$umbralMascaraCeros > 0)
       interpolacionST <- aplicarMascaraRnR(
         observaciones=spObservaciones, interpolacion=interpolacionST, params=params, 
-        umbral=params$umbralMascaraCeros, shpMask=shpMask)
+        shpMask=shpMask)
   }
   
   # Additional data
@@ -1502,9 +1516,11 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
   return(interpolacionST)
 }
 
-universalGridding <- function(ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, pathsRegresores=NULL, 
-                              valoresRegresoresSobreObservaciones=NULL, coordsAInterpolar, params, iObservacionesEnCoordsAInterpolar=NULL, 
-                              shpMask=NULL, longitudesEnColumnas=T, paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL) {
+universalGridding <- function(
+    ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, pathsRegresores=NULL, 
+    valoresRegresoresSobreObservaciones=NULL, coordsAInterpolar, params, 
+    iObservacionesEnCoordsAInterpolar=NULL, shpMask=NULL, longitudesEnColumnas=T, 
+    paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL) {
   # - pathsRegresores debe ser una matriz de nTxnU elementos, con una fila por fecha a interpolar y una columna por 
   # regresor. pathsRegresores[i, j] debe contener el path al archivo que contiene el raster con los datos del regresor j 
   # para la fecha i de las observaciones (pueden haber elementos repetidos en regresores[, j])
@@ -2512,13 +2528,21 @@ universalGriddingEx <- function(ti, coordsObservaciones, fechasObservaciones, va
     # Interpolacion
     coordsObservaciones$value <- as.numeric(valoresObservaciones[ti, ])
     params$formulaRegresionCC <- regs$formulaRegresionCC
+    if (params$umbralMascaraCeros > 0) {
+      # We'll use these values to use the regressors in the Rain/NoRain mask interpolation
+      params$valoresRegresoresSobreObservaciones <- lapply(
+        valoresRegresoresSobreObservaciones, FUN = function(x) return(x[ti, , drop=F]))
+      params$valoresRegresoresSobreCoordsAInterpolar_ti <- valoresRegresoresSobreCoordsAInterpolar_ti
+    }
+    
     # observaciones <- coordsObservaciones
     # longitudesEnColumnas <- T
     # valoresCampoBaseSobreObservaciones = regs$valoresCampoBaseSobreObservaciones
     # valoresCampoBase = regs$valoresCampoBase
-    interpolacion <- interpolarEx(observaciones = coordsObservaciones, coordsAInterpolar = coordsAInterpolar, params = params, 
-                                  shpMask = shpMask, valoresCampoBaseSobreObservaciones=regs$valoresCampoBaseSobreObservaciones, 
-                                  valoresCampoBase=regs$valoresCampoBase, longitudesEnColumnas=longitudesEnColumnas)
+    interpolacion <- interpolarEx(
+      observaciones = coordsObservaciones, coordsAInterpolar = coordsAInterpolar, params = params, 
+      shpMask = shpMask, valoresCampoBaseSobreObservaciones=regs$valoresCampoBaseSobreObservaciones, 
+      valoresCampoBase=regs$valoresCampoBase, longitudesEnColumnas=longitudesEnColumnas)
     interpolacion$formulaRegresionCC <- regs$formulaRegresionCC
     
     # mapearPuntosGGPlot(puntos = observaciones, shpBase = shpMask$shp, continuo=T, zcol='value')
@@ -2806,11 +2830,11 @@ universalGriddingCV <- function(
   return(res)
 }
 
-aplicarMascaraRnR <- function(observaciones, interpolacion, valoresCampoBaseSobreObservaciones=NULL, 
-                              valoresCampoBase=NULL, params, umbral=0.1, shpMask) {
+aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
   rango <- range(observaciones$value, na.rm = T)
   if (rango[1] < 1E-3 & rango[2] > 1E-3) {
     obsBinarias <- crearObservacionesBinarias(observaciones=observaciones, zcol = 'value')
+    valoresObservacionesBinarias <- t(obsBinarias@data)
     binInterpParams <- params
     binInterpParams$modoDiagnostico <- F
     binInterpParams$minVal <- 0
@@ -2820,19 +2844,21 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, valoresCampoBaseSobr
     binInterpParams$metodoIgualacionDistribuciones <- 'GLS'
     binInterpParams$ventanaIgualacionDistribuciones <- 1
     binInterpParams$incorporarCoordenadas <- TRUE
-    binInterpParams$descartarCoordenadasNoSignificativas <- TRUE
+    binInterpParams$descartarCoordenadasNoSignificativas <- FALSE
     binInterpParams$interpolationMethod <- 'automap'
     #binInterpParams$betaSimpleKriging <- 0
     binInterpShpMask <- interpolacion$shpMask
-    
+
     if (!is.null(binInterpShpMask)) binInterpShpMask$mask <- rep(TRUE, length(interpolacion$predictionLocations))
-    interpBinaria <- interpolarEx(
-      observaciones=obsBinarias, coordsAInterpolar=interpolacion$predictionLocations, 
-      params=binInterpParams, shpMask=binInterpShpMask, 
-      valoresCampoBaseSobreObservaciones=valoresCampoBaseSobreObservaciones,
-      valoresCampoBase=valoresCampoBase)
+    interpBinaria <- universalGriddingEx(
+      ti=1, fechasObservaciones='', coordsObservaciones=obsBinarias, 
+      valoresObservaciones=valoresObservacionesBinarias, 
+      valoresRegresoresSobreObservaciones=params$valoresRegresoresSobreObservaciones,
+      valoresRegresoresSobreCoordsAInterpolar_ti=params$valoresRegresoresSobreCoordsAInterpolar_ti,
+      coordsAInterpolar=interpolacion$predictionLocations, params=binInterpParams, 
+      shpMask=binInterpShpMask)
     
-    if (umbral == 'auto') {
+    if (params$umbralMascaraCeros == 'auto') {
       binCV <- universalGriddingCV(obsBinarias, 1, matrix(obsBinarias$value, ncol = nrow(obsBinarias)), 
                                    params = binInterpParams)
       
@@ -2848,6 +2874,8 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, valoresCampoBaseSobr
       })
       
       umbral <- umbrales[which.max(aucs)] + 1e-3
+    } else {
+      umbral <- params$umbralMascaraCeros
     }
     
     if (params$modoDiagnostico) {

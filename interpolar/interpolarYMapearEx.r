@@ -212,9 +212,7 @@ interpolarYMapearI <- function(
     espEscalaAdaptada=NULL) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   # iTi <- 90
-  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2019-03-12')
-  valoresObservaciones[iTi, ]
-  
+  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-10-24')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
 
