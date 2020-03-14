@@ -288,13 +288,16 @@ agregacionTemporalGrillada <- function(
     fechas, pathsRegresor, formatoNomArchivoSalida=paste0('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif'), 
     nFechasAAgregar=3, minNfechasParaAgregar=max(trunc(nFechasAAgregar/2), 1), tIni=1, 
     tFin=length(pathsRegresor), funcionAgregacion=base::mean, ctl=NULL, shpBase=NULL,
-    borrarOriginales=FALSE, overlap=TRUE, funcEscalado=NULL) {
+    borrarOriginales=FALSE, overlap=TRUE, funcEscalado=NULL, nCoresAUsar=0) {
   # Para calcular agregaciones temporales de una serie temporal de un mismo regresor
   # pathsRegresor es una vector de rasters
   # Para cada fecha fi, se toman los píxeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) y se
   # calcula funcionAgregacion con ellos
   # Si no hay al menos minNfechasParaAgregar píxeles disponibles el píxel se devuelve nulo
-  nCoresAUsar <- min(detectCores(T, T), tFin - tIni + 1)
+  if (nCoresAUsar <= 0) {
+    nCoresAUsar <- min(detectCores(T, T), tFin - tIni + 1)
+  }
+  
   dir.create(dirname(formatoNomArchivoSalida), showWarnings = F, recursive = T)
   
   if (overlap) { tSeq <- tIni:tFin
