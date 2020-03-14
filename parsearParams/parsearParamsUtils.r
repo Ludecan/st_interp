@@ -27,7 +27,7 @@ require("methods")
 getTokens <- function(params, separadorTokens=';') {
   paramsSplit <- unlist(strsplit(params, separadorTokens))
   tokens <- array(data=NA, dim=c(length(paramsSplit), 2))
-  for (i in 1:length(paramsSplit)) {
+  for (i in seq_along(paramsSplit)) {
     posIgual <- regexpr('=', paramsSplit[i], fixed=T)[1]
     tokens[i, 1] <- substr(x=paramsSplit[i], start=1, stop=posIgual - 1)
     tokens[i, 2] <- substr(x=paramsSplit[i], start=posIgual+1, stop=nchar(paramsSplit[i]))
@@ -60,8 +60,9 @@ getParamValues <- function(
   i <- 1
   i <- i - 1
   for (i in seq(along=paramNames)) {
-    res[[paramNames[i]]] <- getParamValue(tokens=tokens, paramName=paramNames[i], classOfValue=classOfValues[i], 
-                                          obligatorio=obligatorios[i], paramDefaultValue=paramDefaultValues[[i]])
+    res[[paramNames[i]]] <- getParamValue(
+        tokens=tokens, paramName=paramNames[i], classOfValue=classOfValues[i], 
+        obligatorio=obligatorios[i], paramDefaultValue=paramDefaultValues[[i]])
     i <- i + 1
   }
   return(res)
