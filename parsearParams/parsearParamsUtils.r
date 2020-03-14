@@ -50,10 +50,12 @@ getParamValue <- function(tokens, paramName, classOfValue=NA, obligatorio=FALSE,
   } else { stop(paste('parsearParamsUtils.getParamValue: No se encuentra el valor de ', paramName, sep='')) }
 }
 
-getParamValues <- function(params, separadorTokens=';', paramNames, classOfValues=rep(NA_character_, length(paramNames)), 
-                           obligatorios=rep(FALSE, length(paramNames)), paramDefaultValues=rep(NA, length(paramNames))) {
+getParamValues <- function(
+    params, separadorTokens=';', paramNames, classOfValues=rep(NA_character_, length(paramNames)), 
+    obligatorios=rep(FALSE, length(paramNames)), paramDefaultValues=rep(NA, length(paramNames))) {
   tokens <- getTokens(params, separadorTokens=separadorTokens)
   res <- vector(mode = "list", length = length(paramNames))
+  names(res) <- paramNames
   
   i <- 1
   i <- i - 1
@@ -68,11 +70,12 @@ getParamValues <- function(params, separadorTokens=';', paramNames, classOfValue
 getParamValuesFromConstructorParams <- function(params, separadorTokens=';', funcCrearParams) {
   parametrosFunc <- formals(funcCrearParams)
   paramNames <- names(parametrosFunc)
-  classOfValues <- rep(NA_character_, dim=length(parametrosFunc))
-  obligatorios <- rep(FALSE, dim=length(parametrosFunc))
+  classOfValues <- rep(NA_character_, length(parametrosFunc))
+  obligatorios <- rep(FALSE, length(parametrosFunc))
   paramDefaultValues <- list()
   length(paramDefaultValues) <- length(parametrosFunc)
 
+  i <- 2
   for (i in seq_along(parametrosFunc)) {
     if (class(parametrosFunc[[i]]) == 'NULL') {
       obligatorios[i] <- FALSE
