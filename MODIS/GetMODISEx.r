@@ -40,7 +40,7 @@ source(paste0(script.dir.GetMODISEx, '../instalarPaquetes/instant_pkgs.r'), enco
 source(paste0(script.dir.GetMODISEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.GetMODISEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.GetMODISEx, '../tryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c("digest", "sp", "rgdal", "raster", "RCurl", "lubridate", 'doParallel', 'rts'))
+instant_pkgs(c('digest', 'sp', 'rgdal', 'Rcpp', 'raster', 'RCurl', 'lubridate', 'doParallel', 'rts'))
 # source(paste(script.dir.GetMODISEx, 'ModisDownload.r', sep=''))
 #shpGrillaMODISSinusoidalV5 <- readOGR('modis_sinusoidal', 'modis_sinusoidal_grid_world')
 #plot(shpGrillaMODISSinusoidalV5)  
@@ -127,13 +127,13 @@ getHsYVsBoundingBox <- function(proj4stringResultados, xMin, xMax, yMin, yMax) {
 
 addDate_temporalResolution <- function(date, temporalResolution) {
   #date <- ymd(date)
-  if (temporalResolution$units=="min") {
+  if (temporalResolution$units=='min') {
     minute(date) <- minute(date) + temporalResolution$increment
-  } else if (temporalResolution$units=="day") {
+  } else if (temporalResolution$units=='day') {
     day(date) <- day(date) + temporalResolution$increment
-  } else if (temporalResolution$units=="month") {
+  } else if (temporalResolution$units=='month') {
     month(date) <- month(date) + temporalResolution$increment
-  } else if (temporalResolution$units=="year") {
+  } else if (temporalResolution$units=='year') {
     year(date) <- year(date) + temporalResolution$increment
   } else {
     stop(paste('ModisDownload.subDate_temporalResolution: unknown unit: ', temporalResolution$units, sep=''))
@@ -180,7 +180,7 @@ getMODISEx <- function(producto='MOD09Q1',
     southing <- 0
     stop(paste('GetMODISEx.getMODISEx: proyección ', proyeccion, ' no implementada.', sep=''))
   }
-  datum <- getParamValue(tokensP4str, paramName='+datum', classOfValue='character', obligatorio=F, paramDefaultValue="WGS84")
+  datum <- getParamValue(tokensP4str, paramName='+datum', classOfValue='character', obligatorio=F, paramDefaultValue='WGS84')
   doMosaic <- length(HsYVs$hs) > 1 || length(HsYVs$vs) > 1
 
   pathProductoMODIS <- subirDirectorio(pathArchivosResultado)
@@ -264,7 +264,7 @@ getMODISEx <- function(producto='MOD09Q1',
   #    if (utmSur) campo <- projectRaster(campo, crs = CRS(proj4stringResultados))
   #    writeRaster(x=campo, filename=archivos[[i]], overwrite=T, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
   #    #writeRaster(x=campo, filename='D:/lele.tif', overwrite=T, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
-  #    #campo <- raster("//192.168.1.223/mch/datosEnGrilla/fdg/MYD11A1/MYD11A1_LST_Night/MYD11A1_2002-07-08.LST_Night_1km.tif")
+  #    #campo <- raster('//192.168.1.223/mch/datosEnGrilla/fdg/MYD11A1/MYD11A1_LST_Night/MYD11A1_2002-07-08.LST_Night_1km.tif')
   #  }
   #}
   
@@ -309,7 +309,7 @@ getMODISEx <- function(producto='MOD09Q1',
   
   nCoresAUsar <- min(detectCores(T, T), length(archivos))
   if (nCoresAUsar > 1) {
-    cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
+    cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('appendToFileName','getFileExt'))
     clusterEvalQ(cl, expr = {
       require('rgdal')
@@ -327,7 +327,7 @@ getMODISEx <- function(producto='MOD09Q1',
   }
   
   matchesFechas <- regexpr(archivos, pattern = '(19|20)[0-9][0-9][- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])')
-  fechas <- substr(archivos, start = matchesFechas, stop = matchesFechas + attr(matchesFechas, "match.length") - 1)
+  fechas <- substr(archivos, start = matchesFechas, stop = matchesFechas + attr(matchesFechas, 'match.length') - 1)
   fechas <- gsub(pattern = '-', replacement = '/', x = fechas, fixed = T)  
   
   setwd(oldWD)
@@ -350,7 +350,7 @@ getModisListEx <- function(producto, version, HsYVs, fechaIniUTC, fechaFinUTC, p
 
 getFechasArchivos <- function(archivos) {
   matchesFechas <- regexpr(archivos, pattern = '(19|20)[0-9][0-9][- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])')
-  fechas <- substr(archivos, start = matchesFechas, stop = matchesFechas + attr(matchesFechas, "match.length") - 1)
+  fechas <- substr(archivos, start = matchesFechas, stop = matchesFechas + attr(matchesFechas, 'match.length') - 1)
   fechas <- gsub(pattern = '-', replacement = '/', x = fechas, fixed = T)  
   return(data.frame(fechas=fechas, archivos=archivos, stringsAsFactors = F))
 }
@@ -400,7 +400,7 @@ getFechasYArchivosMODIS <- function(producto='MOD09Q1',
       result = tryCatch({
         readGDAL(fechasArchivos$archivos[[i]], silent=T)
       }, error = function(e) {
-        print(paste("MY_ERROR:  ", e, fechasArchivos$archivos[[i]]))
+        print(paste('MY_ERROR: ', e, fechasArchivos$archivos[[i]]))
         result <- list()
         class(result) <- 'errorRetry'
         return(result)

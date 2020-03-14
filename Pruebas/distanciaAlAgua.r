@@ -25,7 +25,7 @@
 source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/instalarPaquetes/instant_pkgs.r", encoding = 'WINDOWS-1252')
 source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/interpolarEx.r", encoding = 'WINDOWS-1252')
 source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/mapearEx.r", encoding = 'WINDOWS-1252')
-instant_pkgs('raster')
+instant_pkgs(c('Rcpp', 'raster'))
 
 pathRasterLC <- 'C:/mch/ArchivosProcesosLocales/MascaraDeTierra/LCType_PuntaDelEsteCorregido.tif'
 lc <- raster(pathRasterLC)

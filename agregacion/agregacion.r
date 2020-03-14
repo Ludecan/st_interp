@@ -33,7 +33,7 @@ if (is.null(script.dir.agregacion)) { script.dir.agregacion <- ''
 } else { script.dir.agregacion <- paste0(dirname(script.dir.agregacion), '/') }
 
 source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c('stats', 'sp'))
+instant_pkgs(c('stats', 'sp', 'Rcpp', 'raster'))
 source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'), encoding = 'WINDOWS-1252')
 
 naSiTodosNAFuncSiNo <- function(x, func, ...) {

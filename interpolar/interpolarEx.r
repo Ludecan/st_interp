@@ -45,7 +45,7 @@ source(paste0(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r'), enco
 source(paste0(script.dir.interpolarEx, '../agregacion/agregacion.r'), encoding = 'WINDOWS-1252')
 
 instant_pkgs(pkgs = c('unmarked', 'VGAM', 'cli', 'devtools'), silent = TRUE, doCargarPaquetes=FALSE)
-instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'raster', 
+instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'Rcpp', 'raster', 
                       'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 'rms',
                       'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
                       'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC'), 
