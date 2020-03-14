@@ -366,6 +366,9 @@ descargarArchivo <- function(
     is_http = !is_ftp && (startsWith(urls[i], 'http://') || startsWith(urls[i], 'https://'))
     results <- 1
     
+    path = dirname(nombresArchivosDestino[i])
+    if (!dir.exists(path)) dir.create(path, showWarnings = FALSE, recursive = T)
+    
     while (do_download & nRetries < maxRetries) {
       f = CFILE(nombresArchivosDestino[i], mode="wb")
       er2 <- try(er <- curlPerform(url = urls[i], curl=threadHandle, writedata = f@ref))
