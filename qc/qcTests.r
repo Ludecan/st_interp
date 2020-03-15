@@ -599,7 +599,15 @@ mapearResultadosDeteccionOutliersV2 <- function(
 
   fechas <- unique(test$fecha)
   
-  if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones))
+  if (nCoresAUsar <= 0) {
+    if (.Platform$OS.type == "windows") {
+      memtot_gb <- memory.size(max=NA) / 1024
+    } else {
+      memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2  
+    }
+    # Limit number of processes to no more than either 10 or 1 per GB of RAM
+    nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones), round(memtot_gb))
+  }
   
   if (nrow(test) > 0) {
     if (nCoresAUsar > 1 && !is.null(carpetaSalida)) {
@@ -1329,7 +1337,15 @@ testEspacialPrecipitacion <- function(
     }
   }
   
-  if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones))
+  if (nCoresAUsar <= 0) {
+    if (.Platform$OS.type == "windows") {
+      memtot_gb <- memory.size(max=NA) / 1024
+    } else {
+      memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2
+    }
+    # Limit number of processes to no more than either 10 or 1 per GB of RAM
+    nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones), round(memtot_gb))
+  }
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))

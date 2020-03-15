@@ -2662,7 +2662,14 @@ universalGriddingCV <- function(
   if (!is.null(pathsRegresores)) { valoresRegresoresSobreObservaciones <- extraerValoresRegresoresSobreSP(objSP = coordsObservaciones, pathsRegresores = pathsRegresores)
   } else { valoresRegresoresSobreObservaciones <- NULL }
 
-  if (params$nCoresAUsar <= 0) { nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones))
+  if (params$nCoresAUsar <= 0) { 
+    if (.Platform$OS.type == "windows") {
+      memtot_gb <- memory.size(max=NA) / 1024
+    } else {
+      memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2  
+    }
+    # Limit number of processes to no more than either 10 or 1 per GB of RAM
+    nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones), round(memtot_gb))
   } else { nCoresAUsar <- params$nCoresAUsar }
   
   if (length(params$tlagsAR) <= 0) {

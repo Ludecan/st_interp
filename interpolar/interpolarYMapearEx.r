@@ -393,7 +393,13 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
   
   if (length(paramsIyM$tlagsAR) <= 0) {
     if (paramsIyM$nCoresAUsar <= 0) {
-      nCoresDisponibles <- detectCores(T, T)
+      if (.Platform$OS.type == "windows") {
+        memtot_gb <- memory.size(max=NA) / 1024
+      } else {
+        memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2  
+      }
+      # Limit number of processes to no more than either 10 or 1 per GB of RAM
+      nCoresDisponibles <- min(detectCores(T, T), round(memtot_gb))
       if (length(tsAInterpolar) >= 1) { 
         nCoresAUsar <- min(nCoresDisponibles, length(tsAInterpolar))
         paramsIyM$nCoresAUsar <- ceiling(nCoresDisponibles / nCoresAUsar)
