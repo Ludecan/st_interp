@@ -36,6 +36,7 @@ if (is.null(script.dir.qcTests)) { script.dir.qcTests <- ''
 
 source(paste0(script.dir.qcTests, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.qcTests, '../interpolar/interpolarEx.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.qcTests, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('sp', 'robustbase'))
 
 # Códigos para los distintos tipos de outliers detectables por los métodos
@@ -600,13 +601,7 @@ mapearResultadosDeteccionOutliersV2 <- function(
   fechas <- unique(test$fecha)
   
   if (nCoresAUsar <= 0) {
-    if (.Platform$OS.type == "windows") {
-      memtot_gb <- memory.size(max=NA) / 1024
-    } else {
-      memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2  
-    }
-    # Limit number of processes to no more than either 10 or 1 per GB of RAM
-    nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones), round(memtot_gb))
+    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), ncol(valoresObservaciones))
   }
   
   if (nrow(test) > 0) {
@@ -1338,13 +1333,7 @@ testEspacialPrecipitacion <- function(
   }
   
   if (nCoresAUsar <= 0) {
-    if (.Platform$OS.type == "windows") {
-      memtot_gb <- memory.size(max=NA) / 1024
-    } else {
-      memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2
-    }
-    # Limit number of processes to no more than either 10 or 1 per GB of RAM
-    nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones), round(memtot_gb))
+    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), ncol(valoresObservaciones))
   }
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))

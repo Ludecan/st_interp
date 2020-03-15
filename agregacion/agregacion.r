@@ -35,6 +35,7 @@ if (is.null(script.dir.agregacion)) { script.dir.agregacion <- ''
 source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('stats', 'sp', 'Rcpp', 'raster'))
 source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.agregacion, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
 
 naSiTodosNAFuncSiNo <- function(x, func, ...) {
   x <- x[!is.na(x)]
@@ -295,7 +296,7 @@ agregacionTemporalGrillada <- function(
   # calcula funcionAgregacion con ellos
   # Si no hay al menos minNfechasParaAgregar píxeles disponibles el píxel se devuelve nulo
   if (nCoresAUsar <= 0) {
-    nCoresAUsar <- min(detectCores(T, T), tFin - tIni + 1)
+    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), tFin - tIni + 1)
   }
   
   dir.create(dirname(formatoNomArchivoSalida), showWarnings = F, recursive = T)
@@ -407,7 +408,7 @@ agregacionTemporalGrillada2 <- function(fechas, pathsRegresores, formatoNomArchi
   # Para cada fecha fi, se toman los píxeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) de 
   # todos los regresores y se calcula funcionAgregacion con ellos
   # Si no hay al menos minNfechasParaAgregar píxeles disponibles el píxel se devuelve nulo
-  nCoresAUsar <- min(detectCores(T, T), tFin - tIni + 1)
+  nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), tFin - tIni + 1)
   dir.create(dirname(formatoNomArchivoSalida), showWarnings = F, recursive = T) 
   
   if (nCoresAUsar > 1) {
@@ -538,7 +539,9 @@ agregacionTemporalGrillada3 <- function(
   #proj4stringShpMask=NULL
   #spSinMascara <- shpMask$shp
   
-  if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), length(clases))
+  if (nCoresAUsar <= 0) {
+    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), length(clases))
+  }
   dir.create(unique(dirname(nomArchivosSalidaClaseI)), showWarnings = F, recursive = T) 
   
   if (nCoresAUsar > 1) {

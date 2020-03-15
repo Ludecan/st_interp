@@ -43,6 +43,7 @@ source(paste0(script.dir.interpolarEx, './mapearEx.r'), encoding = 'WINDOWS-1252
 source(paste0(script.dir.interpolarEx, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.interpolarEx, '../agregacion/agregacion.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
 
 instant_pkgs(pkgs = c('unmarked', 'VGAM', 'cli', 'devtools'), silent = TRUE, doCargarPaquetes=FALSE)
 instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'Rcpp', 'raster', 
@@ -2663,13 +2664,7 @@ universalGriddingCV <- function(
   } else { valoresRegresoresSobreObservaciones <- NULL }
 
   if (params$nCoresAUsar <= 0) { 
-    if (.Platform$OS.type == "windows") {
-      memtot_gb <- memory.size(max=NA) / 1024
-    } else {
-      memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2  
-    }
-    # Limit number of processes to no more than either 10 or 1 per GB of RAM
-    nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones), round(memtot_gb))
+    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), ncol(valoresObservaciones))
   } else { nCoresAUsar <- params$nCoresAUsar }
   
   if (length(params$tlagsAR) <= 0) {

@@ -37,6 +37,7 @@ source(paste0(script.dir.interpolarYMapearEx, 'interpolarEx.r'), encoding = 'WIN
 source(paste0(script.dir.interpolarYMapearEx, "mapearEx.r"), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.interpolarYMapearEx, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.interpolarYMapearEx, 'leerEscalas.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarYMapearEx, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
 
 createDefaultListaMapas <- function(
     paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
@@ -393,13 +394,7 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
   
   if (length(paramsIyM$tlagsAR) <= 0) {
     if (paramsIyM$nCoresAUsar <= 0) {
-      if (.Platform$OS.type == "windows") {
-        memtot_gb <- memory.size(max=NA) / 1024
-      } else {
-        memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2  
-      }
-      # Limit number of processes to no more than either 10 or 1 per GB of RAM
-      nCoresDisponibles <- min(detectCores(T, T), round(memtot_gb))
+      nCoresDisponibles <- getAvailableCores(maxCoresPerGB = 1)
       if (length(tsAInterpolar) >= 1) { 
         nCoresAUsar <- min(nCoresDisponibles, length(tsAInterpolar))
         paramsIyM$nCoresAUsar <- ceiling(nCoresDisponibles / nCoresAUsar)
