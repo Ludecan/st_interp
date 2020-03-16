@@ -1416,7 +1416,9 @@ testMaxToMeanRatios <- function(valoresObservaciones, minMaxVal=20, maxRatio=30,
       factorHaciaAbajo = Inf, factorHaciaArriba = maxRatio))
   }
   
-  if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), ncol(valoresObservaciones))
+  if (nCoresAUsar <= 0) { 
+    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), ncol(valoresObservaciones))
+  }
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
