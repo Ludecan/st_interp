@@ -107,18 +107,27 @@ getTiposDeLineaParaSeries <- function(y, tiposDistintos=FALSE, seriesAdicionales
   return(getTiposDeLineaParaNSeries(n = n, tiposDistintos = tiposDistintos, seriesAdicionalesReservadas = seriesAdicionalesReservadas))
 }
 
-aplicarOpcionesAGrafico <- function(p, titulo='', tituloEjeX='', tituloEjeY='', dibujarEjes=T, xyLims=NULL, tamanioFuenteTextos=15,
-                                    escalaGraficos=1, sinFondo=T) {
+aplicarOpcionesAGrafico <- function(
+    p, titulo='', tituloEjeX='', tituloEjeY='', dibujarEjes=T, xyLims=NULL, tamanioFuenteTextos=15,
+    escalaGraficos=1, sinFondo=T) {
   if (sinFondo) p <- p + theme_bw()
   #if (sinFondo) p <- p + theme(panel.background=element_blank())
   p <- p + 
        labs(x=tituloEjeX, y=tituloEjeY, title=titulo) + 
        theme(plot.title = element_text(size=tamanioFuenteTextos * escalaGraficos, hjust = 0.5),
-             text = element_text(size=tamanioFuenteTextos*escalaGraficos)) 
-  if (!is.null(xyLims)) p <- p + coord_cartesian(xlim=xyLims$xLim, ylim=xyLims$yLim, expand = xyLims$expand)
+             text = element_text(size=tamanioFuenteTextos * escalaGraficos)) 
+  if (!is.null(xyLims)) {
+    if (is.null(xyLims$expand)) {
+      expand <- 0
+    } else {
+      expand <- xyLims$expand
+    }
+    p <- p + coord_cartesian(xlim=xyLims$xLim, ylim=xyLims$yLim, expand=expand)
+  }
   if (!dibujarEjes) {
-    p <- p + theme(axis.line=element_blank(), axis.text.x=element_blank(), axis.text.y=element_blank(),
-                   axis.ticks=element_blank(), axis.title.x=element_blank(), axis.title.y=element_blank())  
+    p <- p + 
+      theme(axis.line=element_blank(), axis.text.x=element_blank(), axis.text.y=element_blank(),
+            axis.ticks=element_blank(), axis.title.x=element_blank(), axis.title.y=element_blank())  
   }
   
   return(p)
@@ -167,7 +176,10 @@ linePlot <- function(
     p <- p + annotate('text', x = min(x, na.rm = T), y = yPos, label=round(mediaY, 2))
   }
   
-  p <- aplicarOpcionesAGrafico(p, titulo, tituloEjeX, tituloEjeY, dibujarEjes = dibujarEjes, xyLims, tamanioFuenteTextos, escalaGraficos, sinFondo=sinFondo)
+  p <- aplicarOpcionesAGrafico(
+    p=p, titulo=titulo, tituloEjeX=tituloEjeX, tituloEjeY=tituloEjeY, xyLims=xyLims, 
+    dibujarEjes=dibujarEjes, tamanioFuenteTextos=tamanioFuenteTextos, escalaGraficos=escalaGraficos, 
+    sinFondo=sinFondo)
   
   if (dibujar) print(p)
   if (!is.null(nomArchSalida)) guardarGrafico(p, nomArchSalida, DPI, widthPx=widthPx, heightPx=heightPx)
@@ -239,15 +251,18 @@ scatterPlot <- function(x, y,
   return (p)
 }
 
-boxplot_GGPlot <- function(clases, y, titulo='', tituloEjeX='', tituloEjeY='', dibujarEscala=T, dibujarEjes=T, xyLims=NULL, 
-                           dibujar=interactive(), nomArchSalida=NULL, DPI=120, widthPx=800, heightPx=800, tamanioFuenteTextos=15, escalaGraficos=1,
-                           notch=F, dibujarPuntos=F) {
+boxplot_GGPlot <- function(
+    clases, y, titulo='', tituloEjeX='', tituloEjeY='', dibujarEscala=T, dibujarEjes=T, xyLims=NULL, 
+    dibujar=interactive(), nomArchSalida=NULL, DPI=120, widthPx=800, heightPx=800, 
+    tamanioFuenteTextos=15, escalaGraficos=1, notch=F, dibujarPuntos=F) {
   i <- !is.na(clases) & !is.na(y)
   
   df <- data.frame(classes=factor(clases[i]), values=y[i])
   p <- ggplot(df, aes(classes, values)) + geom_boxplot(aes(group=classes), notch=notch)
   if (dibujarPuntos) p <- p + geom_jitter(width = 0.2)
-  p <- aplicarOpcionesAGrafico(p, titulo, tituloEjeX, tituloEjeY, xyLims, tamanioFuenteTextos, escalaGraficos)
+  p <- aplicarOpcionesAGrafico(
+    p=p, titulo=titulo, tituloEjeX=tituloEjeX, tituloEjeY=tituloEjeY, xyLims=xyLims, 
+    tamanioFuenteTextos=tamanioFuenteTextos, escalaGraficos=escalaGraficos)
   if (dibujar) print(p)
   if (!is.null(nomArchSalida)) guardarGrafico(p, nomArchSalida, DPI, widthPx=widthPx, heightPx=heightPx)
   return (p)

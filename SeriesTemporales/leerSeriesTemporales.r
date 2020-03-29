@@ -78,7 +78,9 @@ leerEstaciones <- function(pathArchivoEstaciones, columnaId=1, fileEncoding = ''
   return (estaciones)
 }
 
-leerDatos <- function(pathArchivoDatos, dfEstaciones, skip=0L, formatoFechas='YmdHMS', truncated=5, tzFechas='UTC', header=T, sep=',', dec='.', na.strings='-9999', fileEncoding = '', colIdEstaciones=-1L) {
+leerDatos <- function(
+    pathArchivoDatos, dfEstaciones, skip=0L, formatoFechas='YmdHMS', truncated=5, tzFechas='UTC', 
+    header=T, sep=',', dec='.', na.strings='-9999', fileEncoding = '', colIdEstaciones=-1L) {
   dfDatos <- read.table(pathArchivoDatos, header=header, sep=sep, skip=skip, dec=dec, stringsAsFactors=F, na.strings=na.strings, fileEncoding = fileEncoding)
   return (limpiarDatos(dfDatos = dfDatos, dfEstaciones = dfEstaciones, 
                        colIdEstaciones = colIdEstaciones, header = header, 
@@ -86,7 +88,9 @@ leerDatos <- function(pathArchivoDatos, dfEstaciones, skip=0L, formatoFechas='Ym
 }
 
 grabarDatos <- function(pathArchivoDatos, fechas, datos, sep='\t', dec='.', na='-9999', append=F, col.names=T, formatoFechas='%Y-%m-%d') {
-  write.table(x=data.frame(Fechas=format(fechas, format = formatoFechas), datos), file=pathArchivoDatos, append=append, sep=sep, dec=dec, na=na, row.names=F, col.names=col.names)
+  write.table(
+    x=data.frame(Fechas=format(fechas, format = formatoFechas), datos), file=pathArchivoDatos, 
+    append=append, sep=sep, dec=dec, na=na, row.names=F, col.names=col.names)
 }
 
 leerSeriesArchivoUnico <- function(

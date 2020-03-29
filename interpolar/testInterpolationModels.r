@@ -192,7 +192,7 @@ calcValidationStatisticsMultipleModels <- function(
   names(validationStatsEspaciales) <- names(cvs)
   names(validationStatsTemporales) <- names(cvs)
   
-  for (i in 1:length(cvs)) {
+  for (i in seq_along(cvs)) {
     nomModelo <- names(cvs)[i]
     validationStatsOverall <- rbind(
       validationStatsOverall, 

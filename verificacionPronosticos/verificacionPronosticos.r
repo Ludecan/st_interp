@@ -126,7 +126,8 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
 }
 
 calcValidationStatistics <- function(pronostico, observacion, climatologia) {
-  return(as.data.frame(t(setNames(calcValidationStatisticsEx(pronostico, observacion, climatologia), StatNames))))
+  return(as.data.frame(t(setNames(calcValidationStatisticsEx(pronostico, observacion, climatologia), 
+                                  StatNames))))
 }
 
 calcValidationStatisticsTemporal <- function(pronosticos, observaciones, climatologias) {
@@ -150,7 +151,9 @@ calcValidationStatisticsEspacial <- function(pronosticos, observaciones, climato
 }
 
 calcValidationStatisticsOverall <- function(nombreModelo, pronosticos, observaciones, climatologias) {
-  res <- calcValidationStatistics(pronostico=as.vector(pronosticos), observacion=as.vector(observaciones), climatologia=as.vector(climatologias))
+  res <- calcValidationStatistics(
+    pronostico=as.vector(pronosticos), observacion=as.vector(observaciones), 
+    climatologia=as.vector(climatologias))
   rownames(res) <- nombreModelo
   return(res)
 }
@@ -227,16 +230,19 @@ calcAndPlotAllValidationStatisticsV2 <- function(
   validationStats <- list()
   length(validationStats) <- length(pronosticos)
   for (i in 1:length(pronosticos)) {
-    validationStats[[i]] <- calcAllValidationStatistics(nombreModelo = names(pronosticos)[i], pronosticos = pronosticos[[i]][iNoNAs, ],
-                                                        observaciones = observaciones, climatologias = climatologias)
+    validationStats[[i]] <- calcAllValidationStatistics(
+      nombreModelo = names(pronosticos)[i], pronosticos = pronosticos[[i]][iNoNAs, ],
+      observaciones = observaciones, climatologias = climatologias)
   }
   names(validationStats) <- names(pronosticos)
   
   statsOverall <- t(sapply(validationStats, function(x) {return (x$statsOverall)}))
   rownames(statsOverall) <- names(pronosticos)
-  write.table(x = statsOverall, paste(carpetaSalida, 'validationStatsOverall.tsv', sep=''), sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
+  write.table(x = statsOverall, paste(carpetaSalida, 'validationStatsOverall.tsv', sep=''), 
+              sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
   
-  spValidationStats <- SpatialPointsDataFrame(coords = coordsObservaciones, data=data.frame(value=rep(NA, nrow(coordsObservaciones))))
+  spValidationStats <- SpatialPointsDataFrame(
+    coords = coordsObservaciones, data=data.frame(value=rep(NA, nrow(coordsObservaciones))))
   gs <- list()
   length(gs) <- length(ordenModelosPorColumnas)
   escalaGraficos <- nColsPlots
@@ -255,21 +261,30 @@ calcAndPlotAllValidationStatisticsV2 <- function(
     maxEscala <- suppressWarnings(as.numeric(infoVS$maxEscala))
     if (is.na(maxEscala)) { maxEscala <- get(infoVS$maxEscala)(vsEspaciales, na.rm=T) }
     
-    if (!is.na(infoVS$medioEscala)) { escala <- crearEscalaTresPuntos(inicio = minEscala, medio = infoVS$medioEscala, fin = maxEscala, intervaloFinalCerrado = T, nIntervalos = 11, continuo = T, space = 'rgb')
-    } else { escala <- crearEscalaDosPuntos(inicio = minEscala, fin = maxEscala, brewerPal = 'RdYlGn', invertirPaleta = infoVS$invertirColores, nIntervalos = 11, continuo = T) }
+    if (!is.na(infoVS$medioEscala)) { 
+      escala <- crearEscalaTresPuntos(
+        inicio = minEscala, medio = infoVS$medioEscala, fin = maxEscala, intervaloFinalCerrado = T, 
+        nIntervalos = 11, continuo = T, space = 'rgb')
+    } else { 
+      escala <- crearEscalaDosPuntos(
+        inicio = minEscala, fin = maxEscala, brewerPal = 'RdYlGn', 
+        invertirPaleta = infoVS$invertirColores, nIntervalos = 11, continuo = T) 
+    }
     escala <- ajustarExtremosEscala(escala = escala, datos = vsEspaciales, nDigitos = 2, redondear = TRUE)
 
-    j <- 1
+    j <- 2
     for (j in seq_along(ordenModelosPorColumnas)) {
       print(j)
       jPron <- which(names(pronosticos) == ordenModelosPorColumnas[j])
       spValidationStats$value <- vsEspaciales[, jPron]
       nomArchivo <- paste(carpetaSalida, sprintf("%02d", i), '-', iEstadistico, '/', sprintf("%02d", j), '-', ordenModelosPorColumnas[j], '.png', sep='')
-      gs[[j]] <- mapearPuntosGGPlot(puntos = spValidationStats, shpBase = shpBase, xyLims = xyLims, dibujarTexto = TRUE, escala = escala, 
-                                    tamaniosPuntos = tamaniosPuntos, tamanioFuentePuntos = tamanioFuentePuntos, tamanioFuenteEjes = tamanioFuenteEjes, tamanioFuenteTitulo=tamanioFuenteTitulo,
-                                    nDigitos = 2, titulo = paste(ordenModelosPorColumnas[j], ': ', iEstadistico, sep=''), 
-                                    nomArchResultados = nomArchivo, dibujar = F, alturaEscalaContinua = unit(x=0.65, units = 'in'), 
-                                    escalaGraficos = escalaGraficos)
+      gs[[j]] <- mapearPuntosGGPlot(
+          puntos=spValidationStats, shpBase=shpBase, xyLims=xyLims, dibujarTexto=TRUE, 
+          escala=escala, tamaniosPuntos=tamaniosPuntos, tamanioFuentePuntos=tamanioFuentePuntos,
+          tamanioFuenteEjes=tamanioFuenteEjes, tamanioFuenteTitulo=tamanioFuenteTitulo, nDigitos=2, 
+          titulo=paste0(ordenModelosPorColumnas[j], ': ', iEstadistico), 
+          nomArchResultados=nomArchivo, dibujar=F, alturaEscalaContinua=unit(x=0.65, units='in'), 
+          escalaGraficos = escalaGraficos)
     }
     
     nomArchMapa <- paste(carpetaSalida, sprintf("%02d", i), '-', iEstadistico, '_Espacial.png', sep='')
@@ -278,7 +293,7 @@ calcAndPlotAllValidationStatisticsV2 <- function(
   }
   
   ####### Temporales ########
-  meses <- months(fechas)
+  meses <- months(fechas, abbreviate = TRUE)
   meses <- factor(meses, levels = unique(meses), ordered = T)
   gs2 <- list()
   length(gs2) <- length(ordenModelosPorColumnas)
@@ -302,12 +317,15 @@ calcAndPlotAllValidationStatisticsV2 <- function(
       jPron <- which(names(pronosticos) == ordenModelosPorColumnas[j])
       vsTemporalesJ <- vsTemporales[, jPron]
       
-      gs[[j]] <- linePlot(x= fechas, y=vsTemporalesJ, dibujarPuntos = F, titulo = paste(ordenModelosPorColumnas[j], ': ', iEstadistico, sep=''), 
-                          xyLims = xyLimsLinePlots, dibujar = F, escalaGraficos=escalaGraficos, lineaRegresion = T, formulaRegresion = y~1,
-                          annotateMean = T)
+      gs[[j]] <- linePlot(
+        x= fechas, y=vsTemporalesJ, dibujarPuntos=F, 
+        titulo=paste0(ordenModelosPorColumnas[j], ': ', iEstadistico), xyLims=xyLimsLinePlots, 
+        dibujar=F, escalaGraficos=escalaGraficos, lineaRegresion=T, formulaRegresion=y~1, 
+        annotateMean = T)
       
-      gs2[[j]] <- boxplot_GGPlot(clases = meses, y = vsTemporalesJ, titulo = paste(ordenModelosPorColumnas[j], ': ', iEstadistico, sep=''), 
-                                 escalaGraficos = escalaGraficos, xyLims = xyLimsBoxPlots)
+      gs2[[j]] <- boxplot_GGPlot(
+        clases=meses, y=vsTemporalesJ, titulo=paste0(ordenModelosPorColumnas[j], ': ', iEstadistico),
+        escalaGraficos=escalaGraficos, xyLims=xyLimsBoxPlots)
     }
     
     which.min(validationStats$`GRK-LST_Night_Combinada_Clim_mean+x+y`$statsTemporales$ME)
