@@ -45,7 +45,7 @@ TTO_OutlierPorLoBajo = 1L
 TTO_OutlierPorLoAlto = 2L
 TTO_PrecipitacionAislada=3L
 TTO_SequedadAislada=4L
-TTO_ValorNulo = -1L 
+TTO_ValorNulo = -1L
 TTO_SinDatosSuficientesEnLaEstacion = -2L
 TTO_SinDatosSuficientesEnVecinos = -3L
 TTO_ValorConfirmado = -4L
@@ -60,6 +60,23 @@ TTipoOutlierToString <- function(tipoOutlier) {
 
 tiposOutliersValoresSospechosos <- c(TTO_OutlierPorLoBajo, TTO_OutlierPorLoAlto, TTO_PrecipitacionAislada, TTO_SequedadAislada)
 
+importanciaOutlier <- function(tipoOutlier) {
+  if (tipoOutlier == TTO_SinProblemasDetectados) {
+    return(0)
+  } else if (tipoOutlier %in% c(
+    TTO_OutlierPorLoBajo, TTO_OutlierPorLoAlto, TTO_PrecipitacionAislada,
+    TTO_SequedadAislada)) {
+    return(3)
+  } else if (tipoOutlier %in% c(
+    TTO_ValorNulo, TTO_SinDatosSuficientesEnLaEstacion, 
+    TTO_SinDatosSuficientesEnVecinos)) {
+    return(1)
+  } else if (tipoOutlier == TTO_ValorConfirmado) {
+    return(2)
+  } else {
+    stop(paste0('qcTests.importanciaOutlier: tipoOutlier desconocido: ', tipoOutlier))
+  }
+}
 
 createDFTests <- function(
     estacion, fecha, valor, estimado, tipoOutlier, stdDif, reemplazar=0L, valorReemplazo=NA_real_) {
