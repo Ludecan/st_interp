@@ -1347,16 +1347,22 @@ contarNoNulosPorCuadrantesTi <- function(pathGeoTiff, objCuadrantes = NULL, nCua
   } else { return(NA_integer_) }
 }
 
-contarNoNulosPorCuadrantes <- function(pathsGeoTiffs, nCuadrantesX=2, nCuadrantesY=nCuadrantesX, zcol=1, nCoresAUsar=0, shpMask=NULL, carpetaSalida='Resultados/1-Exploracion/') {
+contarNoNulosPorCuadrantes <- function(
+    pathsGeoTiffs, nCuadrantesX=2, nCuadrantesY=nCuadrantesX, zcol=1, nCoresAUsar=0, shpMask=NULL, 
+    carpetaSalida='Resultados/1-Exploracion/') {
   # pathsGeoTiffs <- pathsRegresores[, 1, drop=F]
   reg <- colnames(pathsGeoTiffs)[1]
   
-  if (nCoresAUsar <= 0) { nCoresAUsar <- min(detectCores(all.tests = T, logical = T), length(pathsGeoTiffs))
-  } else { nCoresAUsar <- min(nCoresAUsar, length(pathsGeoTiffs)) }
+  if (nCoresAUsar <= 0) { 
+    nCoresAUsar <- min(detectCores(all.tests = T, logical = T), length(pathsGeoTiffs))
+  } else { 
+    nCoresAUsar <- min(nCoresAUsar, length(pathsGeoTiffs)) 
+  }
   
   iPrimerNoNA <- which(!is.na(pathsGeoTiffs))[1]
   evaluarConReintentos(rasterI <- readGDAL(fname = pathsGeoTiffs[iPrimerNoNA], silent = T))
-  objCuadrantes <- dividirEnCuadrantes(object = rasterI, nCuadrantesX = nCuadrantesX, nCuadrantesY = nCuadrantesY)
+  objCuadrantes <- dividirEnCuadrantes(
+    object = rasterI, nCuadrantesX = nCuadrantesX, nCuadrantesY = nCuadrantesY)
   
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
@@ -1366,17 +1372,21 @@ contarNoNulosPorCuadrantes <- function(pathsGeoTiffs, nCuadrantesX=2, nCuadrante
       require('rgdal')
       source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
     })
-    disponiblesPorCuadrantes <- parSapplyLB(cl = cl, X=as.vector(pathsGeoTiffs), FUN = contarNoNulosPorCuadrantesTi, objCuadrantes=objCuadrantes, shpMask=shpMask)
+    disponiblesPorCuadrantes <- parSapplyLB(
+      cl = cl, X=as.vector(pathsGeoTiffs), FUN = contarNoNulosPorCuadrantesTi, 
+      objCuadrantes=objCuadrantes, shpMask=shpMask)
     stopCluster(cl)
   } else {
-    disponiblesPorCuadrantes <- sapply(X=as.vector(pathsGeoTiffs), FUN = contarNoNulosPorCuadrantesTi, objCuadrantes=objCuadrantes, shpMask=shpMask, simplify = T)
+    disponiblesPorCuadrantes <- sapply(
+      X=as.vector(pathsGeoTiffs), FUN = contarNoNulosPorCuadrantesTi, objCuadrantes=objCuadrantes, 
+      shpMask=shpMask, simplify = T)
   }
   disponiblesPorCuadrantes[is.na(disponiblesPorCuadrantes)] <- 0
   cuadrantes <- apply(expand.grid(0:(nCuadrantesX-1), 0:(nCuadrantesY-1)), 1, function(x) paste(x,collapse="-"))
   
   # head(t(disponiblesPorCuadrantes))
   df <- as.data.frame(t(disponiblesPorCuadrantes), row.names = as.character(1:ncol(disponiblesPorCuadrantes)))
-  df$fecha <- fechasObservaciones
+  df$fecha <- rownames(pathsGeoTiffs)
   #head(df)
   
   #colMaxs(as.matrix(df[,1:4]))

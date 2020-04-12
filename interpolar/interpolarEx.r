@@ -2839,8 +2839,9 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
     valoresObservacionesBinarias <- t(obsBinarias@data)
     binInterpParams <- params
     binInterpParams$modoDiagnostico <- F
-    binInterpParams$minVal <- 0
-    binInterpParams$maxVal <- 1
+    binInterpParams$mLimitarValoresInterpolados <- 'LimitarMinimoyMaximo'
+    binInterpParams$minimoLVI <- 0
+    binInterpParams$maximoLVI <- 1
     binInterpParams$umbralMascaraCeros <- 0
     binInterpParams$metodoRemocionDeSesgo='ninguno'
     binInterpParams$metodoIgualacionDistribuciones <- 'GLS'
@@ -2848,6 +2849,7 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
     binInterpParams$incorporarCoordenadas <- TRUE
     binInterpParams$descartarCoordenadasNoSignificativas <- FALSE
     binInterpParams$interpolationMethod <- 'automap'
+    binInterpParams$minRatioRangosParaExtrapolacion <- 0
     #binInterpParams$betaSimpleKriging <- 0
     binInterpShpMask <- interpolacion$shpMask
 

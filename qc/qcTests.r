@@ -1198,7 +1198,7 @@ testEspacialPrecipitacionIV2 <- function(
         if (!is.na(Pobs)) {
           if (iFechasConVecinosSuficientes[iFecha]) {
             valoresVecinosI <- as.numeric(valoresVecinos[iFecha, iNoNAsVecinos[iFecha,]])
-            
+
             if (Pobs >= ispObs && max(valoresVecinosI) <= ispMax) {
               tiposOutliers[iFecha] <- TTO_PrecipitacionAislada
               stdDifs[iFecha] <- NA_real_

@@ -69,7 +69,8 @@ source(paste0(script.dir.parsearParamsInterpolarYMapear, '../parsearParams/parse
 #' @param coordsAInterpolarSonGrilla=TRUE, 
 #' @param interpolationMethod='automap', # 'none'(sin interpolación), 'idw' (inverse distance weighting), 'automap' (kriging), 'copula' o 'stUniversalKriging' (Kriging Espacio - Temporal)
 #' @param mLimitarValoresInterpolados='UsarPromDesvEst', #'NoLimitar', 'LimitarMinimo', 'LimitarMaximo', 'LimitarMinimoyMaximo', 'UsarPromDesvEst' o 'UsarPromDesvEstYMinimoYMaximo'
-#' @param minimoLVI=NA, maximoLVI=NA,
+#' @param minimoLVI=NA, 
+#' @param maximoLVI=NA,
 #' @param factorDesvEstLVI=3.5,
 #' @param metodoIgualacionDistribuciones='regresionLineal', # 'ninguna', 'regresionLineal', 'regresionLinealRobusta', 'regresionLinealConEliminacionDeOutliers', 'CDFMatching' o 'GLS'
 #' @param formulaRegresion='',

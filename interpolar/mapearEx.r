@@ -308,14 +308,20 @@ ajustarExtremosEscala <- function(escala, datos, nDigitos=1, redondear=TRUE) {
     rango <- rangoExtendidoANDigitos(x = datos, nDigitos = nDigitos, na.rm = T)
     nEscala <- length(escala$escala)
     if (escala$escala[1] > rango[1]) escala$escala[1] <- rango[1]
-    if ((escala$colores[length(escala$colores)] == '' | escala$continuo) && escala$escala[nEscala] < rango[2]) escala$escala[nEscala] <- rango[2]
+    if ((escala$colores[length(escala$colores)] == '' | 
+         escala$continuo) && 
+        escala$escala[nEscala] < rango[2]) escala$escala[nEscala] <- rango[2]
     if (redondear) escala$escala <- c(achicarToNDigitos(escala$escala[1], nDigitos = nDigitos), 
                                       round(escala$escala[2:(nEscala-1)], digits = nDigitos), 
                                       agrandarToNDigitos(escala$escala[nEscala], nDigitos = nDigitos))
     
     iUnicos <- !duplicated(escala$escala)
     escala$escala <- escala$escala[iUnicos]
-    escala$colores <- escala$colores[iUnicos]
+    if (length(iUnicos) == length(escala$colores)) {
+      escala$colores <- escala$colores[iUnicos]      
+    } else {
+      escala$colores <- escala$colores[iUnicos[0:(length(iUnicos)-1)]]
+    }
   }
   return(escala)
 }

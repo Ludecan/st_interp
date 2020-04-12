@@ -74,9 +74,6 @@ testRegressors <- function(
       objSP = coordsObservaciones, pathsRegresor = pathsRegresores[, i, drop=F], silent = F))
     
     # which(is.na(pathsRegresores[, i, drop=F]))[1]
-    nrow(pathsRegresores)
-    length(serie)
-    length(regresor)
     
     iNoNa <- which(iNoNaSerie & !is.na(regresor))
     if (length(iNoNa) > 1) {

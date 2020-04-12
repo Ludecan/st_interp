@@ -155,7 +155,7 @@ darEscala <- function(especificacion, valores, ajustarExtremos=T) {
       escala$escala <- c(0, escala$escala)
       escala$colores <- c(especificacion$colorCero, escala$colores)
     } else {
-      escala <- 0
+      escala <- c(0, 1)
       escala <- crearEscala(
         escala = escala, colores = especificacion$colores, brewerPal = especificacion$brewerPal, 
         continuo=especificacion$continuo)
