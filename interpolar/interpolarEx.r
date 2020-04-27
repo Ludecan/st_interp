@@ -1528,7 +1528,7 @@ universalGridding <- function(
   # para ver la descripción de los demás parámetros ver la función universalGriddingEx de esta misma unidad
   # universalGriddingEx recibe los valores de los regresores sobre las coordenadas a interpolar para la fecha ti ya cargados
   # esta función los carga para facilitar su uso
-  
+
   # Cargo los valores de los regresores sobre toda la grilla a interpolar para la fecha ti en una matriz nCIxnU
   # con las las filas variando según la coordenada a interpolar y las columnas variando según el regresor
   if (!is.null(pathsRegresores) && !is.null(valoresRegresoresSobreObservaciones) && ncol(pathsRegresores) > 0) {
@@ -2530,7 +2530,7 @@ universalGriddingEx <- function(ti, coordsObservaciones, fechasObservaciones, va
     coordsObservaciones$value <- as.numeric(valoresObservaciones[ti, ])
     params$formulaRegresionCC <- regs$formulaRegresionCC
     if (params$umbralMascaraCeros > 0) {
-      # We'll use these values to use the regressors in the Rain/NoRain mask interpolation
+      # We store these values to be able to use the regressors in the Rain/NoRain mask interpolation
       params$valoresRegresoresSobreObservaciones <- lapply(
         valoresRegresoresSobreObservaciones, FUN = function(x) return(x[ti, , drop=F]))
       params$valoresRegresoresSobreCoordsAInterpolar_ti <- valoresRegresoresSobreCoordsAInterpolar_ti
@@ -2850,10 +2850,17 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
     binInterpParams$descartarCoordenadasNoSignificativas <- FALSE
     binInterpParams$interpolationMethod <- 'automap'
     binInterpParams$minRatioRangosParaExtrapolacion <- 0
+    if (!is.null(params$valoresRegresoresSobreObservaciones)) {
+      binInterpParams$signosValidosRegresores <- rep(
+        x = 1, length = length(params$valoresRegresoresSobreObservaciones))
+      names(binInterpParams$signosValidosRegresores) <- names(
+        params$valoresRegresoresSobreObservaciones)
+    }
     #binInterpParams$betaSimpleKriging <- 0
     binInterpShpMask <- interpolacion$shpMask
 
-    if (!is.null(binInterpShpMask)) binInterpShpMask$mask <- rep(TRUE, length(interpolacion$predictionLocations))
+    if (!is.null(binInterpShpMask)) binInterpShpMask$mask <- rep(
+      TRUE, length(interpolacion$predictionLocations))
     interpBinaria <- universalGriddingEx(
       ti=1, fechasObservaciones='', coordsObservaciones=obsBinarias, 
       valoresObservaciones=valoresObservacionesBinarias, 
@@ -2863,7 +2870,7 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
       shpMask=binInterpShpMask)
     
     if (params$umbralMascaraCeros == 'auto') {
-      binCV <- universalGriddingCV(obsBinarias, 1, matrix(obsBinarias$value, ncol = nrow(obsBinarias)), 
+      binCV <- universalGriddingCV(obsBinarias, 1, matrix(obsBinarias$value, ncol=nrow(obsBinarias)), 
                                    params = binInterpParams)
       
       umbrales <- sort(unique(binCV))
