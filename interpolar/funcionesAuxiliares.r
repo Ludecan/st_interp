@@ -216,7 +216,9 @@ cargarRegresor <- function(carpetaRegresor, fechasRegresando, funcFechasRegresor
   pathsRegresor <- sort(dir(carpetaRegresor, pattern = '*.tif$', full.names = T, include.dirs = F))
   if (length(pathsRegresor) > 0) {
     fechasRegresor <- funcFechasRegresor(x=pathsRegresor, tz = tz(fechasRegresando[1])) 
-    res <- matrix(expandirPathsRegresor(fechasRegresor = fechasRegresor, pathsRegresor = pathsRegresor, fechasRegresando = fechasRegresando, expandir=expandir), ncol = 1)
+    res <- matrix(expandirPathsRegresor(
+      fechasRegresor = fechasRegresor, pathsRegresor = pathsRegresor, 
+      fechasRegresando = fechasRegresando, expandir=expandir), ncol = 1)
   } else { res <- matrix(NA, nrow = length(fechasRegresando), ncol = 1) }
   colnames(res) <- ultimaCarpeta(carpetaRegresor, removerTrailingSlash = F)
   return(res)

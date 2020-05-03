@@ -33,9 +33,10 @@ if (is.null(script.dir.agregacion)) { script.dir.agregacion <- ''
 } else { script.dir.agregacion <- paste0(dirname(script.dir.agregacion), '/') }
 
 source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c('stats', 'sp', 'Rcpp', 'raster'))
+instant_pkgs(c('stats', 'sp', 'Rcpp', 'raster', 'rgdal'))
 source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.agregacion, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.agregacion, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
 
 naSiTodosNAFuncSiNo <- function(x, func, ...) {
   x <- x[!is.na(x)]
@@ -155,13 +156,78 @@ agregar <- function(x, funcionAgregacion, claseIndiceI=rep(1, nrow(x)), ordenarP
 }
 
 agregacionEspacialAPoligonos <- function(spObj, shpPoligonos, funcionAgregacion, zcol=1, na.rm=T) {
-  if (is.character(funcionAgregacion))
+  if (is.character(funcionAgregacion)) {
     funcionAgregacion <- parseFuncionAgregacion(funcionAgregacion)
-
+  }
+  if (!identicalCRS(spObj, shpPoligonos)) {
+    shpPoligonos <- spTransform(shpPoligonos, proj4string(spObj))
+  }
+  
+  # extract(raster(spObj), shpPoligonos, fun=funcionAgregacion)
+  
+  vals <- sp::over(x=shpPoligonos, y=spObj, returnList = T)
   if (na.rm) {
-    return (as.numeric(over(y=spObj[,zcol], x=shpPoligonos, fn=naSiTodosNAFuncSiNo, func=funcionAgregacion)[,1]))
+    return(sapply(
+      vals, FUN = function(x) { naSiTodosNAFuncSiNo(x[, zcol], func=funcionAgregacion)}))
   } else {
-    return(as.numeric(over(y=spObj[,zcol], x=shpPoligonos, fn=funcionAgregacion)[,1]))
+    return(sapply(vals, FUN = function(x) { funcionAgregacion(x[, zcol])}))
+  }
+  
+  #if (na.rm) {
+  #  return (as.numeric(
+  #    over(x=shpPoligonos, y=spObj[,1], fn=naSiTodosNAFuncSiNo, func=funcionAgregacion)))
+  #} else {
+  #  return(as.numeric(over(x=shpPoligonos, y=spObj[,1], fn=funcionAgregacion)))
+  #}
+}
+
+agregacionEspacialAPoligonosDesdeArchivo <- function(
+    pathSpObj, shpPoligonos, funcionAgregacion, zcol=1, na.rm=T, guardarCSV=FALSE,
+    retornarResultados=TRUE) {
+  spObj <- readGDAL(pathSpObj, silent = T)
+  res <- agregacionEspacialAPoligonos(
+    spObj=spObj, shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
+    na.rm=na.rm)
+  
+  if (guardarCSV) {
+    write.table(x=matrix(res, ncol=1), 
+                file=changeFileExt(pathSpObj, nuevaExtensionConPunto = '.csv'), sep = ',',
+                row.names = F, col.names = F)
+  }
+  
+  if (retornarResultados) {
+    return(res)
+  } else {
+    return(NULL)
+  }
+}
+
+agregacionEspacialAPoligonosDesdeArchivos <- function(
+    pathsSpObjs, shpPoligonos, funcionAgregacion, zcol=1, na.rm=T, nCoresAUsar=0, 
+    guardarCSV=FALSE, retornarResultados=TRUE) {
+  if (nCoresAUsar <= 0) {
+    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), length(pathsSpObjs))
+  }
+  
+  pathsSpObjs <- changeFileExt(listaMapas$nombreArchivo, '.tif')
+  guardarCSV=TRUE
+  
+  if (nCoresAUsar > 1) {
+    cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
+    clusterExport(cl, varlist = c('script.dir.agregacion'))
+    clusterEvalQ(cl = cl, expr = {
+      source(paste0(script.dir.agregacion, 'agregacion.r'), encoding = 'WINDOWS-1252')
+      if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
+    })
+    
+    parSapplyLB(cl=cl, X=pathsSpObjs, FUN=agregacionEspacialAPoligonosDesdeArchivo,
+                shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
+                na.rm=na.rm, guardarCSV=guardarCSV, retornarResultados=retornarResultados)
+    stopCluster(cl)
+  } else {
+    sapply(X=pathsSpObjs, FUN=agregacionEspacialAPoligonosDesdeArchivo,
+           shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
+           na.rm=na.rm, guardarCSV=guardarCSV, retornarResultados=retornarResultados)
   }
 }
 
