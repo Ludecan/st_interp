@@ -385,7 +385,9 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
   
   # Cargamos las observaciones de los regresores en las coordenadas de las estaciones
   if (!is.null(pathsRegresores)) { 
-    valoresRegresoresSobreObservaciones <- extraerValoresRegresoresSobreSP(objSP = coordsObservaciones, pathsRegresores = pathsRegresores, nCoresAUsar = paramsIyM$nCoresAUsar)
+    valoresRegresoresSobreObservaciones <- extraerValoresRegresoresSobreSP(
+      objSP = coordsObservaciones, pathsRegresores = pathsRegresores, 
+      nCoresAUsar = paramsIyM$nCoresAUsar)
   } else { valoresRegresoresSobreObservaciones <- NULL }
   
   if (paramsIyM$incorporarCoordenadas | paramsIyM$incorporarTiempo | paramsIyM$incorporarDistanciaAlAgua | paramsIyM$incorporarAltitud) {
