@@ -155,7 +155,8 @@ agregar <- function(x, funcionAgregacion, claseIndiceI=rep(1, nrow(x)), ordenarP
   return(res)
 }
 
-agregacionEspacialAPoligonos <- function(spObj, shpPoligonos, funcionAgregacion, zcol=1, na.rm=T) {
+agregacionEspacialAPoligonos <- function(
+    spObj, shpPoligonos, funcionAgregacion, zcol=1, na.rm=T, useRaster=FALSE) {
   if (is.character(funcionAgregacion)) {
     funcionAgregacion <- parseFuncionAgregacion(funcionAgregacion)
   }
@@ -163,15 +164,18 @@ agregacionEspacialAPoligonos <- function(spObj, shpPoligonos, funcionAgregacion,
     shpPoligonos <- spTransform(shpPoligonos, proj4string(spObj))
   }
   
-  # extract(raster(spObj), shpPoligonos, fun=funcionAgregacion)
-  
-  vals <- sp::over(x=shpPoligonos, y=spObj, returnList = T)
-  if (na.rm) {
-    return(sapply(
-      vals, FUN = function(x) { naSiTodosNAFuncSiNo(x[, zcol], func=funcionAgregacion)}))
+  if (useRaster) {
+    return (
+      raster::extract(x = raster(spObj), y = shpPoligonos, fun=funcionAgregacion, na.rm=na.rm))
   } else {
-    return(sapply(vals, FUN = function(x) { funcionAgregacion(x[, zcol])}))
+    if (na.rm) {
+      return (as.numeric(sp::over(
+        x=shpPoligonos, y=spObj, fn=naSiTodosNAFuncSiNo, func=funcionAgregacion)[, zcol]))
+    } else {
+      return(sapply(vals, FUN = function(x) { funcionAgregacion(x[, zcol])}))
+    }
   }
+  
   
   #if (na.rm) {
   #  return (as.numeric(
@@ -183,11 +187,12 @@ agregacionEspacialAPoligonos <- function(spObj, shpPoligonos, funcionAgregacion,
 
 agregacionEspacialAPoligonosDesdeArchivo <- function(
     pathSpObj, shpPoligonos, funcionAgregacion, zcol=1, na.rm=T, guardarCSV=FALSE,
-    retornarResultados=TRUE) {
+    retornarResultados=TRUE, useRaster=FALSE) {
+  # pathSpObj <- pathsSpObjs[1]
   spObj <- readGDAL(pathSpObj, silent = T)
   res <- agregacionEspacialAPoligonos(
     spObj=spObj, shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
-    na.rm=na.rm)
+    na.rm=na.rm, useRaster=useRaster)
   
   if (guardarCSV) {
     write.table(x=matrix(res, ncol=1), 
@@ -204,13 +209,12 @@ agregacionEspacialAPoligonosDesdeArchivo <- function(
 
 agregacionEspacialAPoligonosDesdeArchivos <- function(
     pathsSpObjs, shpPoligonos, funcionAgregacion, zcol=1, na.rm=T, nCoresAUsar=0, 
-    guardarCSV=FALSE, retornarResultados=TRUE) {
+    guardarCSV=FALSE, retornarResultados=TRUE, useRaster=FALSE) {
   if (nCoresAUsar <= 0) {
     nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), length(pathsSpObjs))
   }
   
   pathsSpObjs <- changeFileExt(listaMapas$nombreArchivo, '.tif')
-  guardarCSV=TRUE
   
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
@@ -222,12 +226,14 @@ agregacionEspacialAPoligonosDesdeArchivos <- function(
     
     parSapplyLB(cl=cl, X=pathsSpObjs, FUN=agregacionEspacialAPoligonosDesdeArchivo,
                 shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
-                na.rm=na.rm, guardarCSV=guardarCSV, retornarResultados=retornarResultados)
+                na.rm=na.rm, guardarCSV=guardarCSV, retornarResultados=retornarResultados, 
+                useRaster=useRaster)
     stopCluster(cl)
   } else {
     sapply(X=pathsSpObjs, FUN=agregacionEspacialAPoligonosDesdeArchivo,
            shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
-           na.rm=na.rm, guardarCSV=guardarCSV, retornarResultados=retornarResultados)
+           na.rm=na.rm, guardarCSV=guardarCSV, retornarResultados=retornarResultados, 
+           useRaster=useRaster)
   }
 }
 

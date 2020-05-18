@@ -384,7 +384,7 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
   if (is.na(paramsIyM$cutoff)) paramsIyM$cutoff <- getDefaultSpatialCutoff(coordsObservaciones, params = paramsIyM)
   
   # Cargamos las observaciones de los regresores en las coordenadas de las estaciones
-  if (!is.null(pathsRegresores)) { 
+  if (!is.null(pathsRegresores)) {
     valoresRegresoresSobreObservaciones <- extraerValoresRegresoresSobreSP(
       objSP = coordsObservaciones, pathsRegresores = pathsRegresores, 
       nCoresAUsar = paramsIyM$nCoresAUsar)

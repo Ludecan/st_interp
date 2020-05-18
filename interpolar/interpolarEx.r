@@ -233,7 +233,7 @@ extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1
   # i <- 1
   if (!silent) print(i)
 
-  if (!is.na(pathsRegresor[i]) && file.exists(pathsRegresor[i])) {
+  if (!is.na(pathsRegresor[i]) && file.exists(pathsRegresor[i]) && length(objSP) > 0) {
     ext <- getFileExt(pathsRegresor[i])
     if (ext == 'tif') { evaluarConReintentos(regresor <- readGDAL(pathsRegresor[i], silent = silent))
     } else if (ext == 'nc') {
@@ -259,7 +259,6 @@ extraerValoresRegresorSobreSP <- function(
     nCoresAUsar=0, setNames=T, ...) {
   pr <- pathsRegresor[seq.int(from = iInicial, to = iFinal, by = 1)]
   pathsUnicos <- unique(pr)
-  iMatch <- match(x = pr, pathsUnicos)
   
   # netCDF is not reentrant. Force single core
   if (any(getFileExt(pathsUnicos) == 'nc', na.rm=T)) { nCoresAUsar <- 1
@@ -285,7 +284,13 @@ extraerValoresRegresorSobreSP <- function(
       pathsRegresor=pathsUnicos, fn=fn, zcol=zcol, silent=silent, ...=...)
   }
   
-  valoresSobreSP <- t(valoresSobreSP[, iMatch])
+  if (length(pathsUnicos) < length(pr)) { 
+    iMatch <- match(x = pr, pathsUnicos)
+    valoresSobreSP <- t(valoresSobreSP[, iMatch])
+  } else {
+    valoresSobreSP <- t(valoresSobreSP)
+  }
+  
   if (setNames) {
     colnames(valoresSobreSP) <- row.names(objSP)
     
