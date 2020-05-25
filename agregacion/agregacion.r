@@ -224,17 +224,19 @@ agregacionEspacialAPoligonosDesdeArchivos <- function(
       if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
     })
     
-    parSapplyLB(cl=cl, X=pathsSpObjs, FUN=agregacionEspacialAPoligonosDesdeArchivo,
-                shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
-                na.rm=na.rm, guardarCSV=guardarCSV, retornarResultados=retornarResultados, 
-                useRaster=useRaster)
+    resultados <- parSapplyLB(
+      cl=cl, X=pathsSpObjs, FUN=agregacionEspacialAPoligonosDesdeArchivo, shpPoligonos=shpPoligonos,
+      funcionAgregacion=funcionAgregacion, zcol=zcol, na.rm=na.rm, guardarCSV=guardarCSV, 
+      retornarResultados=retornarResultados, useRaster=useRaster)
     stopCluster(cl)
   } else {
-    sapply(X=pathsSpObjs, FUN=agregacionEspacialAPoligonosDesdeArchivo,
-           shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
-           na.rm=na.rm, guardarCSV=guardarCSV, retornarResultados=retornarResultados, 
-           useRaster=useRaster)
+    resultados <- sapply(
+      X=pathsSpObjs, FUN=agregacionEspacialAPoligonosDesdeArchivo, shpPoligonos=shpPoligonos, 
+      funcionAgregacion=funcionAgregacion, zcol=zcol, na.rm=na.rm, guardarCSV=guardarCSV, 
+      retornarResultados=retornarResultados, useRaster=useRaster)
   }
+  
+  return(resultados)
 }
 
 testAgregacion <- function() {
