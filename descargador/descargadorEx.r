@@ -36,7 +36,7 @@ if (is.null(script.dir.descargadorEx)) { script.dir.descargadorEx <- ''
 
 source(paste0(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c('RCurl', 'parallel', 'digest', 'data.table', 'stringi', 'stringr', 'lubridate'))
+instant_pkgs(c('RCurl', 'curl', 'parallel', 'digest', 'data.table', 'stringi', 'stringr', 'lubridate'))
 
 threadHandle <- getCurlHandle()
 
@@ -337,8 +337,9 @@ isCompressed <- function(paths) {
 }
 
 descargarArchivo <- function(
-    i, urls, nombresArchivosDestino, forzarReDescarga=FALSE, maxRetries=5, segundosEntreIntentos=15, 
-    curlOpts=NULL, do_unzip=isCompressed(nombresArchivosDestino)) {
+    i, urls, nombresArchivosDestino, forzarReDescarga=FALSE, maxRetries=5L, 
+    segundosEntreIntentos=15L, curlOpts=NULL, do_unzip=isCompressed(nombresArchivosDestino),
+    useCurl=FALSE) {
   # i <- 1
   nRetries <- 0
 
@@ -365,17 +366,24 @@ descargarArchivo <- function(
     is_ftp = startsWith(urls[i], 'ftp://') || startsWith(urls[i], 'ftps://')
     is_http = !is_ftp && (startsWith(urls[i], 'http://') || startsWith(urls[i], 'https://'))
     results <- 1
-    
     path = dirname(nombresArchivosDestino[i])
     if (!dir.exists(path)) dir.create(path, showWarnings = FALSE, recursive = T)
     
     while (do_download & nRetries < maxRetries) {
-      f = CFILE(nombresArchivosDestino[i], mode="wb")
-      er2 <- try(er <- curlPerform(url = urls[i], curl=threadHandle, writedata = f@ref))
-      close(f)
+      if (useCurl) {
+        handle <- new_handle(verbose = TRUE)
+        if (!is.null(curlOpts)) { handle_setopt(handle, .list = curlOpts) }
+        er2 <- try(er <- curl_download(
+          url = urls[i], destfile = nombresArchivosDestino[i], handle = handle, quiet = FALSE))    
+      } else {
+        f = CFILE(nombresArchivosDestino[i], mode="wb")
+        er2 <- try(er <- curlPerform(url = urls[i], curl=threadHandle, writedata = f@ref))
+        close(f)  
+      }
+      
       if (class(er2) == "try-error" || 
-          er != 0 || 
-          !file.exists(nombresArchivosDestino[i]) || length(readBin(nombresArchivosDestino[i], what='raw')) <= 0) {
+          !file.exists(nombresArchivosDestino[i]) || 
+          length(readBin(nombresArchivosDestino[i], what='raw')) <= 0) {
         
         if (is_ftp && grepl(pattern = '5[[:digit:]]{2}', er2)) {
           # Handling FTP permanent error cases. Needs improvement
@@ -388,8 +396,10 @@ descargarArchivo <- function(
           Sys.sleep(segundosEntreIntentos)
         }
         
-        # Reinicio el handle si hay algún problema
-        threadHandle <- getCurlHandle(.opts = curlOpts)
+        if (!useCurl) {
+          # Reset handle if there's any error
+          threadHandle <- getCurlHandle(.opts = curlOpts)
+        }
       } else { do_download <- FALSE }
     }
   } else {
@@ -441,18 +451,24 @@ descargarArchivo_curl <- function(i, urls, nombresArchivosDestino, maxRetries=5,
   return(success)
 }
 
-descargarArchivos <- function(urls, nombresArchivosDestino=paste0(pathSalida, basename(urls)), 
-                              nConexionesSimultaneas=4, forzarReDescarga=FALSE, curlOpts=NULL, 
-                              pathSalida='', do_unzip=isCompressed(nombresArchivosDestino)) {
+chunks_by_num <- function(x, n) {
+  split(x, cut(seq_along(x), ceiling(n), labels = FALSE)) 
+}
+
+chunks_by_size <- function(x, n) {
+  split(x, ceiling(seq_along(x)/n))
+}
+
+descargarArchivos <- function(
+    urls, nombresArchivosDestino=paste0(pathSalida, basename(urls)), 
+    nConexionesSimultaneas=4, forzarReDescarga=FALSE, curlOpts=NULL, 
+    pathSalida='', do_unzip=isCompressed(nombresArchivosDestino)) {
   # Retorna:
   # 0 si no se pudo bajar el archivo
   # 1 si se bajo un archivo nuevo
   # 2 si el archivo ya existía
-  #nConexionesSimultaneas=4
-  #forzarReDescarga=FALSE
-  #archivos <- generarNombresArchivoSMN()
-  #urls <- archivos$urls
-  #nombresArchivosDestino <- archivos$nombresArchivosDestino
+  
+  useCurl <- !is.null(curlOpts) && 'use_ssl' %in% names(curlOpts)
   
   if (length(urls) > 0) {
     sapply(unique(dirname(nombresArchivosDestino)), dir.create, showWarnings = F, recursive=T)
@@ -460,44 +476,31 @@ descargarArchivos <- function(urls, nombresArchivosDestino=paste0(pathSalida, ba
     # if (length(urls) * 4 < nConexionesSimultaneas) nConexionesSimultaneas <- max(trunc(length(urls) / 4), 1)
     nConexionesAUsar <- min(nConexionesSimultaneas, length(urls))
     
-    # nConexionesAUsar descargas paralelas con Keepalive usando RCurl
-    if (nConexionesAUsar > 1) {
+    if (nConexionesAUsar > 1 && !useCurl) {
       cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
-      clusterExport(cl, varlist = c('curlOpts', 'script.dir.descargadorEx'), envir = environment())
+      clusterExport(
+        cl, varlist = c('curlOpts', 'useCurl', 'script.dir.descargadorEx'), envir = environment())
       clusterEvalQ(cl, expr = {
         source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
-        require('RCurl')
-        threadHandle <- getCurlHandle(.opts = curlOpts)
+        if (useCurl) {
+          require('curl')
+        } else {
+          require('RCurl')
+          threadHandle <- getCurlHandle(.opts = curlOpts)
+        }
       })
       results <- parSapplyLB(cl = cl, X=seq_along(urls), FUN = descargarArchivo, urls=urls, 
                          nombresArchivosDestino=nombresArchivosDestino, 
-                         forzarReDescarga=forzarReDescarga, curlOpts = curlOpts, do_unzip=do_unzip)
+                         forzarReDescarga=forzarReDescarga, curlOpts = curlOpts, do_unzip=do_unzip,
+                         useCurl=useCurl)
       stopCluster(cl)
     } else {
-      assign("threadHandle", getCurlHandle(.opts = curlOpts), envir = .GlobalEnv)
-      # threadHandle <- getCurlHandle(.opts = curlOpts)
+      if (!useCurl) { assign("threadHandle", getCurlHandle(.opts = curlOpts), envir = .GlobalEnv) }
       results <- sapply(X=seq_along(urls), FUN = descargarArchivo, urls=urls,
                         nombresArchivosDestino=nombresArchivosDestino, 
-                        forzarReDescarga=forzarReDescarga, curlOpts = curlOpts, do_unzip=do_unzip)
+                        forzarReDescarga=forzarReDescarga, curlOpts = curlOpts, do_unzip=do_unzip,
+                        useCurl=useCurl)
     }
-    # descargas secuenciales con Keepalive usando RCurl
-    #cl <- makeCluster(getOption('cl.cores', 1))
-    #system.time({
-    #  clusterEvalQ(cl, expr = {
-    #    require('RCurl')
-    #    threadHandle <- getCurlHandle() })
-    #  parLapplyLB(cl = cl, X=seq_along(urls), fun = descargarArchivo, urls=urls, nombresArchivosDestino=nombresArchivosDestino, 
-    #              nConexionesSimultaneas=nConexionesAUsar)
-    #})
-    #stopCluster(cl)
-    
-    # nConexionesAUsar descargas paralelas con Keepalive usando curl
-    #cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
-    #system.time({
-    #  clusterEvalQ(cl, expr = { require('curl') })
-    #  parLapplyLB(cl = cl, X=seq_along(urls), fun = descargarArchivo_curl, urls=urls, nombresArchivosDestino=nombresArchivosDestino)
-    #})
-    #stopCluster(cl)
   } else {
     results <- integer(0)
   }
