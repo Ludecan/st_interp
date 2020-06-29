@@ -371,7 +371,7 @@ descargarArchivo <- function(
     
     while (do_download & nRetries < maxRetries) {
       if (useCurl) {
-        handle <- new_handle(verbose = TRUE)
+        handle <- new_handle(verbose = FALSE)
         if (!is.null(curlOpts)) { handle_setopt(handle, .list = curlOpts) }
         er2 <- try(er <- curl_download(
           url = urls[i], destfile = nombresArchivosDestino[i], handle = handle, quiet = FALSE))    

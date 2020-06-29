@@ -1160,7 +1160,7 @@ testEspacialPrecipitacionIV2 <- function(
   # mapearPuntosGGPlot(SpatialPointsDataFrame(geometry(coordsObservaciones), data = data.frame(value=as.numeric(valoresObservaciones[iFecha,]))), shpBase = shpBase, continuo = T, dibujar = F, dibujarTexto = T, tamaniosPuntos = 2)  
   # print(i)
   iesVecinosI <- getIVecinosAMenosDeMaxDist_i(
-    i=i, coordsObservaciones=coordsObservaciones, maxDist=maxDist, filtrarDistanciaCero=FALSE)
+    i=i, coordsObservaciones=coordsObservaciones, maxDist=maxDist, filtrarDistanciaCero=TRUE)
   if (length(iesVecinosI) >= minNCuadrantes) {
     valoresVecinos <- valoresObservaciones[, iesVecinosI, drop=F]
     iNoNAsVecinos <- iNoNAs[, iesVecinosI, drop=F]

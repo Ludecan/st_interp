@@ -781,7 +781,11 @@ interpolarEx <- function(
         var1.pred <- rep(NA_real_, nPredictionLocations)
         if (!is.null(valoresCampoBase)) { var1.pred[!is.na(valoresCampoBase[shpMask$mask])] <- mean(observaciones$value)
         } else { var1.pred[] <- mean(observaciones$value) }
-      } else { var1.pred <- rep(NA_real_, nPredictionLocations) }
+      } else if (!is.null(valoresCampoBase)) {
+        var1.pred <- rep(0, times=nPredictionLocations)
+      } else{ 
+        var1.pred <- rep(NA_real_, nPredictionLocations) 
+      }
       
       predictions <- data.frame(var1.pred=var1.pred, var1.var=rep(x=0, times=nPredictionLocations))
     } else if (!is.null(valoresCampoBase)) {
@@ -796,8 +800,10 @@ interpolarEx <- function(
     class(predictions@data[, 1]) <- 'numeric'
     class(predictions@data[, 2]) <- 'numeric'
     
-    interpolacion <- imitarObjetoIntamap(observaciones = observaciones, formulaString = value~1, predictions=predictions, intCRS = proj4StringAInterpolar, 
-                                         targetCRS = proj4StringAInterpolar, class='automap', outputWhat=list(mean=T, variance=T))
+    interpolacion <- imitarObjetoIntamap(
+      observaciones=observaciones, formulaString=value~1, predictions=predictions, 
+      intCRS=proj4StringAInterpolar, targetCRS=proj4StringAInterpolar, class='automap', 
+      outputWhat=list(mean=T, variance=T))
   }
   
   if (params$modoDiagnostico & (!is.null(valoresCampoBase) & !is.null(valoresCampoBaseSobreObservaciones))) {
@@ -2069,7 +2075,7 @@ ajusteRegresores <- function(
       } else { iesVals <- 1:length(valoresObservaciones[tsVentana, ]) }
       
       # Igualacion de Distribuciones
-      if (metodoIgualacionDistribuciones != 1) {
+      if (metodoIgualacionDistribuciones != 1 && any(!is.na(valoresObservaciones[tsVentana, ]))) {
         # Obtengo los valores de los regresores sobre las observaciones
         # Obtengo un vector concatenando los valores de las observaciones de cada estacion para cada fecha en la ventana 
         # algo como c(obsEst1, obsEst2, ..., obsEstN) donde obsEsti son los valores de todas las fechas en una estacion
