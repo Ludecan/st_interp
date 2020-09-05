@@ -427,8 +427,12 @@ getModelVariogram <- function(experimental_variogram, formula, input_data = NULL
       psill <- iv[n, 4]
       
       if(m != "Mat" && m != "Ste") { # If not Matern and not Stein
-        model_fit = getModel(psill = psill - nugget, model = m, range = range, kappa = 0, nugget = nugget, fit_range = fit_range, 
-                             fit_sill = fit_sill, fit_nugget = fit_nugget, verbose = verbose, fit.method=fit.method)
+        model_fit = getModel(
+          psill = psill - nugget, model = m, range = range, kappa = 0, nugget = nugget, 
+          fit_range = fit_range, fit_sill = fit_sill, fit_nugget = fit_nugget, verbose = verbose, 
+          fit.method=fit.method)
+        
+        print(model_fit)
         
         if (!isInvalidVariogram(model_fit, minPsill = minPsill, minRange = minRange) & attr(model_fit, "SSErr") < bestSSerr) { # skip models that failed
           bestFit <- model_fit
@@ -1118,11 +1122,12 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   } else { fixNugget <- 0 }
 
   for (i in 1:length(model)) {
+    # i <- 1
     if (verbose) print(paste0(i, ': ', model[[i]]))
     vgIni <- afvmod(
       formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, 
       miscFitOptions=list(orig.behavior=F), fix.values=c(fixNugget, NA, NA), verbose=verbose, 
-      nPuntosIniciales=2, fit.method = 7)$var_model
+      nPuntosIniciales=3, fit.method = 7)$var_model
     
     if (!is.null(vgIni)) {
       try({

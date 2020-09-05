@@ -2549,8 +2549,8 @@ universalGriddingEx <- function(ti, coordsObservaciones, fechasObservaciones, va
     
     # observaciones <- coordsObservaciones
     # longitudesEnColumnas <- T
-    # valoresCampoBaseSobreObservaciones = regs$valoresCampoBaseSobreObservaciones
-    # valoresCampoBase = regs$valoresCampoBase
+    # valoresCampoBaseSobreObservaciones <- regs$valoresCampoBaseSobreObservaciones
+    # valoresCampoBase <- regs$valoresCampoBase
     interpolacion <- interpolarEx(
       observaciones = coordsObservaciones, coordsAInterpolar = coordsAInterpolar, params = params, 
       shpMask = shpMask, valoresCampoBaseSobreObservaciones=regs$valoresCampoBaseSobreObservaciones, 
