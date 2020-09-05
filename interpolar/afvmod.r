@@ -307,6 +307,7 @@ getExperimentalVariogram <- function(formula, input_data, verbose = FALSE, GLS.m
 
 isInvalidVariogram <- function(v, minPsill = 1E-3, minRange = 0.05) {
   return((is.null(v) |
+   length(v) == 0 |
    any(!v$model %in% c('Nug', "Pow")  & ((v$psill < minPsill) | (v$range <= minRange))) |
    any(v$model == 'Nug' & v$psill < 0) |
    any(v$model == 'Pow' & (v$range > 2 | v$range <= 0))))
@@ -432,9 +433,7 @@ getModelVariogram <- function(experimental_variogram, formula, input_data = NULL
           fit_range = fit_range, fit_sill = fit_sill, fit_nugget = fit_nugget, verbose = verbose, 
           fit.method=fit.method)
         
-        print(model_fit)
-        
-        if (!isInvalidVariogram(model_fit, minPsill = minPsill, minRange = minRange) & attr(model_fit, "SSErr") < bestSSerr) { # skip models that failed
+        if (!isInvalidVariogram(model_fit, minPsill = minPsill, minRange = minRange) && attr(model_fit, "SSErr") < bestSSerr) { # skip models that failed
           bestFit <- model_fit
           bestSSerr <- attr(model_fit, "SSErr")
         }
@@ -442,7 +441,7 @@ getModelVariogram <- function(experimental_variogram, formula, input_data = NULL
         for(k in kappa) {
           model_fit = getModel(psill = psill - nugget, model = m, range = range, k, nugget = nugget, fit_range, fit_sill, fit_nugget, verbose = verbose, fit.method=fit.method)
           
-          if (!isInvalidVariogram(model_fit, minPsill=minPsill, minRange = minRange) & attr(model_fit, "SSErr") < bestSSerr) { # skip models that failed
+          if (!isInvalidVariogram(model_fit, minPsill=minPsill, minRange = minRange) && attr(model_fit, "SSErr") < bestSSerr) { # skip models that failed
             bestFit <- model_fit
             bestSSerr <- attr(model_fit, "SSErr")
           }          
