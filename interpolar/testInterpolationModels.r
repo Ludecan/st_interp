@@ -35,6 +35,9 @@ if (is.null(script.dir.testInterpolationModels)) { script.dir.testInterpolationM
 } else { script.dir.testInterpolationModels <- paste0(dirname(script.dir.testInterpolationModels), '/') }
 
 source(paste0(script.dir.testInterpolationModels, '../verificacionPronosticos/verificacionPronosticos.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.testInterpolationModels, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+
+instant_pkgs('caret')
 
 getTSeqs <- function(fechasObservaciones) {
   anios <- sort(unique(year(fechasObservaciones)), decreasing = T)
@@ -50,13 +53,19 @@ getTSeqs <- function(fechasObservaciones) {
 
 testRegressors <- function(
     valoresObservaciones, pathsRegresores, pathSHPNotNUll, pathResultados='Resultados/1-Exploracion/', 
-    seriesName='Rainfall', outputTableFilename=NULL, logTransforms=FALSE) {
+    seriesName='Rainfall', outputTableFilename=NULL, logTransforms=FALSE, 
+    rainfallDetectionThresholds=NULL) {
   dir.create(pathResultados, showWarnings = FALSE, recursive = TRUE)
   serie <- unlist(c(valoresObservaciones))
   
   res <- matrix(nrow=ncol(pathsRegresores), ncol = 7)
-  colnames(res) <- c('Pearson', 'Spearman', 'Adj. R^2', 'CantDatos', 'CoberturaMínima', 'CoberturaMedia', 'CoberturaMáxima')
+  colnames(res) <- c(
+    'Pearson', 'Spearman', 'Adj. R^2', 'CantDatos', 'CoberturaMínima', 'CoberturaMedia', 
+    'CoberturaMáxima')
   rownames(res) <- colnames(pathsRegresores)
+  rainfallDetectionStats <- matrix(
+    nrow=ncol(pathsRegresores), ncol=3 * length(rainfallDetectionThresholds))
+  rownames(rainfallDetectionStats) <- rownames(res)
   
   iNoNaSerie <- !is.na(serie)
   i <- 1
@@ -83,7 +92,7 @@ testRegressors <- function(
         s <- log1p(s)
         r <- log1p(s)
       }
-      
+
       res[i, 1] <- cor(s, r)
       res[i, 2] <- cor(s, r, method = 'spearman')
       m <- lm(formula = 'y~x+1', data = data.frame(x=r, y=s))
@@ -109,9 +118,23 @@ testRegressors <- function(
         titulo = paste(seriesName, ' vs ', colnames(pathsRegresores)[i], sep=''), 
         dibujar = interactive(), nomArchSalida = arch)
       
+      if (!is.null(rainfallDetectionThresholds)) {
+        rainfallStats <- calcRainfallDetectionMultiThresholds(
+          pronostico = r, observacion = s, thresholds = rainfallDetectionThresholds)
+        
+        rainfallDetectionStats[i, ] <- rainfallStats
+        if (is.null(colnames(rainfallDetectionStats))) {
+          colnames(rainfallDetectionStats) <- names(rainfallStats)
+        }
+      }
+      
       rm(s, r, m, smry, aux, nNoNulosPorCuadrantes, nNoNulos, arch)
     }
     rm(shpMaskNoNulos, nPixeles, iNoNa, regresor)
+  }
+  
+  if (ncol(rainfallDetectionStats) > 0) {
+    res <- cbind(res, rainfallDetectionStats)
   }
   
   if (!is.null(outputTableFilename)) {

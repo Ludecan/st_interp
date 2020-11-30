@@ -328,7 +328,7 @@ ajustarExtremosEscala <- function(escala, datos, nDigitos=1, redondear=TRUE) {
 
 getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong=TRUE, factorMargen = 0.025) {
   # obtengo el rectángulo que encierra a la grilla u observaciones y dejo un borde de 2.5% para cada lado
-  p4str <- proj4string(spObjs[[1]])
+  crsOBJ <- spObjs[[1]]@proj4string
   xLim <- spObjs[[1]]@bbox[1,]
   yLim <- spObjs[[1]]@bbox[2,]
 
@@ -364,6 +364,7 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
   if (ejesXYLatLong) {
     # Hago el "cuadrado" en lat/long
     p4strLatLong <- '+proj=longlat +datum=WGS84'
+    SRS_stringLatLong <- 'EPSG:4326'
     coordsBB <- matrix(data=c(xLim[1], yLim[1], #abajo, izquierda
                               xLim[1], yLim[2], #arriba, izquierda
                               xLim[2], yLim[2], #arriba, derecha
@@ -372,8 +373,8 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
                        ncol=2, byrow=T)
     p <- Polygon(coordsBB)
     ps <- Polygons(list(p), 1)
-    sps <- SpatialPolygons(list(ps), proj4string=CRS(p4str))
-    spsLatLong <- spTransform(sps, CRS(p4strLatLong))
+    sps <- SpatialPolygons(list(ps), proj4string=crsOBJ)
+    spsLatLong <- spTransform(sps, CRS(projargs = p4strLatLong, SRS_string = SRS_stringLatLong))
     
     # Redondeo para sacar los decimales
     lonMin <- floor(spsLatLong@bbox[1, 1])
@@ -405,8 +406,10 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
       lineasHorizontales[[i]] <- lineaHorizontal
       i <- i + 1
     }
-    lineasLatLong <- SpatialLines(c(lineasVerticales, lineasHorizontales), proj4string=CRS(p4strLatLong))
-    lineasLatLong <- spTransform(lineasLatLong, CRS(p4str))
+    lineasLatLong <- SpatialLines(
+      c(lineasVerticales, lineasHorizontales), 
+      proj4string=CRS(projargs = p4strLatLong, SRS_string = SRS_stringLatLong))
+    lineasLatLong <- spTransform(lineasLatLong, crsOBJ)
     # Intersecto las lineas horizontales y verticales con el cuadrado lat/long proyectado
     # para quedarme solo con la parte dentro del área del gráfico
     lineasLatLong <- gIntersection(lineasLatLong, sps, byid=T)
@@ -414,11 +417,12 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
     # Obtengo la intersección de cada recta con el marco del área de ploteo del mapa
     # y el texto a mostrar en cada intersección, W o E para Lon y S o N para Lat y el grado entero
     # Borde inferior del marco de ploteo
-    linea <- SpatialLines(list(Lines(list(Line(expand.grid(x=xLim, y=yLim[1]))), ID='aux')), proj4string=CRS(p4str))
+    linea <- SpatialLines(list(Lines(list(Line(expand.grid(x=xLim, y=yLim[1]))), ID='aux')), proj4string=crsOBJ)
     cortesEjeX <- gIntersection(lineasLatLong, linea)
     breaksEjeX <- cortesEjeX@coords[,1]
     row.names(cortesEjeX) <- 1:length(cortesEjeX)
-    cortesEjeX <- spTransform(cortesEjeX, CRS(p4strLatLong))
+    cortesEjeX <- spTransform(
+      cortesEjeX, CRS(projargs = p4strLatLong, SRS_string = SRS_stringLatLong))
     
     textoEjeX <- character(0)
     lons <- cortesEjeX@coords[,1]
@@ -429,11 +433,12 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
     }    
     
     # Borde izquierdo del marco de ploteo
-    linea <- SpatialLines(list(Lines(list(Line(expand.grid(x=xLim[1], y=yLim))), ID='aux')), proj4string=CRS(p4str))
+    linea <- SpatialLines(list(Lines(list(Line(expand.grid(x=xLim[1], y=yLim))), ID='aux')), proj4string=crsOBJ)
     cortesEjeY <- gIntersection(lineasLatLong, linea)
     breaksEjeY <- cortesEjeY@coords[,2]
     row.names(cortesEjeY) <- 1:length(cortesEjeY)
-    cortesEjeY <- spTransform(cortesEjeY, CRS(p4strLatLong))
+    cortesEjeY <- spTransform(
+      cortesEjeY, CRS(projargs = p4strLatLong, SRS_string = SRS_stringLatLong))
     textoEjeY <- character(0)
     lats <- cortesEjeY@coords[,2]
     for (i in 1:length(lats)) {
@@ -788,7 +793,7 @@ mapearGrillaGGPlot <- function(
     coordsObservaciones=NULL, tamaniosPuntos = 0.8, tamanioFuentePuntos = 3, puntosAResaltar=NULL) {
   #grilla <- coarsenGrid(grilla, coarse = 6)
   if (!is.null(shpBase) & !identicalCRS(grilla, shpBase)) { 
-    shpBase <- spTransform(shpBase, proj4string(grilla))
+    shpBase <- spTransform(shpBase, grilla@proj4string)
   }
   if (is.null(xyLims)) {
     if (is.null(shpBase)) { xyLims <- getXYLims(spObjs = list(grilla), ejesXYLatLong = F)
@@ -870,7 +875,7 @@ mapearGrillaGGPlot <- function(
     p <- p + scale_fill_gradientn(colours=escala$colores, values=vals, limits=c(escala$escala[1], valMax),
                                   breaks=escala$escala, na.value="gray95") + theme(legend.key.height=alturaEscalaContinua)
   } else {
-    breaks <- rev(levels(v))
+    breaks <- levels(v)
     #if (length(breaks) > 18) { labels <- rev(escala$escala[1:ultimoI])
     #} else { 
       labels <- breaks 

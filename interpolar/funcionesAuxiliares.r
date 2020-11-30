@@ -379,15 +379,15 @@ lala <- function() {
   #rm(TWISRE3)
   
   twisre3 <- readGDAL(paste(pathDatos, 'TWISRE3/TWISRE3a.tif', sep=''))
-  twisre3_uy <- spTransform(coordsAInterpolar, proj4string(twisre3))
+  twisre3_uy <- spTransform(coordsAInterpolar, twisre3@proj4string)
   res <- over(x = twisre3_uy, twisre3, returnList = F)[,1]
   twisre3_uy <- SpatialPixelsDataFrame(coordsAInterpolar, data = data.frame(TWI=(res/10+10)))
   shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP = params$pathSHPMapaBase, grilla = twisre3_uy, spSinMascara = estacionesINUMET)
   mapearGrillaGGPlot(twisre3_uy, shpMask$shp, nomArchResultados = paste(pathDatos, 'TWISRE3/twisre3_uy.png', sep=''), continuo = T)
   
-  estacionesINUMET <- spTransform(estacionesINUMET, CRS(proj4string(twisre3_uy)))
+  estacionesINUMET <- spTransform(estacionesINUMET, twisre3_uy@proj4string)
   iNA <- which(is.na(twisre3_uy@data[shpMask$mask, ]))
-  coordsNA <- SpatialPoints(coordinates(aux2)[iNA,], proj4string = CRS(proj4string(twisre3_uy)))
+  coordsNA <- SpatialPoints(coordinates(aux2)[iNA,], proj4string = twisre3_uy@proj4string)
   
   twisre3_uy <- rellenarSP(sp = twisre3_uy, mascara = shpMask$mask, metodo='idw', zcol=1)
   mapearGrillaGGPlot(twisre3_uy, shpMask$shp, nomArchResultados = paste(pathDatos, 'TWISRE3/twisre3_uy.png', sep=''), continuo = T)
@@ -395,8 +395,9 @@ lala <- function() {
   if (FALSE) {
     iEstacionesNA <- which(is.na(over(estacionesINUMET, twisre3_uy)))
     coordsEstacionesNA <- coordinates(estacionesINUMET)[iEstacionesNA, , drop=F]
-    coordsEstacionesNA <- SpatialPoints(coords = coordsEstacionesNA, proj4string = CRS(proj4string(estacionesINUMET)))
-    aux3 <- SpatialPoints(coords = coordinates(twisre3_uy), proj4string = CRS(proj4string(aux2)))
+    coordsEstacionesNA <- SpatialPoints(
+      coords = coordsEstacionesNA, proj4string = estacionesINUMET@proj4string)
+    aux3 <- SpatialPoints(coords = coordinates(twisre3_uy), proj4string = aux2@proj4string)
     dist <- gDistance(coordsEstacionesNA, aux3, byid = T)
     i <- order(dist)
     twisre3_uy@data[over(coordsEstacionesNA, geometry(twisre3_uy)), 1] <- twisre3_uy@data[which.min(i), 1]
@@ -413,7 +414,9 @@ lala <- function() {
   rm(twisre3, twisre3_uy, res, coordsPDelEste, aux3, lalala)
   
   proj4StringLatLong <- '+proj=longlat +datum=WGS84'
-  coordsAInterpolarLatLong <- spTransform(coordsAInterpolar, CRSobj = CRS(proj4StringLatLong))
+  wktLatLong <- "EPSG:4326"
+  coordsAInterpolarLatLong <- spTransform(
+    coordsAInterpolar, CRSobj = CRS(projargs = proj4StringLatLong, SRS_string = wktLatLong))
   
   lat <- coordinates(coordsAInterpolarLatLong)[, 2] * pi / 180
   range(cos(lat * pi / 180))
@@ -561,11 +564,17 @@ plotRasterI <- function(i, pathsRaster, shpBase=NULL, escala=NULL, carpetaSalida
     
     if (replot || !file.exists(archivoSalida) || file.info(archivoSalida)$size == 0) {
       rasterI <- readGDAL(pathsRaster[i], silent = T)
-      if (!is.null(shpBase) && proj4string(rasterI) != proj4string(shpBase)) { shpBase <- spTransform(shpBase, CRS(proj4string(rasterI)))}
-      if (!is.null(escala) && !all(is.na(rasterI@data[, 1]))) escala <- ajustarExtremosEscala(escala = escala, datos = rasterI@data[, 1], redondear = F)
+      if (!is.null(shpBase) && proj4string(rasterI) != proj4string(shpBase)) { 
+        shpBase <- spTransform(shpBase, rasterI@proj4string)
+      }
+      if (!is.null(escala) && !all(is.na(rasterI@data[, 1]))) {
+        escala <- ajustarExtremosEscala(escala = escala, datos = rasterI@data[, 1], redondear = F)
+      }
       
-      mapearGrillaGGPlot(grilla = rasterI, shpBase = shpBase, escala = escala, nomArchResultados = archivoSalida, continuo = T, dibujar=F, 
-                         titulo = titulos[i], widthPx = widthPx, heightPx = heightPx, alturaEscalaContinua = alturaEscalaContinua)
+      mapearGrillaGGPlot(
+        grilla = rasterI, shpBase = shpBase, escala = escala, nomArchResultados = archivoSalida, 
+        continuo = T, dibujar=F, titulo = titulos[i], widthPx = widthPx, heightPx = heightPx, 
+        alturaEscalaContinua = alturaEscalaContinua)
     }
   }
   return(NULL)
@@ -679,13 +688,18 @@ plotMultiRastersEnPanelesI <- function(i, pathsRasters, fechasRasters, shpBase=N
         grilla@data[,1] <- NA
       }
       
-      if (!is.null(shpBase) && proj4string(grilla) != proj4string(shpBase))  { shpBase <- spTransform(shpBase, CRS(proj4string(grilla))) }
-      if (!is.null(escalas[[j]]) && !all(is.na(grilla@data[, 1]))) escalas[[j]] <- ajustarExtremosEscala(escala = escalas[[j]], datos = grilla@data[, 1], redondear = F)
+      if (!is.null(shpBase) && proj4string(grilla) != proj4string(shpBase))  { 
+        shpBase <- spTransform(shpBase, grilla@proj4string)
+      }
+      if (!is.null(escalas[[j]]) && !all(is.na(grilla@data[, 1]))) {
+        escalas[[j]] <- ajustarExtremosEscala(escala = escalas[[j]], datos = grilla@data[, 1], redondear = F)
+      } 
       
-      gs[[j]] <- mapearGrillaGGPlot(grilla = grilla, shpBase = shpBase, escala = escalas[[j]], dibujar=F, 
-                                    titulo = paste(as.character(fechasRasters[i]), ': ', colnames(pathsRasters)[j], sep=''), 
-                                    alturaEscalaContinua = alturaEscalaContinua)
-                                    #, dibujarPuntosObservaciones = T, coordsObservaciones = coordsObservaciones, tamanioFuentePuntos = 4)
+      gs[[j]] <- mapearGrillaGGPlot(
+        grilla = grilla, shpBase = shpBase, escala = escalas[[j]], dibujar=F, 
+        titulo = paste(as.character(fechasRasters[i]), ': ', colnames(pathsRasters)[j], sep=''), 
+        alturaEscalaContinua = alturaEscalaContinua)
+        #, dibujarPuntosObservaciones = T, coordsObservaciones = coordsObservaciones, tamanioFuentePuntos = 4)
     }
     oldSciPen <- getOption("scipen")
     options(scipen=15)
@@ -876,7 +890,8 @@ filtrarRasters <- function(pathsRasters, minVal=NA, maxVal=NA, carpetaSalida='fi
 }
 
 crearDFLeonardo <- function() {
-  estacs <- spTransform(estaciones, CRS("+proj=longlat +datum=WGS84"))
+  estacs <- spTransform(
+    estaciones, CRS(projargs = "+proj=longlat +datum=WGS84", SRS_string = "EPSG:4326"))
   coords <- coordinates(estacs)
   
   # nro estacion | lon | lat | altura | año | mes | día | modis 1 | modis 2 |  temperaturas registradas ese día|
@@ -969,7 +984,8 @@ coarsenGridEx <- function(object, coarse = 2, offset = sample(c(0:(coarse - 1)),
   newPoints
 }
 
-dividirEnCuadrantes <- function(object, nCuadrantesX = 2, nCuadrantesY=2, claseObjetoRetornado=c('SpatialPolygons', 'SpatialGrid')) {
+dividirEnCuadrantes <- function(
+    object, nCuadrantesX = 2, nCuadrantesY=2, claseObjetoRetornado=c('SpatialPolygons', 'SpatialGrid')) {
   boundingBox <- bbox(object)
   
   cellsizeX <- (boundingBox[1, 2] - boundingBox[1, 1]) / nCuadrantesX
@@ -980,8 +996,11 @@ dividirEnCuadrantes <- function(object, nCuadrantesX = 2, nCuadrantesY=2, claseO
   cells.dim <- c(nCuadrantesX, nCuadrantesY)
   newTopology <- GridTopology(cellcentre.offset, cellsize, cells.dim)
   
-  if (claseObjetoRetornado[1] != 'SpatialGrid') { return(as.SpatialPolygons.GridTopology(grd=newTopology,proj4string=CRS(proj4string(object))))
-  } else { return(SpatialGrid(newTopology, proj4string = proj4string(object))) }
+  if (claseObjetoRetornado[1] != 'SpatialGrid') { 
+    return(as.SpatialPolygons.GridTopology(grd=newTopology, proj4string=object@proj4string))
+  } else { 
+    return(SpatialGrid(newTopology, proj4string = object@proj4string))
+  }
 }
 
 muestrearEnCuadrantes <- function(sp, size, nCuadrantesX = 2, nCuadrantesY=2, zcol=-1) {
@@ -1162,8 +1181,8 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
     g2 <- mapearPuntosGGPlot(sp[muestras,], tamaniosPuntos = 2, continuo = T, dibujar = F, titulo = 'Muestreo LST MODIS: 2002-07-20. n=2000')
     png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_Mapas.png', width = 1920, height = 1017, type='cairo')
     tryCatch(expr = print(multiplot(plotlist = list(g1, g2), cols=2)), finally = dev.off())
-    
-    auxSP <- SpatialPoints(coords = coordinates(sp)[muestras,], proj4string = CRS(proj4string(sp))) 
+
+    auxSP <- SpatialPoints(coords = coordinates(sp)[muestras,], proj4string = sp@proj4string) 
     auxSP <- SpatialPointsDataFrame(coords = auxSP, data = data.frame(value=over(auxSP, sp))) 
     
     i1 <- over(cuadrantes, sp, returnList = T)
@@ -1324,8 +1343,12 @@ comprimirGeoTiffs <- function(carpeta, nivelCompresion=9, predictor=2) {
   }
 }
 
-contarNoNulosPorCuadrantesEnObjSP <- function(objSP, objCuadrantes = NULL, nCuadrantesX=2, nCuadrantesY=nCuadrantesX, zcol=1, shpMask=NULL) {
-  if (is.null(objCuadrantes)) objCuadrantes <- dividirEnCuadrantes(object = objSP, nCuadrantesX = nCuadrantesX, nCuadrantesY = nCuadrantesY)
+contarNoNulosPorCuadrantesEnObjSP <- function(
+    objSP, objCuadrantes = NULL, nCuadrantesX=2, nCuadrantesY=nCuadrantesX, zcol=1, shpMask=NULL) {
+  if (is.null(objCuadrantes) || !identicalCRS(objSP, objCuadrantes)) {
+    objCuadrantes <- dividirEnCuadrantes(
+      object = objSP, nCuadrantesX = nCuadrantesX, nCuadrantesY = nCuadrantesY)
+  }
   ies <- over(geometry(objSP), objCuadrantes, returnList = F)
   
   if (!is.null(shpMask)) { iNoNAs <- !is.na(objSP@data[, zcol]) & shpMask$mask
@@ -1340,11 +1363,13 @@ contarNoNulosPorCuadrantesEnObjSP <- function(objSP, objCuadrantes = NULL, nCuad
 }
 
 contarNoNulosPorCuadrantesTi <- function(pathGeoTiff, objCuadrantes = NULL, nCuadrantesX=2, nCuadrantesY=nCuadrantesX, zcol=1, shpMask=NULL) {
-  #print(pathGeoTiff)
+  print(pathGeoTiff)
+  #pathGeoTiff <- "datos/satelites/GPM/20200531.tif"
   #pathGeoTiff <- pathsGeoTiffs[1,]
   if (!is.na(pathGeoTiff)) {
-    return(contarNoNulosPorCuadrantesEnObjSP(objSP = readGDAL(fname = pathGeoTiff, silent = T), objCuadrantes = objCuadrantes, 
-                                             nCuadrantesX=nCuadrantesX, nCuadrantesY=nCuadrantesY, zcol=zcol, shpMask=shpMask))
+    return(contarNoNulosPorCuadrantesEnObjSP(
+      objSP = readGDAL(fname = pathGeoTiff, silent = T), objCuadrantes = objCuadrantes, 
+      nCuadrantesX=nCuadrantesX, nCuadrantesY=nCuadrantesY, zcol=zcol, shpMask=shpMask))
   } else if (!is.null(objCuadrantes)) { return(rep(NA_integer_, length(objCuadrantes))) 
   } else { return(NA_integer_) }
 }
@@ -1487,7 +1512,7 @@ filtrarSPDataFrameIConClimatologia <- function(i, pathsRasters, clasesClimatolog
   if (reRun || !file.exists(nomArchSalida) || file.info(nomArchSalida)$size <= 0) {
     spI <- readGDAL(pathsRasters[i])
     # escala <- crearEscalaEquiespaciada(spI@data[, zcol], continuo = T)
-    # shpBase <- spTransform(shpMask$shp, CRS(proj4string(spI)))
+    # shpBase <- spTransform(shpMask$shp, spI@proj4string)
     # mapearGrillaGGPlot(spI, shpBase = shpBase, escala = escala, dibujar = F)
     
     iNoNA <- !is.na(spI@data[,zcol])
@@ -1586,7 +1611,7 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
       if (any(iNoNA) & length(unique(rasterI@data[iNoNA, zcol])) > 100) {
         if (doPlots) {
           escala <- crearEscalaEquiespaciada(rasterI@data[, zcol], continuo = T)
-          if (!is.null(shpBase)) shpBase <- spTransform(shpBase, CRS(proj4string(rasterI)))
+          if (!is.null(shpBase)) shpBase <- spTransform(shpBase, rasterI@proj4string)
           plots <- list()
           alturaEscalaContinua <- unit(0.075, 'npc')
           rango <- rangoExtendidoANDigitos(rasterI@data[, zcol], na.rm = T)
@@ -1938,8 +1963,10 @@ detectarDiscontinuidadesEnRasters <- function(pathsRasters, pathsRastersCentrado
     lala <- coarsenGrid(rasterI, coarse = 6)
     length(lala)
     
-    centroides <- SpatialPoints(rasterI, proj4string = CRS(proj4string(rasterI)))
-    if (!identicalCRS(centroides, rasterCentradoI)) centroides <- spTransform(centroides, CRS(proj4string(rasterCentradoI)))
+    centroides <- SpatialPoints(rasterI, proj4string = rasterI@proj4string)
+    if (!identicalCRS(centroides, rasterCentradoI)) {
+      centroides <- spTransform(centroides, rasterCentradoI@proj4string)
+    }
     
     iCentroides <- over(centroides, geometry(rasterCentradoI))
     
@@ -2116,8 +2143,11 @@ seleccionarMejorRegresorPorFechasI <- function(i, fechasObservaciones, valoresOb
   for (j in seq_along(regresoresCandidatosI)) {
     if (!is.na(regresoresCandidatosI[j])) {
       reg <- readGDAL(regresoresCandidatosI[j], silent = T)
-      if (proj4string(reg) != proj4string(coordsObservaciones)) { auxSP <- spTransform(coordsObservaciones, proj4string(reg))
-      } else { auxSP <- coordsObservaciones }
+      if (!identicalCRS(reg, coordsObservaciones)) { 
+        auxSP <- spTransform(coordsObservaciones, reg@proj4string)
+      } else { 
+        auxSP <- coordsObservaciones 
+      }
       
       regVals <- over(geometry(auxSP), reg)[1]
       xMat <- cbind(regVals, coordinates(auxSP))
@@ -2229,7 +2259,11 @@ SpatialGridDataFrameEnMtoSpatialGridDataFrameEnKm <- function(grillaM) {
   grillaKm <- grillaM@grid
   grillaKm@cellcentre.offset <- grillaKm@cellcentre.offset * 0.001
   grillaKm@cellsize <- grillaKm@cellsize * 0.001
-  return(SpatialGridDataFrame(grid = grillaKm, proj4string = gsub(pattern = '+units=m', replacement = '+units=km', x = proj4string(grillaM), fixed = T), data = grillaM@data))
+  # TODO: Agregar el wkt de la proj4string
+  return(SpatialGridDataFrame(
+    grid=grillaKm, 
+    proj4string=gsub(pattern='+units=m', replacement='+units=km', x=proj4string(grillaM), fixed=T), 
+    data=grillaM@data))
 }
 
 mapearRastersCentradoYEscaladoI <- function(i, pathsRasters, pathsRastersCentrado, pathsRastersEscalado, pathsRastersRellenado,

@@ -275,7 +275,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
     
     if (FALSE) {
       shpBase <- cargarSHP('C:/mch/ArchivosProcesosLocales/CartografiaBase/uruguay_departamentos.shp')
-      shpBase <- spTransform(shpBase, CRS(proj4string(coordsObservaciones)))
+      shpBase <- spTransform(shpBase, coordsObservaciones@proj4string)
       xyLims <- getXYLims(c(coordsObservaciones, shpBase), ejesXYLatLong = F)
       grilla <- grillaSobreBoundingBox(shpBase)
       grilla <- SpatialGridDataFrame(grilla, data=data.frame(value=predict(modelo, newdata=data.frame(x=coordinates(grilla)[,1], y=coordinates(grilla)[,2]))))
@@ -606,7 +606,7 @@ mapearResultadosDeteccionOutliersV2 <- function(
   }
   
   if (!identicalCRS(coordsObservaciones, shpBase)) {
-    shpBase <- spTransform(shpBase, proj4string(coordsObservaciones))
+    shpBase <- spTransform(shpBase, coordsObservaciones@proj4string)
   }
   
   #test <- testSRT

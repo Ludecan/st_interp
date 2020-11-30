@@ -202,15 +202,16 @@ guardarRasterBin <- function(archiBin, grillaRaster, naValue=NULL) {
   close(binFile)
 }
 
-guardarSPobj <- function(archivoSalida, objSp, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff')) {
+guardarSPobj <- function(
+    archivoSalida, objSp, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff')) {
   formatoSalida <- formatoSalida[1]
   if (formatoSalida == 'kml') {
     stop('uIOGrillas.guardarSPobj: formatoSalida ".kml" no implementado')
-    #writeGDAL(objSp, changeFileExt(archivoI, '.kml'))
+    #writeGDAL(objSp, changeFileExt(archivoSalida, '.kml'))
   } else  if (formatoSalida == 'netCDF') {
     stop('uIOGrillas.guardarSPobj: formatoSalida "netCDF" no implementado')
   } else  if (formatoSalida == 'GeoTiff') {
-    writeGDAL(objSp, changeFileExt(archivoI, '.tif'), options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
+    writeGDAL(objSp, changeFileExt(archivoSalida, '.tif'), options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
   } else
     stop(paste('uIOGrillas.guardarSPobj: formatoSalida desconocido ', formatoSalida, sep=''))
 }

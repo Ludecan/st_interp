@@ -79,7 +79,8 @@ distKmToP4Str <- function(p4str, distKm) {
   }
 }
 
-crearSpatialPointsDataFrame <- function(x, y, value, proj4string='+proj=longlat +datum=WGS84', nombresFilas=NULL) {
+crearSpatialPointsDataFrame <- function(
+    x, y, value, proj4string='+proj=longlat +datum=WGS84', SRS_string, nombresFilas=NULL) {
   # crea un spatialPointsDataFrame a partir de las coordenadas x e y y una columna de valor value
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
   # observaciones <- data.frame(x=x, y=y, value=value)
@@ -92,7 +93,7 @@ crearSpatialPointsDataFrame <- function(x, y, value, proj4string='+proj=longlat 
   }
   
   if (!is.null(nombresFilas)) row.names(observaciones) <- nombresFilas
-  proj4string(observaciones) <- sp::CRS(proj4string)
+  proj4string(observaciones) <- sp::CRS(projargs = proj4string, SRS_string=SRS_string)
   return (observaciones)
 }
 
@@ -107,7 +108,9 @@ imitarObjetoIntamap <- function(observaciones, formulaString=value~1, prediction
   return(res)
 }
 
-cargarCoordenadas <- function(pathArchivo, proj4string='+proj=longlat +datum=WGS84', incluyeNombresObservaciones=FALSE) {
+cargarCoordenadas <- function(
+    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string, 
+    incluyeNombresObservaciones=FALSE) {
   if (incluyeNombresObservaciones) {
     observaciones <- read.table(file=pathArchivo, sep=' ', dec='.', header=T,
                                 colClasses=c('character', 'numeric', 'numeric') , comment.char='')
@@ -118,13 +121,18 @@ cargarCoordenadas <- function(pathArchivo, proj4string='+proj=longlat +datum=WGS
     nombresFilas <- NULL
   }
   
-  return (crearSpatialPointsDataFrame(x=observaciones[,1], y=observaciones[,2], value=rep(x=NA, nrow(observaciones)), proj4string=proj4string, nombresFilas=nombresFilas))
+  return (crearSpatialPointsDataFrame(
+    x=observaciones[,1], y=observaciones[,2], value=rep(x=NA, nrow(observaciones)), 
+    proj4string=proj4string, SRS_string=SRS_string, nombresFilas=nombresFilas))
 }
 
-cargarObservaciones <- function(pathArchivo, proj4string='+proj=longlat +datum=WGS84', incluyeNombresObservaciones=FALSE) {
+cargarObservaciones <- function(
+    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string, 
+    incluyeNombresObservaciones=FALSE) {
   if (incluyeNombresObservaciones) {
-    observaciones <- read.table(file=pathArchivo, sep=' ', dec='.', header=T,
-                                colClasses=c('character', 'numeric', 'numeric', 'numeric'), comment.char='')
+    observaciones <- read.table(
+      file=pathArchivo, sep=' ', dec='.', header=T, 
+      colClasses=c('character', 'numeric', 'numeric', 'numeric'), comment.char='')
     nombresFilas <- rownames(observaciones)
   } else {
     observaciones <- read.table(file=pathArchivo, sep=' ', dec='.', header=T,
@@ -132,7 +140,9 @@ cargarObservaciones <- function(pathArchivo, proj4string='+proj=longlat +datum=W
     nombresFilas <- NULL
   }
   
-  return (crearSpatialPointsDataFrame(x=observaciones[,2], y=observaciones[,3], value=observaciones[,1], proj4string=proj4string, nombresFilas=nombresFilas))
+  return (crearSpatialPointsDataFrame(
+    x=observaciones[,2], y=observaciones[,3], value=observaciones[,1], proj4string=proj4string, 
+    SRS_string=SRS_string, nombresFilas=nombresFilas))
 }
 
 cargarVectorDeBinario <- function(pathArchivo, NAValue=-.Machine$double.xmax, what='numeric', recordSize=8) {
@@ -159,11 +169,12 @@ cargarMatrizDeBinario <- function(pathArchivo, nFilas, NAValue=-.Machine$double.
 
 crearObservacionesBinarias <- function(observaciones, zcol=1) {
   return (SpatialPointsDataFrame(
-    geometry(observaciones), data = data.frame(value=as.numeric(observaciones@data[,zcol] >= 1E-3)), 
-    proj4string = proj4string(observaciones)))
+    geometry(observaciones), 
+    data=data.frame(value=as.numeric(observaciones@data[,zcol] >= 1E-3))))
 }
 
-crearCoordsAInterpolar <- function(xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84') {  
+crearCoordsAInterpolar <- function(
+    xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84', SRS_string) {  
   # crea un spatialPoints o spatialPixels a partir de las coordenadas xs e ys
   # si grid=T es un spatialPixels y xs e ys son los ejes de la grilla
   # si grid=F es un spatialPoints y xs e ys son las coordenadas de los puntos
@@ -171,32 +182,40 @@ crearCoordsAInterpolar <- function(xs, ys, grid=T, proj4string='+proj=longlat +d
   if (grid) { coordsAInterpolar <- expand.grid(x=xs, y=ys)
   } else { coordsAInterpolar <- data.frame(x=xs, y=ys) }
   coordinates(coordsAInterpolar) <- c('x','y')
-  projAInterpolar <- sp::CRS(proj4string)
+  projAInterpolar <- sp::CRS(projargs=proj4string, SRS_string=SRS_string)
   proj4string(coordsAInterpolar) <- projAInterpolar
   gridded(coordsAInterpolar) <- grid
   return (coordsAInterpolar)
 }
 
-crearGrillaAuxiliar <- function(xs, ys, gridValues, proj4string='+proj=longlat +datum=WGS84') {
+crearGrillaAuxiliar <- function(
+    xs, ys, gridValues, proj4string='+proj=longlat +datum=WGS84', SRS_string) {
   # crea un spatialPointsDataFrame a partir de las coordenadas x e y y una columna de valor value
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
   grilla <- expand.grid(x=xs, y=ys)
   grilla$gridValue <- gridValues
   coordinates(grilla) <- c('x', 'y')
   gridded(grilla) <- T
-  proj4string(grilla) <- sp::CRS(proj4string)
+  proj4string(grilla) <- sp::CRS(projargs=proj4string, SRS_string=SRS_string)
   return (grilla)
 }
 
-crearGrillaRectilineaParaArea <- function(xMin, xMax, yMin, yMax, deltaX=(xMax-xMin)/250, deltaY=deltaX, 
-                                          proj4stringCoordenadasArea='+proj=longlat +datum=WGS84', proj4stringGrillaSalida) {
-  if (proj4stringCoordenadasArea != proj4stringGrillaSalida) {
+crearGrillaRectilineaParaArea <- function(
+    xMin, xMax, yMin, yMax, deltaX=(xMax-xMin)/250, deltaY=deltaX, 
+    proj4stringCoordenadasArea='+proj=longlat +datum=WGS84', SRS_stringCoordenadasArea, 
+    proj4stringGrillaSalida, SRS_stringGrillaSalida) {
+  
+  if (proj4stringCoordenadasArea != proj4stringGrillaSalida || 
+      SRS_stringCoordenadasArea != SRS_stringGrillaSalida) {
     # Creamos la caja en la proyección de entrada, proyectamos a la proyección de salida
     # y obtenemos el área en la proyección de salida que engloba las 4 esquinas de la caja en
     # la proyección de entrada
     boundingBox <- matrix(c(xMin, yMin, xMax, yMin, xMin, yMax, xMax, yMax), ncol = 2, byrow = T)
-    boundingBox <- SpatialPoints(coords = boundingBox, proj4string = CRS(proj4stringCoordenadasArea))
-    boundingBox <- spTransform(boundingBox, CRS(proj4stringGrillaSalida))
+    boundingBox <- SpatialPoints(
+      coords=boundingBox, 
+      proj4string=CRS(projargs=proj4stringCoordenadasArea, SRS_string=SRS_stringCoordenadasArea))
+    boundingBox <- spTransform(
+      boundingBox, CRS(projargs=proj4stringGrillaSalida, SRS_stringCoordenadasArea))
     
     xMin <- min(coordinates(boundingBox)[,1])
     xMax <- max(coordinates(boundingBox)[,1])
@@ -206,10 +225,14 @@ crearGrillaRectilineaParaArea <- function(xMin, xMax, yMin, yMax, deltaX=(xMax-x
   
   xs <- seq(from=xMin, to=xMax, by = deltaX)
   ys <- seq(from=yMin, to=yMax, by = deltaY)
-  return(crearCoordsAInterpolar(xs = xs, ys = ys, grid = T, proj4string = proj4stringGrillaSalida))
+  return(crearCoordsAInterpolar(
+    xs = xs, ys = ys, grid = T, proj4string = proj4stringGrillaSalida, 
+    SRS_string = SRS_stringGrillaSalida))
 }
 
-netCDFToSP <- function(fname, varName='rfe', p4string="+proj=longlat +datum=WGS84", lonDimName='Lon', latDimName='Lat', spObj=NULL, zcol=1) {
+netCDFToSP <- function(
+    fname, varName='rfe', p4string="+proj=longlat +datum=WGS84", SRS_string="EPSG:4326", 
+    lonDimName='Lon', latDimName='Lat', spObj=NULL, zcol=1) {
   # TO-DO: handle multiple layer/times files
   nc <- nc_open(filename = fname)
   value <- as.vector(ncvar_get(nc, varid = varName))
@@ -218,8 +241,10 @@ netCDFToSP <- function(fname, varName='rfe', p4string="+proj=longlat +datum=WGS8
     lon <- ncvar_get(nc, lonDimName)
     lat <- ncvar_get(nc, latDimName)
     coords <- as.matrix(expand.grid(lon=lon, lat=lat))
-    spObj <- SpatialPixelsDataFrame(points = SpatialPoints(coords = coords, proj4string = CRS(p4string)), data = data.frame(value), 
-                                    tolerance = 0.000152602)
+    spObj <- SpatialPixelsDataFrame(
+      points = SpatialPoints(
+        coords = coords, proj4string = CRS(projargs = p4string, SRS_string = SRS_string)), 
+      data = data.frame(value), tolerance = 0.000152602)
     gridded(spObj) <- TRUE
     # Workaround for krigeST bug
     row.names(spObj) <- as.character(row.names(spObj))
@@ -243,7 +268,7 @@ extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1
 
     # Obtengo los valores del regresor en las coordenadas de las observaciones
     if (!identicalCRS(x = objSP, y = regresor)) {
-      auxObjSP <- spTransform(x = geometry(objSP), CRSobj = CRS(proj4string(regresor)))
+      auxObjSP <- spTransform(x = geometry(objSP), CRSobj = regresor@proj4string)
       res <- over(x = auxObjSP, y = regresor, fn = fn, returnList = F, ...=...)[,zcol]
     } else {  res <- over(x = objSP, y = regresor, fn = fn, returnList = F, ...=...)[,zcol]
     }
@@ -330,7 +355,7 @@ extraerValoresRegresoresSobreSP <- function(
   #   pathsRegresores[i,]
   #   valoresRegresoresSobreObservaciones[[1]][i,]
   #   vr <- readGDAL(fname = pathsRegresores[i,], silent = T)
-  #   auxSP <- spTransform(coordsObservaciones, CRS(proj4string(vr)))
+  #   auxSP <- spTransform(coordsObservaciones, vr@proj4string)
   #   print(i)
   #   print(max(abs(valoresRegresoresSobreObservaciones[[1]][i,] - over(auxSP, vr))))
   # }
@@ -373,12 +398,11 @@ cargarSHPYObtenerMascaraParaGrilla <- function(
     pathSHP, proj4strSHP=NULL, grilla, spSinMascara=NULL, overrideP4str=FALSE, encoding = NULL) {
   if (file.exists(pathSHP)) {
     grilla <- geometry(grilla)
-    proj4stringGrilla <- proj4string(grilla)
     if (!is.null(spSinMascara)) {
       spSinMascara <- geometry(spSinMascara)
       
       if (!identicalCRS(grilla, spSinMascara)) {
-        spSinMascara <- spTransform(spSinMascara, CRS(proj4stringGrilla))
+        spSinMascara <- spTransform(spSinMascara, grilla@proj4string)
       }
     }
     
@@ -388,7 +412,7 @@ cargarSHPYObtenerMascaraParaGrilla <- function(
       prefijoNombreArchivoCache = paste0(nombreArchSinPathNiExtension(pathSHP), '_'))
     if (!file.exists(pathCache)) {
       shp <- cargarSHP(pathSHP, proj4strSHP, overrideP4str = overrideP4str, encoding = encoding)
-      if (!identicalCRS(grilla, shp)) { shp <- spTransform(shp, CRS(proj4stringGrilla)) }
+      if (!identicalCRS(grilla, shp)) { shp <- spTransform(shp, grilla@proj4string) }
       
       # Recorte al contorno del país
       if (!is.null(grilla)) {
@@ -585,7 +609,9 @@ interpolarEx <- function(
   # For small variances (all observations the same) the library gives an error, we handle the case separately
   varianzaObservaciones <- var(observaciones$value)
   if (varianzaObservaciones > 1E-6 && params$interpolationMethod !='none' && length(observaciones) >= 4) {
-    if (proj4string(observaciones) != proj4StringAInterpolar) { observaciones <- spTransform(observaciones, CRS(proj4StringAInterpolar)) }
+    if (!identicalCRS(observaciones, coordsAInterpolar)) { 
+      observaciones <- spTransform(observaciones, proj4StringAInterpolar@proj4string) 
+    }
   
     mapaConstante <- F
     
@@ -983,9 +1009,15 @@ interpolarEx <- function(
   return (interpolacion)
 }
 
-interpolarEx2 <- function(x, y, value, xs, ys, params, interpolateGrid=T, proj4stringObservaciones='+proj=longlat +datum=WGS84',  proj4stringCoordsAInterpolar='+proj=longlat +datum=WGS84', shpMask=NULL, longitudesEnColumnas=T) {
-  observaciones <- crearSpatialPointsDataFrame(x, y, value, proj4stringObservaciones)
-  coordsAInterpolar <- crearCoordsAInterpolar(xs, ys, interpolateGrid, proj4stringCoordsAInterpolar)
+interpolarEx2 <- function(
+    x, y, value, xs, ys, params, interpolateGrid=T, 
+    proj4stringObservaciones='+proj=longlat +datum=WGS84', SRS_stringObservaciones=NULL,
+    proj4stringCoordsAInterpolar='+proj=longlat +datum=WGS84', SRS_stringCoordsAInterpolar, 
+    shpMask=NULL, longitudesEnColumnas=T) {
+  observaciones <- crearSpatialPointsDataFrame(
+    x, y, value, proj4stringObservaciones, SRS_stringObservaciones)
+  coordsAInterpolar <- crearCoordsAInterpolar(
+    xs, ys, interpolateGrid, proj4stringCoordsAInterpolar, SRS_stringCoordsAInterpolar)
   return (interpolarEx(observaciones, coordsAInterpolar, params, shpMask))
 }
 
@@ -1464,7 +1496,7 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
     if (puedoInterpolar) {
       aux <- as.STSDF.STFDFEx(STFDF(sp = geometry(spObservaciones), time = fechasVentana[max(iTiEnTsVentana - nTsST + 1,1):iTiEnTsVentana], 
                                     endTime = fechasVentana[max(iTiEnTsVentana - nTsST + 1,1):iTiEnTsVentana] + deltaT, data = df[iFechasST, ,drop=F]))
-      aux <- spTransform(aux, CRS(proj4string(predLocs)))
+      aux <- spTransform(aux, predLocs@proj4string)
       
       puedoInterpolar <- nrow(aux@data) > 5
     }
@@ -1557,7 +1589,7 @@ universalGridding <- function(
         } else { stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresores[ti, j], '"')) }
         
         if (!identicalCRS(coordsAInterpolar, regresor)) {
-          aux <- spTransform(coordsAInterpolar, CRS(proj4string(regresor)))
+          aux <- spTransform(coordsAInterpolar, regresor@proj4string)
           valoresRegresoresSobreCoordsAInterpolar_ti[, j] <- over(x = aux, regresor, returnList = F)[,1]
           rm(aux)
         } else {
@@ -1764,14 +1796,16 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     archiCuerposDeAgua <- paste0(script.dir.interpolarEx, 'datasets/cuerposDeAguaUy_25MKm2.shp')
     if (!file.exists(archiCuerposDeAgua)) stop(paste0('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiCuerposDeAgua, sep =''))
     cuerposDeAgua <- cargarSHP(pathSHP = archiCuerposDeAgua)
-    if (proj4string(cuerposDeAgua) != proj4string(coordsAInterpolar)) cuerposDeAgua <- spTransform(cuerposDeAgua, CRS(proj4string(coordsAInterpolar)))
+    if (!identicalCRS(cuerposDeAgua, coordsAInterpolar)) {
+      cuerposDeAgua <- spTransform(cuerposDeAgua, coordsAInterpolar@proj4string)
+    }
     cuerposDeAgua <- gUnaryUnion(cuerposDeAgua)
     dfDatosCoordsAInterpolar$dist <- t(gDistance(spgeom1 = as(coordsAInterpolar, 'SpatialPoints'), spgeom2 = cuerposDeAgua, byid = T))[,1]
 
     archiAltitud <- paste0(script.dir.interpolarEx, 'datasets/GMTED2010_Mean_Uy.tif')
     if (!file.exists(archiAltitud)) stop(paste0('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiAltitud, sep =''))
     altitudTerreno <- readGDAL(archiAltitud, silent=T)
-    puntosCoordsAInterpolar <- spTransform(as(coordsAInterpolar, 'SpatialPoints'), CRS(proj4string(altitudTerreno)))
+    puntosCoordsAInterpolar <- spTransform(as(coordsAInterpolar, 'SpatialPoints'), altitudTerreno@proj4string)
     dfDatosCoordsAInterpolar$alt <- over(puntosCoordsAInterpolar, altitudTerreno)[,1]
 
     dfDatosCoordsAInterpolar <- as.data.frame(dfDatosCoordsAInterpolar)
@@ -1799,7 +1833,9 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
         stop(paste0('interpolarEx.r.cachearRegresoresEstaticos: No se encuentra el archvo ', archiCuerposDeAgua, sep =''))
       cuerposDeAgua <- cargarSHP(archiCuerposDeAgua)
     } 
-    if (proj4string(cuerposDeAgua) != proj4string(coordsObservaciones)) cuerposDeAgua <- spTransform(cuerposDeAgua, CRS(proj4string(coordsAInterpolar)))
+    if (!identicalCRS(cuerposDeAgua, coordsObservaciones)) {
+      cuerposDeAgua <- spTransform(cuerposDeAgua, coordsAInterpolar@proj4string)
+    }
     cuerposDeAgua <- gUnaryUnion(cuerposDeAgua)
     dfDatosCoordsObservaciones$dist <- t(gDistance(spgeom1 = as(coordsObservaciones, 'SpatialPoints'), spgeom2 = cuerposDeAgua, byid = T))[,1]
     
@@ -1810,7 +1846,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
       altitudTerreno <- readGDAL(archiAltitud, silent=T)
     }
       
-    puntosObsAux <- spTransform(as(coordsObservaciones, 'SpatialPoints'), CRS(proj4string(altitudTerreno)))
+    puntosObsAux <- spTransform(as(coordsObservaciones, 'SpatialPoints'), altitudTerreno@proj4string)
     dfDatosCoordsObservaciones$alt <- over(puntosObsAux, altitudTerreno)[,1]
     
     dfDatosCoordsObservaciones <- as.data.frame(dfDatosCoordsObservaciones)
@@ -2936,8 +2972,9 @@ simpleBiasAdjustmentEx <- function(observaciones, interpolacion, interpolationPa
     observaciones <- observaciones[iValidObs,]
     
     if (is.null(gridIndexes)) {  
-      if (proj4string(observaciones) != proj4string(interpolacion$predictionLocations))
-        observaciones <- spTransform(observaciones, CRSobj=CRS(proj4string(interpolacion$predictionLocations)))
+      if (!identicalCRS(observaciones, interpolacion$predictionLocations)) {
+        observaciones <- spTransform(observaciones, interpolacion$predictionLocations@proj4string)
+      }
       gridIndexes <- getGridIndexes(observaciones=observaciones, grid=interpolacion$predictionLocations)
     } else { gridIndexes <- gridIndexes[iValidObs] }
     
@@ -3085,7 +3122,9 @@ salvarInterpolacion <- function(baseNomArchResultados, interpolacion, formatoSal
   } else if (formatoSalida == 'GeoTiff') {
     #if (i==9) { #para guardar el IBH en raster
     source('../grillas/uIOGrillas.r', encoding = 'WINDOWS-1252')
-	  guardarGrillaGDAL(changeFileExt(baseNomArchResultados, '.tif'), interpolacion$predictions)
+    if (salvarPrediccion) {
+      guardarGrillaGDAL(changeFileExt(baseNomArchResultados, '.tif'), interpolacion$predictions)
+    }    
   }
 }
 
@@ -3407,7 +3446,7 @@ reducirSpatialPointsDataFrame <- function(coordsObservaciones, radioReduccionSer
     coords <- coords[-iesAEliminar, ]
     vals <- vals[-iesAEliminar, ,drop=F]
     
-    res <- SpatialPointsDataFrame(coords = coords, data = vals, proj4string = CRS(proj4string(coordsObservaciones)))
+    res <- SpatialPointsDataFrame(coords = coords, data = vals, proj4string = coordsObservaciones@proj4string)
   } else {
     res <- coordsObservaciones
   }
@@ -3798,8 +3837,8 @@ deteccionOutliersUniversalGriddingCV <- function(
 }
 
 getPoligonoBoundingBox <- function(
-    objSP, caja=bbox(objSP), p4string=proj4string(objSP), outputProj4String=NULL, 
-    factorExtensionX=1, factorExtensionY=factorExtensionX) {
+    objSP, caja=bbox(objSP), outputCRS=NULL, factorExtensionX=1, 
+    factorExtensionY=factorExtensionX) {
   if (factorExtensionX != 1) {
     # Agrando la caja (factorExtensionX - 1) * 0.5 hacia cada lado
     extX <- diff(caja[1,]) * (factorExtensionX - 1) * 0.5
@@ -3818,33 +3857,35 @@ getPoligonoBoundingBox <- function(
                           caja[1,1], caja[2,1]), ncol = 2, byrow = T)
   boundingBox <- Polygon(coords = boundingBox)
   boundingBoxPolygon <- SpatialPolygons(
-    list(Polygons(list(boundingBox), ID = "BoundingBox")), proj4string = CRS(p4string))
-  if (is.null(outputProj4String)) {
+    list(Polygons(list(boundingBox), ID = "BoundingBox")), proj4string = objSP@proj4string)
+  if (is.null(outputCRS)) {
     return(boundingBoxPolygon)
   } else {
-    return(spTransform(boundingBoxPolygon, CRS(outputProj4String)))
+    return(spTransform(boundingBoxPolygon, outputCRS))
   }
 }
 
 grillaSobreBoundingBox <- function(
-    objSP, caja=bbox(getPoligonoBoundingBox(objSP = objSP, outputProj4String = p4string)), 
-    p4string=proj4string(objSP), largoDimensiones=diff(t(caja)), 
-    nCeldasX=100, nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
+    objSP, caja=bbox(getPoligonoBoundingBox(objSP = objSP, outputCRS = objSP@proj4string)), 
+    largoDimensiones=diff(t(caja)), nCeldasX=100, 
+    nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
   cellsDim <- c(nCeldasX, nCeldasY)
   cellSize <- as.numeric(largoDimensiones / cellsDim)
   cellcentreOffset <- as.numeric(caja[, 1] + cellSize * 0.5)
   
-  return(SpatialGrid(GridTopology(cellcentre.offset = cellcentreOffset, cellsize = cellSize, cells.dim = cellsDim),
-                     proj4string = CRS(p4string)))
+  return(SpatialGrid(GridTopology(
+    cellcentre.offset = cellcentreOffset, cellsize = cellSize, cells.dim = cellsDim),
+    proj4string = objSP@proj4string))
 }
 
 grillaPixelesSobreBoundingBox <- function(
-    objSP, caja=bbox(getPoligonoBoundingBox(objSP = objSP, outputProj4String = p4string)), 
-    p4string=proj4string(objSP), largoDimensiones=diff(t(caja)), nCeldasX=100, 
+    objSP, caja=bbox(getPoligonoBoundingBox(objSP = objSP, outputCRS = objSP@proj4string)), 
+    largoDimensiones=diff(t(caja)), nCeldasX=100, 
     nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
-  return(as(grillaSobreBoundingBox(objSP=objSP, caja=caja, p4string = p4string, 
-                                   largoDimensiones=largoDimensiones, nCeldasX=nCeldasX, 
-                                   nCeldasY = nCeldasY), 'SpatialPixels'))
+  return(as(grillaSobreBoundingBox(
+      objSP=objSP, caja=caja, largoDimensiones=largoDimensiones, nCeldasX=nCeldasX, 
+      nCeldasY = nCeldasY), 
+    'SpatialPixels'))
 }
 
 filtradoRegresoresDiscontinuosPorVGM <- function(pathsRegresoresATestear, shpBase, nMuestras=5000, q1Dists=1/3, q2Dists=1-q1Dists, umbral=3) {

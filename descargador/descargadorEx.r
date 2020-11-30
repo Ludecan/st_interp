@@ -111,7 +111,7 @@ generarNombresArchivo_CHIRP <- function(fechaMin, fechaMax=fechaMin,
     
     if (!is.null(pathSHPRecorte)) {
       shpBase <- cargarSHP('C:/mch/ArchivosProcesosLocales/CartografiaBase/uruguay_departamentos.shp')
-      shpBase <- spTransform(shpBase, CRS(proj4string(capaRaster)))
+      shpBase <- spTransform(shpBase, capaRaster@proj4string)
       areaRecorte <- getPoligonoBoundingBox(objSP = shpBase, factorExtensionX = 1.2)
       capaRaster <- crop(capaRaster, extent(areaRecorte))
       
@@ -338,8 +338,9 @@ isCompressed <- function(paths) {
 
 descargarArchivo <- function(
     i, urls, nombresArchivosDestino, forzarReDescarga=FALSE, maxRetries=5L, 
-    segundosEntreIntentos=15L, curlOpts=NULL, do_unzip=isCompressed(nombresArchivosDestino),
+    segundosEntreIntentos=5L, curlOpts=NULL, do_unzip=isCompressed(nombresArchivosDestino),
     useCurl=FALSE) {
+  # print(i)
   # i <- 1
   nRetries <- 0
 
@@ -385,9 +386,12 @@ descargarArchivo <- function(
           !file.exists(nombresArchivosDestino[i]) || 
           length(readBin(nombresArchivosDestino[i], what='raw')) <= 0) {
         
-        if (is_ftp && grepl(pattern = '5[[:digit:]]{2}', er2)) {
+        if (is_ftp) {
           # Handling FTP permanent error cases. Needs improvement
-          nRetries <- maxRetries
+          if ((grepl(pattern = '5[[:digit:]]{2}', er2)) || 
+              (grepl(pattern = 'file does not exist', er2))) {
+            nRetries <- maxRetries
+          }
         } else if (is_http && grepl(pattern = '4[[:digit:]]{2}', er2)) {
           # Handling HTTP client error cases. Needs improvement
           nRetries <- maxRetries
@@ -474,9 +478,13 @@ descargarArchivos <- function(
     sapply(unique(dirname(nombresArchivosDestino)), dir.create, showWarnings = F, recursive=T)
     
     # if (length(urls) * 4 < nConexionesSimultaneas) nConexionesSimultaneas <- max(trunc(length(urls) / 4), 1)
-    nConexionesAUsar <- min(nConexionesSimultaneas, length(urls))
+    if (!useCurl) {
+      nConexionesAUsar <- min(nConexionesSimultaneas, length(urls))
+    } else {
+      nConexionesAUsar <- 1
+    }
     
-    if (nConexionesAUsar > 1 && !useCurl) {
+    if (nConexionesAUsar > 1) {
       cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
       clusterExport(
         cl, varlist = c('curlOpts', 'useCurl', 'script.dir.descargadorEx'), envir = environment())

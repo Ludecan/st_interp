@@ -37,17 +37,21 @@ if (is.null(script.dir.verificacionPronosticos)) { script.dir.verificacionPronos
 source(paste0(script.dir.verificacionPronosticos, '../Graficas/graficas.r'), encoding = 'WINDOWS-1252')
 
 # "Constantes"
-StatNames <- c('ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos')
-dfInfoValidationStats <- data.frame(StatNames = c('ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos'),
-                                    LongStatNames=c('Mean Error', 'Mean Absolute Error', 'Mean Absolute Deviation', 'Mean Squared Error', 'Difference Variance', 
-                                                    'Root Mean Squared Error', 'Pearson\'s Coefficient of Correlation', 'Spearman\'s Coefficient of Correlation', 'Anomaly Correlation (Pearson)', 
-                                                    'Anomaly Correlation (Spearman)', 'Cantidad de Datos Utilizados'),
-                                    valoresPerfectos = c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 'max'),
-                                    peoresValores = c('max', 'max', 'max', 'max', 'max', 'max', 0, 0, 0, 0, 0),
-                                    minEscala = c('min', 0, 0, 0, 0, 0, -1, -1, -1, -1, 0),
-                                    medioEscala = c(0, NA, NA, NA, NA, NA, 0, 0, 0, 0, NA),
-                                    maxEscala = c('max', 'max', 'max', 'max', 'max', 'max', 1, 1, 1, 1, 'max'),
-                                    invertirColores = c(F, T, T, T, T, T, F, F, F, F, F), stringsAsFactors = F)
+StatNames <- c(
+  'ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos')
+dfInfoValidationStats <- data.frame(
+  StatNames = c('ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos'),
+  LongStatNames=c(
+    'Mean Error', 'Mean Absolute Error', 'Mean Absolute Deviation', 'Mean Squared Error', 
+    'Difference Variance', 'Root Mean Squared Error', 'Pearson\'s Coefficient of Correlation', 
+    'Spearman\'s Coefficient of Correlation', 'Anomaly Correlation (Pearson)', 
+    'Anomaly Correlation (Spearman)', 'Cantidad de Datos Utilizados'),
+  valoresPerfectos = c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 'max'),
+  peoresValores = c('max', 'max', 'max', 'max', 'max', 'max', 0, 0, 0, 0, 0),
+  minEscala = c('min', 0, 0, 0, 0, 0, -1, -1, -1, -1, 0),
+  medioEscala = c(0, NA, NA, NA, NA, NA, 0, 0, 0, 0, NA),
+  maxEscala = c('max', 'max', 'max', 'max', 'max', 'max', 1, 1, 1, 1, 'max'),
+  invertirColores = c(F, T, T, T, T, T, F, F, F, F, F), stringsAsFactors = F)
 
 #cbind(StatNames, valoresPerfectos, peoresValores, minEscala, medioEscala, maxEscala)
 
@@ -123,6 +127,40 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
   #SS_MSE <- 1 - (MSE / MSE_Clim)
   
   return(c(ME, MAE, MAD, MSE, VarDif, RMSE, Corr, RankCorr, CorrAnom, RankCorrAnom, CantDatos))
+}
+
+calcRainfallDetectionStatistics <- function(pronostico, observacion, threshold=NULL, positive='TRUE') {
+  # threshold <- thresholds[1]
+  if (!is.null(threshold)) {
+    p <- pronostico > threshold
+    o <- observacion > threshold
+  } else {
+    p <- pronostico
+    o <- threshold
+  }
+  p <- as.factor(p)
+  o <- as.factor(o)
+  
+  confMatrix <- confusionMatrix(p, o, positive = positive)
+  
+  POD <- confMatrix$overall[1]
+  FAR <- confMatrix$table[2, 1] / sum(confMatrix$table[2, ])
+  FBS <- confMatrix$table[2, 2] / sum(confMatrix$table[, 2])
+  
+  return(structure(c(POD, FAR, FBS), names=c('POD', 'FAR', 'FBS')))
+}
+
+calcRainfallDetectionMultiThresholds <- function(
+    pronostico, observacion, thresholds, positive='TRUE') {
+  rainfallDetectionStats <- sapply(thresholds, function(x) {
+    calcRainfallDetectionStatistics(
+      pronostico=pronostico, observacion=observacion, threshold=x, positive=positive)
+  })
+  
+  resNames <- apply(
+    expand.grid(rownames(rainfallDetectionStats), as.character(thresholds)), 
+    MARGIN = 1, FUN = paste, sep='', collapse='_')
+  return(structure(as.vector(rainfallDetectionStats), names=resNames))
 }
 
 calcValidationStatistics <- function(pronostico, observacion, climatologia) {

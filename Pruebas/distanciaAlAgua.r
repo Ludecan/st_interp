@@ -50,7 +50,7 @@ bbGeneralExt[1,] <- bbGeneralExt[1,] + c(-extX, extX)
 bbGeneralExt[2,] <- bbGeneralExt[2,] + c(-extY, extY)
 
 if (!file.exists('C:/mch/ArchivosProcesosLocales/MascaraDeTierra/cuerposDeAguaUy_25MKm2.shp')) {
-  bbToSpatialPolygon <- function(bb, proj4string) {
+  bbToSpatialPolygon <- function(bb, crsOBJ) {
     coordsBB <- matrix(data=c(bb[1, 1], bb[2, 1], # abajo, izquierda
                               bb[1, 1], bb[2, 2], # arriba, izquierda
                               bb[1, 2], bb[2, 2], # arriba, derecha
@@ -59,11 +59,12 @@ if (!file.exists('C:/mch/ArchivosProcesosLocales/MascaraDeTierra/cuerposDeAguaUy
                        ncol=2, byrow=T)
     p <- Polygon(coordsBB)
     ps <- Polygons(list(p), 1)
-    sps <- SpatialPolygons(list(ps), proj4string=CRS(proj4string))
+    sps <- SpatialPolygons(list(ps), proj4string=crsOBJ)
     return(sps)
   }
-  bbPoligono <- bbToSpatialPolygon(bb = bbGeneralExt, proj4string = proj4string(coordsAInterpolar))
-  bbPoligono <- spTransform(bbPoligono, CRS(proj4string(lc)))
+  
+  bbPoligono <- bbToSpatialPolygon(bb = bbGeneralExt, crsOBJ = coordsAInterpolar@proj4string)
+  bbPoligono <- spTransform(bbPoligono, crs(lc)))
   
   lcRecortado <- crop(lc, bbPoligono)
   cuerposDeAgua <- sp::disaggregate(rasterToPolygons(lcRecortado, fun =  function(x) { x == 0 }, dissolve = T))
@@ -94,14 +95,16 @@ cellSize <- gr@cellsize
 xmin <- bbAreaAInterpolar[1, 1] - floor((bbAreaAInterpolar[1, 1] - bbGeneralExt[1, 1]) / cellSize[1]) * cellSize[1]
 ymin <- bbAreaAInterpolar[2, 1] - floor((bbAreaAInterpolar[2, 1] - bbGeneralExt[2, 1]) / cellSize[2]) * cellSize[2]
 cellsDim <- c(ceiling((bbGeneralExt[1, 2] - xmin) / cellSize[1]), ceiling((bbGeneralExt[2, 2] - ymin) / cellSize[2]))
-grExtendida <- SpatialGridDataFrame(grid = GridTopology(cellcentre.offset = c(xmin, ymin), cellsize = cellSize, cells.dim = cellsDim),
-                                    data = data.frame(distanciaAlAgua=rep(NA, cellsDim[1] * cellsDim[2])), proj4string = CRS(proj4string(coordsAInterpolar)))
+grExtendida <- SpatialGridDataFrame(
+  grid = GridTopology(cellcentre.offset = c(xmin, ymin), cellsize = cellSize, cells.dim = cellsDim),
+  data = data.frame(distanciaAlAgua=rep(NA, cellsDim[1] * cellsDim[2])), 
+  proj4string = coordsAInterpolar@proj4string)
 
-cuerposDeAgua2 <- spTransform(cuerposDeAgua2, CRS(proj4string(coordsAInterpolar)))
+cuerposDeAgua2 <- spTransform(cuerposDeAgua2, coordsAInterpolar@proj4string)
 grExtendida$distanciaAlAgua <- t(gDistance(spgeom1 = as(grExtendida, 'SpatialPoints'), spgeom2 = gUnaryUnion(cuerposDeAgua2), byid = T))[,1]
 
 escala <- crearEscalaEquiespaciada(grExtendida$distanciaAlAgua, nIntervalos = 8, brewerPal = 'PuBuGn', continuo = T)
-mapearGrillaGGPlot(grilla=grExtendida, shpBase = spTransform(cuerposDeAgua, CRS(proj4string(grExtendida))), escala = escala)
+mapearGrillaGGPlot(grilla=grExtendida, shpBase = spTransform(cuerposDeAgua, grExtendida@proj4string), escala = escala)
 
 writeGDAL(dataset = grExtendida, fname = 'C:/mch/ArchivosProcesosLocales/MascaraDeTierra/distanciaAlAguaUy_25MKm2.tif', options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
 

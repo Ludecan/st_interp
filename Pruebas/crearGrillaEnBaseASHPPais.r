@@ -52,11 +52,11 @@ bbox(shp)
 bbox(mod11a1)
 bbox(grillaUy)
 
-bbox(spTransform(shp, CRS(proj4string(mod11a1))))
-lele <- spTransform(shp, CRS(proj4string(mod11a1)))
+bbox(spTransform(shp, mod11a1@proj4string))
+lele <- spTransform(shp, mod11a1@proj4string)
 
-bbox(spTransform(mod11a1, CRS(proj4string(shp))))
-bbox(spTransform(grillaUy, CRS(proj4string(shp))))
+bbox(spTransform(mod11a1, shp@proj4string))
+bbox(spTransform(grillaUy, shp@proj4string))
 
 LatitudMaxPais <-	-30
 LatitudMinPais <-	-35
@@ -76,7 +76,9 @@ c(achicarToNDigitos(yLim[1], nDigitos), agrandarToNDigitos(yLim[2], nDigitos))
 xLim <- c(-58.45, -53.15)
 yLim <- c(-35, -30)
 p4strLatLong <- '+proj=longlat +datum=WGS84 +no_defs'
-p4strPlana <- '+proj=utm +zone=21 +south +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0'
+SRS_stringLatLong <- "EPSG:4326"
+p4strPlana <- '+proj=utm +zone=21 +south +datum=WGS84 +units=m +no_defs'
+SRS_stringPlana <- "EPSG:32721"
 
 # Creo los 4 vertices que encierran al país
 coordsBB <- matrix(data=c(xLim[1], yLim[1], #abajo, izquierda
@@ -84,9 +86,9 @@ coordsBB <- matrix(data=c(xLim[1], yLim[1], #abajo, izquierda
                           xLim[2], yLim[2], #arriba, derecha
                           xLim[2], yLim[1]), #abajo, derecha
                    ncol=2, byrow=T)
-sps <- SpatialPoints(coords = coordsBB, proj4string = CRS(p4strLatLong))
+sps <- SpatialPoints(coords = coordsBB, proj4string = CRS(projargs = p4strLatLong, SRS_string = SRS_stringLatLong))
 # Los proyecto para hallar el rango de coordenadas en la proyección plana
-sps <- spTransform(sps, CRS(p4strPlana))
+sps <- spTransform(sps, CRS(projargs = p4strPlana, SRS_string = SRS_stringPlana))
 # Hallo los rangos de coordenadas en la proyección plana
 xLim <- bbox(sps)[1,]
 yLim <- bbox(sps)[2,]
@@ -94,15 +96,15 @@ yLim <- bbox(sps)[2,]
 xDim <- 1000
 yDim <- 1000
 grid <- GridTopology(c(xLim[1], yLim[1]), c(xDim, yDim), cells.dim = c(ceiling((xLim[2]-xLim[1])/xDim), ceiling((yLim[2]-yLim[1])/yDim)))
-grid <- SpatialGrid(grid = grid, proj4string = CRS(p4strPlana))
+grid <- SpatialGrid(grid = grid, proj4string = CRS(projargs = p4strPlana, SRS_string = SRS_stringPlana))
 
 (xLim[2]-xLim[1])/ceiling((xLim[2]-xLim[1])/xDim)
 (yLim[2]-yLim[1])/ceiling((yLim[2]-yLim[1])/yDim)
 
 data <- data.frame(as.integer(!is.na(over(grid, geometry(mod11a1)))))
-grid <- SpatialGridDataFrame(grid, data, proj4string = CRS(p4strPlana))
+grid <- SpatialGridDataFrame(grid, data, proj4string = CRS(projargs = p4strPlana, SRS_string = SRS_stringPlana))
 
-shp <- spTransform(shp, CRS(p4strPlana))
+shp <- spTransform(shp, CRS(projargs = p4strPlana, SRS_string = SRS_stringPlana))
 mapearGrillaGGPlot(grilla = grid, shpBase = shp)
 
 geometry(mod11a1)@grid

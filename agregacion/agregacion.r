@@ -161,7 +161,7 @@ agregacionEspacialAPoligonos <- function(
     funcionAgregacion <- parseFuncionAgregacion(funcionAgregacion)
   }
   if (!identicalCRS(spObj, shpPoligonos)) {
-    shpPoligonos <- spTransform(shpPoligonos, proj4string(spObj))
+    shpPoligonos <- spTransform(shpPoligonos, spObj@proj4string)
   }
   
   if (useRaster) {
@@ -313,7 +313,7 @@ agregacionTemporalGrillada_ti <- function(
             arrInd <- arrayInd(ind = iOver, .dim = regresorTs[[n]]@grid@cells.dim)
             xs <- unique(arrInd[,2])
             ys <- unique(arrInd[,1])
-            # shpBaseAux <- spTransform(shpBase, proj4string(regresorTs[[n]]))
+            # shpBaseAux <- spTransform(shpBase, regresorTs[[n]]@proj4string)
             # mapearGrillaGGPlot(regresorTs[[n]][xs, ys, 1], shpBase = shpBaseAux)
             
             regresorTs[[n]] <- regresorTs[[n]][xs, ys, 1]
@@ -382,6 +382,7 @@ agregacionTemporalGrillada <- function(
   } else { paramsCTL <- NULL }
   
   if (!is.null(shpBase)) {
+    iAux <- 2
     iAux <- which.min(!is.na(pathsRegresor))
     if (!is.null(paramsCTL)) {
       regresorAux <- try(readXYGridSP(ctl = paramsCTL$ctl, dsetOverride = pathsRegresor[iAux],
@@ -389,8 +390,8 @@ agregacionTemporalGrillada <- function(
     } else {
       regresorAux <- try(readGDAL(pathsRegresor[iAux], silent=T))
     }
-    shpBaseAux <- spTransform(shpBase, proj4string(regresorAux))
-    bbaux <- getPoligonoBoundingBox(shpBaseAux, factorExtensionX = 1.1)
+    shpBaseAux <- spTransform(shpBase, regresorAux@proj4string)
+    bbaux <- getPoligonoBoundingBox(objSP = shpBaseAux, factorExtensionX = 1.1)
     iOver <- which(!is.na(over(regresorAux, bbaux)))
     rm(iAux, regresorAux, shpBaseAux, bbaux)
   }
@@ -556,22 +557,27 @@ agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, 
     } else if (!is.null(spSinMascara)) {
       grilla <- as(res, 'SpatialGrid')
       mascara <- !iNA
-      if (proj4string(grilla) != proj4string(spSinMascara)) spSinMascara <- spTransform(spSinMascara, CRS(proj4string(grilla)))
-      if (any(grepl(pattern = 'SpatialPoints', x = class(spSinMascara)))) { mascara[over(spSinMascara, grilla)] <- TRUE
-      } else { mascara[!is.na(over(grilla, geometry(spSinMascara)))] <- TRUE }
+      if (proj4string(grilla) != proj4string(spSinMascara)) {
+        spSinMascara <- spTransform(spSinMascara, grilla@proj4string)
+      }
+      if (any(grepl(pattern = 'SpatialPoints', x = class(spSinMascara)))) { 
+        mascara[over(spSinMascara, grilla)] <- TRUE
+      } else { 
+        mascara[!is.na(over(grilla, geometry(spSinMascara)))] <- TRUE 
+      }
     } else {
       mascara <- T
     }
     
     if (interpolarFaltantes != 'No' && any(iNA & mascara)) {
-      spCoords <- SpatialPoints(coordinates(res), proj4string = CRS(proj4string(res)))
+      spCoords <- SpatialPoints(coordinates(res), proj4string = res@proj4string)
       spRes <- SpatialPixelsDataFrame(points = spCoords, data = data.frame(value=getValues(res)))
       paramsRellenarSP <- createParamsInterpolarYMapear(coordsAInterpolarSonGrilla = gridded(spRes), interpolationMethod = interpolarFaltantes,
                                                         nmax=20, inverseDistancePower = 2)
       spRes <- as(rellenarSP(sp = spRes, mascara = mascara, metodo = 'idw', nMuestras = sum(!iNA), nRepeticiones = 1, 
                              zcol = 1, nCuadrantesX = 1, nCuadrantesY = 1, nCuadrantesZ = 1, params=paramsRellenarSP), 'SpatialGridDataFrame')
     } else {
-      spCoords <- SpatialPoints(coordinates(res), proj4string = CRS(proj4string(res)))
+      spCoords <- SpatialPoints(coordinates(res), proj4string = res@proj4string)
       spRes <- as(SpatialPixelsDataFrame(points = spCoords, data = data.frame(value=getValues(res))), 'SpatialGridDataFrame')
     }
     spRes@data[!mascara,] <- NA

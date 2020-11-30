@@ -88,7 +88,8 @@ xy2MODISTile <- function(x, y, CellSize=926.62543305, TileSize=1200 * 926.625433
   return (list(h=h, v=v))
 }
 
-getHsYVsBoundingBox <- function(proj4stringResultados, xMin, xMax, yMin, yMax) {
+getHsYVsBoundingBox <- function(
+    proj4stringResultados, SRS_stringResultados, xMin, xMax, yMin, yMax) {
   #xMin <- 0
   #xMax <- 1
   #yMin <- 2
@@ -98,13 +99,17 @@ getHsYVsBoundingBox <- function(proj4stringResultados, xMin, xMax, yMin, yMax) {
   # Upper Left, Upper Right, Bottom Right, Bottom Left
   coords <- matrix(data = c(xMin, yMax, xMax, yMax, xMax, yMin, xMin, yMin), 
                    nrow = 4, ncol = 2, byrow = T)
-  esquinas <- SpatialPoints(coords = coords, proj4string = CRS(proj4stringResultados))
+  esquinas <- SpatialPoints(
+    coords = coords, 
+    proj4string = CRS(projargs = proj4stringResultados, SRS_string = SRS_stringResultados))
   
-  # spTransform(esquinas, CRS('+proj=longlat +datum=WGS84'))
+  # spTransform(esquinas, CRS('+proj=longlat +datum=WGS84', SRS_string="EPSG:4326"))
   p4strMODISSinusoidalv5 <- '+proj=sinu +lon_0=0 +x_0=0 +y_0=0 +a=6371007.181 +b=6371007.181 +units=m +no_defs'
-  esquinas <- spTransform(esquinas, CRS(p4strMODISSinusoidalv5))
+  SRS_MODISSinusoidalv5 <- "SR-ORG:6842"
+  esquinas <- spTransform(
+    esquinas, CRS(projargs = p4strMODISSinusoidalv5, SRS_string = SRS_MODISSinusoidalv5))
   
-  #esquinas <- spTransform(esquinas, CRS(proj4string(shpGrillaMODISSinusoidalV5)))
+  #esquinas <- spTransform(esquinas, shpGrillaMODISSinusoidalV5@proj4string)
   #over(esquinas, shpGrillaMODISSinusoidalV5)
   
   HyV <- xy2MODISTile(coordinates(esquinas)[1,1], coordinates(esquinas)[1,2])
@@ -142,23 +147,25 @@ addDate_temporalResolution <- function(date, temporalResolution) {
   return(date)
 }
 
-getMODISEx <- function(producto='MOD09Q1',
-                       # coordenadas límite en la proyección de salida del area a recortar
-                       xMin, xMax, yMin, yMax,
-                       # baja todos los datos entre estas dos fechas en la periodicidad del producto. El separador debe ser '.'
-                       fechaIniUTC='2014.09.06', fechaFinUTC='2014.09.06',
-                       # las bandas a obtener del dataset, se deben indicar con 0 las bandas a excluir y con 1 las bandas a incluir. 
-                       # Si se especifican menos bandas que las que hay en el dataset las restantes se asumen 0
-                       bandas='0 0 1',
-                       # versión del producto MODIS a descargar
-                       version='005',                       
-                       # ruta a la carpeta bin dentro del directorio de instalación de MRT
-                       MRTBinPath='C:/MRT/bin',
-                       # string en formato proj4 de la proyección de salida de los datos
-                       proj4stringResultados,
-                       pathArchivosResultado='./',
-                       escala=0.02, offset=-273.15, graficar=F, forceReDownload=F, comprimirGeoTiffs=T) {
-  HsYVs <- getHsYVsBoundingBox(proj4stringResultados, xMin, xMax, yMin, yMax)
+getMODISEx <- function(
+    producto='MOD09Q1',
+    # coordenadas límite en la proyección de salida del area a recortar
+    xMin, xMax, yMin, yMax,
+    # baja todos los datos entre estas dos fechas en la periodicidad del producto. El separador debe ser '.'
+    fechaIniUTC='2014.09.06', fechaFinUTC='2014.09.06',
+    # las bandas a obtener del dataset, se deben indicar con 0 las bandas a excluir y con 1 las bandas a incluir. 
+    # Si se especifican menos bandas que las que hay en el dataset las restantes se asumen 0
+    bandas='0 0 1',
+    # versión del producto MODIS a descargar
+    version='005',                       
+    # ruta a la carpeta bin dentro del directorio de instalación de MRT
+    MRTBinPath='C:/MRT/bin',
+    # string en formato proj4 de la proyección de salida de los datos
+    proj4stringResultados,
+    SRS_stringResultados,
+    pathArchivosResultado='./',
+    escala=0.02, offset=-273.15, graficar=F, forceReDownload=F, comprimirGeoTiffs=T) {
+  HsYVs <- getHsYVsBoundingBox(proj4stringResultados, SRS_stringResultados, xMin, xMax, yMin, yMax)
   
   tokensP4str <- getTokens(proj4stringResultados, separadorTokens=' ')
   proyeccion <- toupper(getParamValue(tokensP4str, paramName='+proj', classOfValue='character', obligatorio=T))
@@ -286,8 +293,11 @@ getMODISEx <- function(producto='MOD09Q1',
       if (utmSur) {
         coords <- coordinates(campo)
         coords[,2] <- coords[,2] + 1E7
-        centroides <- SpatialPoints(coords, proj4string = CRS(proj4stringResultados))
-        campo <- SpatialGridDataFrame(grid = points2grid(centroides), data = campo@data, proj4string = proj4stringResultados)
+        centroides <- SpatialPoints(
+          coords, proj4string=CRS(projargs=proj4stringResultados, SRS_string=SRS_stringResultados))
+        campo <- SpatialGridDataFrame(
+          grid=points2grid(centroides), data=campo@data, 
+          proj4string=CRS(projargs=proj4stringResultados, SRS_string=SRS_stringResultados))
       }
       
       nombreArchivo <- appendToFileName(archivos[[i]], postFijo = '_tempCompressed') 
@@ -355,29 +365,33 @@ getFechasArchivos <- function(archivos) {
   return(data.frame(fechas=fechas, archivos=archivos, stringsAsFactors = F))
 }
 
-getFechasYArchivosMODIS <- function(producto='MOD09Q1',
-                                    # coordenadas límite en la proyección de salida del area a recortar
-                                    xMin, xMax, yMin, yMax,
-                                    # baja todos los datos entre estas dos fechas en la periodicidad del producto. El separador debe ser '.'
-                                    fechaIniUTC='2014.09.06', fechaFinUTC='2014.09.06',
-                                    # las bandas a obtener del dataset, se deben indicar con 0 las bandas a excluir y con 1 las bandas a incluir. 
-                                    # Si se especifican menos bandas que las que hay en el dataset las restantes se asumen 0
-                                    bandas='0 0 1',
-                                    # versión del producto MODIS a descargar
-                                    version='005',
-                                    # ruta a la carpeta bin dentro del directorio de instalación de MRT
-                                    MRTBinPath='C:/MRT/bin',
-                                    # string en formato proj4 de la proyección de salida de los datos
-                                    proj4stringResultados,
-                                    pathArchivosResultado='./',
-                                    escala=0.02, offset=-273.15, graficar=F, comprimirGeoTiffs=T) {
+getFechasYArchivosMODIS <- function(
+    producto='MOD09Q1',
+    # coordenadas límite en la proyección de salida del area a recortar
+    xMin, xMax, yMin, yMax,
+    # baja todos los datos entre estas dos fechas en la periodicidad del producto. El separador debe ser '.'
+    fechaIniUTC='2014.09.06', fechaFinUTC='2014.09.06',
+    # las bandas a obtener del dataset, se deben indicar con 0 las bandas a excluir y con 1 las bandas a incluir. 
+    # Si se especifican menos bandas que las que hay en el dataset las restantes se asumen 0
+    bandas='0 0 1',
+    # versión del producto MODIS a descargar
+    version='005',
+    # ruta a la carpeta bin dentro del directorio de instalación de MRT
+    MRTBinPath='C:/MRT/bin',
+    # string en formato proj4 de la proyección de salida de los datos
+    proj4stringResultados,
+    SRS_stringResultados,
+    pathArchivosResultado='./',
+    escala=0.02, offset=-273.15, graficar=F, comprimirGeoTiffs=T) {
   objParams <- c(producto, xMin, xMax, yMin, yMax, fechaIniUTC, fechaFinUTC, bandas, version, proj4stringResultados, escala, offset, version=2)
   pathCache <- getPathCache(objParams, dirEjecucion=pathArchivosResultado)
   if (!file.exists(pathCache)) {
-    fechasArchivos <- getMODISEx(producto=producto, xMin=xMin, xMax=xMax, yMin=yMin, yMax=yMax,
-                                 fechaIniUTC=fechaIniUTC, fechaFinUTC=fechaFinUTC, bandas=bandas, 
-                                 version=version, MRTBinPath=MRTBinPath, proj4stringResultados=proj4stringResultados, 
-                                 pathArchivosResultado=pathArchivosResultado, graficar=graficar, comprimirGeoTiffs = comprimirGeoTiffs)
+    fechasArchivos <- getMODISEx(
+      producto=producto, xMin=xMin, xMax=xMax, yMin=yMin, yMax=yMax, fechaIniUTC=fechaIniUTC, 
+      fechaFinUTC=fechaFinUTC, bandas=bandas, version=version, MRTBinPath=MRTBinPath, 
+      proj4stringResultados=proj4stringResultados, SRS_stringResultados=SRS_stringResultados,
+      pathArchivosResultado=pathArchivosResultado, graficar=graficar, 
+      comprimirGeoTiffs=comprimirGeoTiffs)
     
     temporalRes <- rts:::getNativeTemporalResolution(producto)
     fechaAux <- addDate_temporalResolution(as.Date(fechasArchivos$fechas[nrow(fechasArchivos)], format='%Y/%m/%d'), temporalRes)
@@ -412,10 +426,12 @@ getFechasYArchivosMODIS <- function(producto='MOD09Q1',
         
         fecha <- gsub(pattern = '/', replacement = '.', x = fechasArchivos$fechas[i], fixed = T)
         
-        getMODISEx(producto=producto, xMin=xMin, xMax=xMax, yMin=yMin, yMax=yMax,
-                   fechaIniUTC=fecha, fechaFinUTC=fecha, bandas=bandas, MRTBinPath=MRTBinPath, 
-                   proj4stringResultados=proj4stringResultados, pathArchivosResultado=pathArchivosResultado, 
-                   graficar=graficar, forceReDownload = T, comprimirGeoTiffs = comprimirGeoTiffs)
+        getMODISEx(
+          producto=producto, xMin=xMin, xMax=xMax, yMin=yMin, yMax=yMax, fechaIniUTC=fecha, 
+          fechaFinUTC=fecha, bandas=bandas, MRTBinPath=MRTBinPath, 
+          proj4stringResultados=proj4stringResultados, SRS_stringResultados=SRS_stringResultados,
+          pathArchivosResultado=pathArchivosResultado, graficar=graficar, 
+          forceReDownload=T, comprimirGeoTiffs=comprimirGeoTiffs)
       } else {
         hecho <- TRUE
       }
