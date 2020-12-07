@@ -35,9 +35,6 @@ if (is.null(script.dir.testInterpolationModels)) { script.dir.testInterpolationM
 } else { script.dir.testInterpolationModels <- paste0(dirname(script.dir.testInterpolationModels), '/') }
 
 source(paste0(script.dir.testInterpolationModels, '../verificacionPronosticos/verificacionPronosticos.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.testInterpolationModels, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-
-instant_pkgs('caret')
 
 getTSeqs <- function(fechasObservaciones) {
   anios <- sort(unique(year(fechasObservaciones)), decreasing = T)
@@ -226,7 +223,7 @@ calcValidationStatisticsMultipleModels <- function(
       pronosticos = cvs[[i]], observaciones = valoresObservaciones, climatologias = climatologias)
   }
   dir.create(pathResultados, showWarnings = F, recursive = T)
-  write.table(x = validationStatsOverall, paste(pathResultados, 'validationStatsOverall.tsv'), 
+  write.table(x = validationStatsOverall, paste0(pathResultados, 'validationStatsOverall.tsv'), 
               sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
   
   return(list(validationStatsOverall=validationStatsOverall,
@@ -236,13 +233,28 @@ calcValidationStatisticsMultipleModels <- function(
 
 calcRainfallDetectionStatisticsMultipleModels <- function(
     valoresObservaciones, cvs, thresholds, pathResultados='Resultados/4-Validacion/') {
-  rainfallDetectionStats <- t(sapply(
-    cvs, calcRainfallDetectionMultiThresholds, observacion=valoresObservaciones, 
-    thresholds=thresholds))
+  rainfallDetectionStatsOverall <- data.frame()
+  rainfallDetectionStatsEspaciales <- list()
+  length(rainfallDetectionStatsEspaciales) <- length(cvs)
+  names(rainfallDetectionStatsEspaciales) <- names(cvs)
+  
+  i <- 1
+  for (i in seq_along(cvs)) {
+    rainfallDetectionStatsOverall_i <- calcRainfallDetectionMultiThresholds(
+      pronostico=cvs[[i]], observacion=valoresObservaciones, thresholds=thresholds)
+    rainfallDetectionStatsOverall <- rbind(
+      rainfallDetectionStatsOverall, rainfallDetectionStatsOverall_i)
+    rownames(rainfallDetectionStatsOverall)[i] <- names(cvs)[i]
+    
+    rainfallDetectionStatsEspaciales[[i]] <- calcRainfallDetectionStatisticsEspacial(
+      pronosticos=cvs[[i]], observaciones=valoresObservaciones, thresholds=thresholds)
+  }
+  colnames(rainfallDetectionStatsOverall) <- names(rainfallDetectionStatsOverall_i)
   
   dir.create(pathResultados, showWarnings = F, recursive = T)
-  write.table(x = rainfallDetectionStats, paste(pathResultados, 'rainfallDetectionStats.tsv'), 
+  write.table(x=rainfallDetectionStatsOverall, paste0(pathResultados, 'rainfallDetectionStats.tsv'), 
               sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
   
-  return(rainfallDetectionStats)
+  return(list(rainfallDetectionStatsOverall=rainfallDetectionStatsOverall,
+              rainfallDetectionStatsEspaciales=rainfallDetectionStatsEspaciales))
 }

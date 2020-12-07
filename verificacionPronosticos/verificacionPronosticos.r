@@ -40,18 +40,19 @@ source(paste0(script.dir.verificacionPronosticos, '../Graficas/graficas.r'), enc
 StatNames <- c(
   'ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos')
 dfInfoValidationStats <- data.frame(
-  StatNames = c('ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos'),
+  StatNames = c('ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos', "POD", "FAR", "FBS"),
   LongStatNames=c(
     'Mean Error', 'Mean Absolute Error', 'Mean Absolute Deviation', 'Mean Squared Error', 
     'Difference Variance', 'Root Mean Squared Error', 'Pearson\'s Coefficient of Correlation', 
     'Spearman\'s Coefficient of Correlation', 'Anomaly Correlation (Pearson)', 
-    'Anomaly Correlation (Spearman)', 'Cantidad de Datos Utilizados'),
-  valoresPerfectos = c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 'max'),
-  peoresValores = c('max', 'max', 'max', 'max', 'max', 'max', 0, 0, 0, 0, 0),
-  minEscala = c('min', 0, 0, 0, 0, 0, -1, -1, -1, -1, 0),
-  medioEscala = c(0, NA, NA, NA, NA, NA, 0, 0, 0, 0, NA),
-  maxEscala = c('max', 'max', 'max', 'max', 'max', 'max', 1, 1, 1, 1, 'max'),
-  invertirColores = c(F, T, T, T, T, T, F, F, F, F, F), stringsAsFactors = F)
+    'Anomaly Correlation (Spearman)', 'Cantidad de Datos Utilizados',
+    'Probability of Detection', 'False Alarm Rate', 'Frequency Bias'),
+  valoresPerfectos = c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 'max', 1, 0, 1),
+  peoresValores = c('max', 'max', 'max', 'max', 'max', 'max', 0, 0, 0, 0, 0, 0, 1, 'max'),
+  minEscala = c('min', 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0),
+  medioEscala = c(0, NA, NA, NA, NA, NA, 0, 0, 0, 0, NA, 0.5, 0.5, NA),
+  maxEscala = c('max', 'max', 'max', 'max', 'max', 'max', 1, 1, 1, 1, 'max', 1, 1, 'max'),
+  invertirColores = c(F, T, T, T, T, T, F, F, F, F, F, F, F, F), stringsAsFactors = F)
 
 #cbind(StatNames, valoresPerfectos, peoresValores, minEscala, medioEscala, maxEscala)
 
@@ -129,24 +130,35 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
   return(c(ME, MAE, MAD, MSE, VarDif, RMSE, Corr, RankCorr, CorrAnom, RankCorrAnom, CantDatos))
 }
 
-calcRainfallDetectionStatistics <- function(pronostico, observacion, threshold=NULL, positive='TRUE') {
+calcRainfallDetectionStatistics <- function(
+    pronostico, observacion, threshold=NULL, positive='TRUE') {
   # threshold <- thresholds[1]
+  idx <- !is.na(pronostico) & !is.na(observacion)
+
   if (!is.null(threshold)) {
-    p <- pronostico > threshold
-    o <- observacion > threshold
+    p <- pronostico[idx] > threshold
+    o <- observacion[idx] > threshold
   } else {
-    p <- pronostico
-    o <- threshold
+    p <- pronostico[idx]
+    o <- threshold[idx]
   }
   p <- as.factor(p)
   o <- as.factor(o)
   
-  confMatrix <- confusionMatrix(p, o, positive = positive)
+  if (any(o == positive)) {
+    FBS <- sum(p == positive) / sum(o == positive)
+    POD <- sum(p == positive & o == positive) / sum(o == positive)
+  } else {
+    FBS <- NA_real_
+    POD <- NA_real_
+  }
   
-  POD <- confMatrix$overall[1]
-  FAR <- confMatrix$table[2, 1] / sum(confMatrix$table[2, ])
-  FBS <- confMatrix$table[2, 2] / sum(confMatrix$table[, 2])
-  
+  if (any(p == positive)) {
+    FAR <- sum(p == positive & o != positive) / sum(p == positive)
+  } else {
+    FAR <- NA_real_
+  }
+
   return(structure(c(POD, FAR, FBS), names=c('POD', 'FAR', 'FBS')))
 }
 
@@ -161,6 +173,20 @@ calcRainfallDetectionMultiThresholds <- function(
     expand.grid(rownames(rainfallDetectionStats), as.character(thresholds)), 
     MARGIN = 1, FUN = paste, sep='', collapse='_')
   return(structure(as.vector(rainfallDetectionStats), names=resNames))
+}
+
+calcRainfallDetectionStatisticsEspacial <- function(
+    pronosticos, observaciones, thresholds, positive='TRUE') {
+  res <- matrix(NA, nrow=ncol(observaciones), ncol = 3 * length(thresholds))
+  for (i in 1:ncol(observaciones)) {
+    aux <- calcRainfallDetectionMultiThresholds(
+      pronostico=pronosticos[,i], observacion=observaciones[,i], thresholds=thresholds, 
+      positive=positive)
+    res[i, ] <- aux
+  }
+  colnames(res) <- names(aux)
+  rownames(res) <- colnames(observaciones)
+  return(as.data.frame(res))
 }
 
 calcValidationStatistics <- function(pronostico, observacion, climatologia) {
@@ -249,7 +275,8 @@ calcAndPlotAllValidationStatistics <- function(nombreModelo, fechas, pronosticos
 
 calcAndPlotAllValidationStatisticsV2 <- function(
     fechas, pronosticos, observaciones, climatologias, carpetaSalida='Resultados/Validacion2/', 
-    coordsObservaciones, shpBase=NULL, xyLims=NULL, nColsPlots = 3, ordenModelosPorColumnas=NULL, 
+    coordsObservaciones, shpBase=NULL, xyLims=NULL, 
+    nColsPlots=min(3, length(ordenModelosPorColumnas)), ordenModelosPorColumnas=names(pronosticos), 
     tamaniosPuntos = 4, tamanioFuentePuntos = 3, tamanioFuenteEjes = 15, tamanioFuenteTitulo=22) {
   dir.create(carpetaSalida, showWarnings = FALSE, recursive = TRUE)
   if (is.null(ordenModelosPorColumnas)) ordenModelosPorColumnas <- names(pronosticos)
@@ -267,118 +294,29 @@ calcAndPlotAllValidationStatisticsV2 <- function(
   observaciones <- observaciones[iNoNAs,]
   climatologias <- climatologias[iNoNAs,]
   
-  validationStats <- list()
-  length(validationStats) <- length(pronosticos)
-  for (i in 1:length(pronosticos)) {
-    validationStats[[i]] <- calcAllValidationStatistics(
-      nombreModelo = names(pronosticos)[i], pronosticos = pronosticos[[i]][iNoNAs, ],
-      observaciones = observaciones, climatologias = climatologias)
-  }
-  names(validationStats) <- names(pronosticos)
+  validationStats <- calcValidationStatisticsMultipleModels(
+    valoresObservaciones=observaciones, cvs=pronosticos, 
+    climatologias=climatologias, pathResultados=carpetaSalida)
   
-  statsOverall <- t(sapply(validationStats, function(x) {return (x$statsOverall)}))
-  rownames(statsOverall) <- names(pronosticos)
-  write.table(x = statsOverall, paste(carpetaSalida, 'validationStatsOverall.tsv', sep=''), 
-              sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
-  
-  spValidationStats <- SpatialPointsDataFrame(
-    coords = coordsObservaciones, data=data.frame(value=rep(NA, nrow(coordsObservaciones))))
-  gs <- list()
-  length(gs) <- length(ordenModelosPorColumnas)
-  escalaGraficos <- nColsPlots
-  dir.create(carpetaSalida, showWarnings = F)
+  write.table(
+    x=validationStats$validationStatsOverall, 
+    file=paste0(carpetaSalida, 'validationStatsOverall.tsv'), sep='\t', dec='.', row.names=TRUE, 
+    col.names=TRUE)
   
   ####### Espaciales ########
-  i <- 1
-  for (i in 1:ncol(statsOverall)) {
-    print(i)
-    iEstadistico <- colnames(statsOverall)[i]
-    infoVS <- dfInfoValidationStats[i, ]
-    vsEspaciales <- sapply(validationStats, function(x) {return(x$statsEspaciales[,i])})
-    
-    minEscala <- suppressWarnings(as.numeric(infoVS$minEscala)) 
-    if (is.na(minEscala)) { minEscala <- get(infoVS$minEscala)(vsEspaciales, na.rm=T) }
-    maxEscala <- suppressWarnings(as.numeric(infoVS$maxEscala))
-    if (is.na(maxEscala)) { maxEscala <- get(infoVS$maxEscala)(vsEspaciales, na.rm=T) }
-    
-    if (!is.na(infoVS$medioEscala)) { 
-      escala <- crearEscalaTresPuntos(
-        inicio = minEscala, medio = infoVS$medioEscala, fin = maxEscala, intervaloFinalCerrado = T, 
-        nIntervalos = 11, continuo = T, space = 'rgb')
-    } else { 
-      escala <- crearEscalaDosPuntos(
-        inicio = minEscala, fin = maxEscala, brewerPal = 'RdYlGn', 
-        invertirPaleta = infoVS$invertirColores, nIntervalos = 11, continuo = T) 
-    }
-    escala <- ajustarExtremosEscala(escala = escala, datos = vsEspaciales, nDigitos = 2, redondear = TRUE)
+  plotValidationStatsEspaciales(
+    coordsObservaciones=coordsObservaciones, 
+    statsEspaciales=validationStats$validationStatsEspaciales[ordenModelosPorColumnas], 
+    carpetaSalida=carpetaSalida, shpBase=shpBase, xyLims=xyLims, nColsPlots=nColsPlots, 
+    ordenModelosPorColumnas=ordenModelosPorColumnas, tamaniosPuntos=tamaniosPuntos,
+    tamanioFuentePuntos=tamanioFuentePuntos, tamanioFuenteEjes=tamanioFuenteEjes, 
+    tamanioFuenteTitulo=tamanioFuenteTitulo)
 
-    j <- 2
-    for (j in seq_along(ordenModelosPorColumnas)) {
-      print(j)
-      jPron <- which(names(pronosticos) == ordenModelosPorColumnas[j])
-      spValidationStats$value <- vsEspaciales[, jPron]
-      nomArchivo <- paste(carpetaSalida, sprintf("%02d", i), '-', iEstadistico, '/', sprintf("%02d", j), '-', ordenModelosPorColumnas[j], '.png', sep='')
-      gs[[j]] <- mapearPuntosGGPlot(
-          puntos=spValidationStats, shpBase=shpBase, xyLims=xyLims, dibujarTexto=TRUE, 
-          escala=escala, tamaniosPuntos=tamaniosPuntos, tamanioFuentePuntos=tamanioFuentePuntos,
-          tamanioFuenteEjes=tamanioFuenteEjes, tamanioFuenteTitulo=tamanioFuenteTitulo, nDigitos=2, 
-          titulo=paste0(ordenModelosPorColumnas[j], ': ', iEstadistico), 
-          nomArchResultados=nomArchivo, dibujar=F, alturaEscalaContinua=unit(x=0.65, units='in'), 
-          escalaGraficos = escalaGraficos)
-    }
-    
-    nomArchMapa <- paste(carpetaSalida, sprintf("%02d", i), '-', iEstadistico, '_Espacial.png', sep='')
-    png(nomArchMapa, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
-    tryCatch(expr = print(multiplot(plotlist=gs, cols = nColsPlots)), finally = dev.off())
-  }
-  
   ####### Temporales ########
-  meses <- months(fechas, abbreviate = TRUE)
-  meses <- factor(meses, levels = unique(meses), ordered = T)
-  gs2 <- list()
-  length(gs2) <- length(ordenModelosPorColumnas)
-  i <- 1
-  for (i in 1:ncol(statsOverall)) {
-    iEstadistico <- colnames(statsOverall)[i]
-    infoVS <- dfInfoValidationStats[i, ]
-    vsTemporales <- sapply(validationStats, function(x) {return(x$statsTemporales[, i])})
-    
-    minEscala <- suppressWarnings(as.numeric(infoVS$minEscala)) 
-    if (is.na(minEscala)) { minEscala <- get(infoVS$minEscala)(vsTemporales, na.rm=T) }
-    maxEscala <- suppressWarnings(as.numeric(infoVS$maxEscala))
-    if (is.na(maxEscala)) { maxEscala <- get(infoVS$maxEscala)(vsTemporales, na.rm=T) }
-    
-    xyLimsLinePlots <- crearXYLims(min(fechas), max(fechas), minEscala, maxEscala)
-    xyLimsBoxPlots <- crearXYLims(min(meses), max(meses), minEscala, maxEscala)
-
-    j <- 4
-    for (j in 1:length(ordenModelosPorColumnas)) {
-      print(j)
-      jPron <- which(names(pronosticos) == ordenModelosPorColumnas[j])
-      vsTemporalesJ <- vsTemporales[, jPron]
-      
-      gs[[j]] <- linePlot(
-        x= fechas, y=vsTemporalesJ, dibujarPuntos=F, 
-        titulo=paste0(ordenModelosPorColumnas[j], ': ', iEstadistico), xyLims=xyLimsLinePlots, 
-        dibujar=F, escalaGraficos=escalaGraficos, lineaRegresion=T, formulaRegresion=y~1, 
-        annotateMean = T)
-      
-      gs2[[j]] <- boxplot_GGPlot(
-        clases=meses, y=vsTemporalesJ, titulo=paste0(ordenModelosPorColumnas[j], ': ', iEstadistico),
-        escalaGraficos=escalaGraficos, xyLims=xyLimsBoxPlots)
-    }
-    
-    which.min(validationStats$`GRK-LST_Night_Combinada_Clim_mean+x+y`$statsTemporales$ME)
-    fechas[331]
-    
-    nomArchGraficos <- paste(carpetaSalida, sprintf("%02d", i), '-', iEstadistico, '_Temporal.png', sep='')
-    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
-    tryCatch(expr = print(multiplot(plotlist=gs, cols = nColsPlots)), finally = dev.off())
-    
-    nomArchGraficos <- paste(carpetaSalida, sprintf("%02d", i), '-', iEstadistico, '_TemporalBoxPlots.png', sep='')
-    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
-    tryCatch(expr = print(multiplot(plotlist=gs2, cols = nColsPlots)), finally = dev.off())
-  }
+  plotValidationStatsTemporales(
+    fechas=fechas, statsTemporales=validationStats$validationStatsTemporales[ordenModelosPorColumnas], 
+    carpetaSalida=carpetaSalida, nColsPlots=nColsPlots, 
+    ordenModelosPorColumnas=ordenModelosPorColumnas)
   
   return(validationStats)
 }
@@ -403,6 +341,135 @@ plotCVStationByStation <- function(iEstacion, fechas, valoresObservaciones, pron
              dibujarPuntos=F, titulo=paste(colnames(valoresEstacionI)[1], '-', iClase), tituloEjeX='Tiempo', tituloEjeY='C', 
              dibujarEscala=T, dibujarEjes=T, xyLims=NULL, dibujar=interactive(), DPI=600, tamanioFuenteTextos=15, 
              escalaGraficos=1, annotateMean=F, nomArchSalida='D:/Tesis/Artigas2014.png') 
+  }
+}
+
+plotValidationStatsEspaciales <- function(
+    coordsObservaciones, statsEspaciales, carpetaSalida='Resultados/Validacion2/', shpBase=NULL, 
+    xyLims=NULL, nColsPlots=min(3, length(ordenModelosPorColumnas)), 
+    ordenModelosPorColumnas=names(statsEspaciales), tamaniosPuntos=4,
+    tamanioFuentePuntos=3, tamanioFuenteEjes=15, tamanioFuenteTitulo=22) {
+  statsNames <- colnames(statsEspaciales[[1]])
+  
+  gs <- list()
+  length(gs) <- length(ordenModelosPorColumnas)
+  escalaGraficos <- nColsPlots
+  dir.create(carpetaSalida, showWarnings = F)
+  
+  i <- 9
+  for (i in seq_along(statsNames)) {
+    statName <- statsNames[i]
+    iEstadistico <- which(startsWith(x=statName, prefix=dfInfoValidationStats$StatNames))
+    if (length(iEstadistico) > 1) {
+      # Keep the longest match
+      iEstadistico <- iEstadistico[
+        which.max(sapply(dfInfoValidationStats$StatNames[iEstadistico], nchar))]
+    }
+    
+    infoVS <- dfInfoValidationStats[iEstadistico, ]
+    vsEspaciales <- sapply(statsEspaciales[ordenModelosPorColumnas], function(x) {return(x[, i])})
+    
+    minEscala <- suppressWarnings(as.numeric(infoVS$minEscala)) 
+    if (is.na(minEscala)) { minEscala <- get(infoVS$minEscala)(vsEspaciales, na.rm=T) }
+    maxEscala <- suppressWarnings(as.numeric(infoVS$maxEscala))
+    if (is.na(maxEscala)) { maxEscala <- get(infoVS$maxEscala)(vsEspaciales, na.rm=T) }
+    
+    if (!is.na(infoVS$medioEscala)) {
+      escala <- crearEscalaTresPuntos(
+        inicio = minEscala, medio = infoVS$medioEscala, fin = maxEscala, intervaloFinalCerrado = T, 
+        nIntervalos = 11, continuo = T, space = 'rgb')
+    } else { 
+      escala <- crearEscalaDosPuntos(
+        inicio = minEscala, fin = maxEscala, brewerPal = 'RdYlGn', 
+        invertirPaleta = infoVS$invertirColores, nIntervalos = 11, continuo = T) 
+    }
+    escala <- ajustarExtremosEscala(escala=escala, datos=vsEspaciales, nDigitos=2, redondear=TRUE)
+    
+    j <- 2
+    for (j in seq_along(ordenModelosPorColumnas)) {
+      print(paste0(statName, ': ', ordenModelosPorColumnas[j]))
+      coordsObservaciones$value <- vsEspaciales[, j]
+      nomArchivo <- paste0(
+          carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '/', sprintf("%02d", j), '-', 
+          ordenModelosPorColumnas[j], '.png')
+      gs[[j]] <- mapearPuntosGGPlot(
+        puntos=coordsObservaciones, shpBase=shpBase, xyLims=xyLims, dibujarTexto=TRUE, 
+        escala=escala, tamaniosPuntos=tamaniosPuntos, tamanioFuentePuntos=tamanioFuentePuntos,
+        tamanioFuenteEjes=tamanioFuenteEjes, tamanioFuenteTitulo=tamanioFuenteTitulo, nDigitos=2, 
+        titulo=paste0(ordenModelosPorColumnas[j], ': ', statsNames[i]), 
+        nomArchResultados=nomArchivo, dibujar=F, alturaEscalaContinua=unit(x=0.65, units='in'), 
+        escalaGraficos=escalaGraficos)
+    }
+    
+    nomArchMapa <- paste0(
+      carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_Espacial.png')
+    png(nomArchMapa, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    tryCatch(expr = print(multiplot(plotlist=gs, cols = nColsPlots)), finally = dev.off())
+  }
+}
+
+plotValidationStatsTemporales <- function(
+    fechas, statsTemporales, carpetaSalida='Resultados/Validacion2/', 
+    nColsPlots=min(3, length(ordenModelosPorColumnas)), 
+    ordenModelosPorColumnas=names(statsTemporales)) {
+  statsNames <- colnames(statsTemporales[[1]])
+  
+  meses <- months(fechas, abbreviate = TRUE)
+  meses <- factor(meses, levels = unique(meses), ordered = T)
+  gs <- list()
+  length(gs) <- length(ordenModelosPorColumnas)
+  gs2 <- list()
+  length(gs2) <- length(ordenModelosPorColumnas)
+  escalaGraficos <- nColsPlots
+  dir.create(carpetaSalida, showWarnings = F)
+  
+  i <- 1
+  for (i in seq_along(statsNames)) {
+    statName <- statsNames[i]
+    iEstadistico <- which(startsWith(x=statName, prefix=dfInfoValidationStats$StatNames))
+    if (length(iEstadistico) > 1) {
+      # Keep the longest match
+      iEstadistico <- iEstadistico[
+        which.max(sapply(dfInfoValidationStats$StatNames[iEstadistico], nchar))]
+    }
+    
+    infoVS <- dfInfoValidationStats[iEstadistico, ]
+    vsTemporales <- sapply(statsTemporales[ordenModelosPorColumnas], function(x) {return(x[, i])})
+    
+    minEscala <- suppressWarnings(as.numeric(infoVS$minEscala)) 
+    if (is.na(minEscala)) { minEscala <- get(infoVS$minEscala)(vsTemporales, na.rm=T) }
+    maxEscala <- suppressWarnings(as.numeric(infoVS$maxEscala))
+    if (is.na(maxEscala)) { maxEscala <- get(infoVS$maxEscala)(vsTemporales, na.rm=T) }
+    
+    xyLimsLinePlots <- crearXYLims(min(fechas), max(fechas), minEscala, maxEscala)
+    xyLimsBoxPlots <- crearXYLims(min(meses), max(meses), minEscala, maxEscala)
+    
+    j <- 1
+    for (j in seq_along(ordenModelosPorColumnas)) {
+      print(paste0(statName, ': ', ordenModelosPorColumnas[j]))
+
+      vsTemporalesJ <- vsTemporales[, j]
+
+      titulo <- paste0(ordenModelosPorColumnas[j], ': ', statName)      
+      gs[[j]] <- linePlot(
+        x= fechas, y=vsTemporalesJ, dibujarPuntos=F, titulo=titulo, xyLims=xyLimsLinePlots, 
+        dibujar=F, escalaGraficos=escalaGraficos, lineaRegresion=T, formulaRegresion=y~1, 
+        annotateMean = T)
+      
+      gs2[[j]] <- boxplot_GGPlot(
+        clases=meses, y=vsTemporalesJ, titulo=titulo, escalaGraficos=escalaGraficos, 
+        xyLims=xyLimsBoxPlots)
+    }
+    
+    nomArchGraficos <- paste0(
+      carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_Temporal.png')
+    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    tryCatch(expr = print(multiplot(plotlist=gs, cols = nColsPlots)), finally = dev.off())
+    
+    nomArchGraficos <- paste0(
+      carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_TemporalBoxPlots.png')
+    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    tryCatch(expr = print(multiplot(plotlist=gs2, cols = nColsPlots)), finally = dev.off())
   }
 }
 
