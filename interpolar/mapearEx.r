@@ -725,7 +725,8 @@ mapearPuntosGGPlot <- function(
   escala$colores[iNoBlancos] <- rgb(t(col2rgb(escala$colores[iNoBlancos])), maxColorValue = 255L)
   if (continuo && nEscala > 1) {
     vals <- ggplot2:::rescale01(escala$escala)
-    alturaEscalaContinuaEscalada <- unit(x=as.numeric(alturaEscalaContinua) * escalaGraficos, units = attr(alturaEscalaContinua, 'unit'))
+    
+    alturaEscalaContinuaEscalada <- alturaEscalaContinua * escalaGraficos
     p <- p + scale_color_gradientn(colours=escala$colores, values=vals, limits=c(escala$escala[1], valMax),
                                    breaks=escala$escala, na.value="gray95") + theme(legend.key.height=alturaEscalaContinuaEscalada)
   } else {
@@ -831,8 +832,11 @@ mapearGrillaGGPlot <- function(
   
   coords <- coordinates(grilla)[iNoNa, , drop=F]
   df <- data.frame(x=coords[, 1], y=coords[, 2], value=v)
-  if (is.projected(grilla)) { ratio <- 1 
-  } else { ratio <- map_aspect(df$x, df$y) }
+  if (is.projected(grilla)) { 
+    ratio <- 1
+  } else {
+    ratio <- map_aspect(xyLims$xLim, xyLims$yLim)
+  }
   
   p <- ggplot(aes(x=x, y=y, z=value), data=df) +
        coord_equal(ratio=ratio, xlim=xyLims$xLim, ylim=xyLims$yLim) +

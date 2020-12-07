@@ -212,7 +212,7 @@ interpolarYMapearI <- function(
     paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
     espEscalaAdaptada=NULL) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
-  # iTi <- 1
+  # iTi <- 1187
   # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-03')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
@@ -220,8 +220,12 @@ interpolarYMapearI <- function(
   nomArchGeoTiff <- changeFileExt(listaMapas$nombreArchivo[ti], '.tif')
   dir.create(dirname(listaMapas$nombreArchivo[ti]), showWarnings = F, recursive = T)
   
-  if (!listaMapas$recalcularSiYaExiste[ti] && file.exists(nomArchGeoTiff) && file.info(nomArchGeoTiff)$size > 0) {
-    existia <- evaluarConReintentos(interpolacion <- list(predictions = readGDAL(nomArchGeoTiff, silent = T)), segundosEntreIntentos = 1)
+  if (!listaMapas$recalcularSiYaExiste[ti] &&
+      file.exists(nomArchGeoTiff) &&
+      file.info(nomArchGeoTiff)$size > 0) {
+    existia <- evaluarConReintentos(
+      interpolacion <- list(
+        predictions = readGDAL(nomArchGeoTiff, silent = T)), segundosEntreIntentos = 1)
   } else { existia <- F }
   
   if (!existia) {
@@ -285,10 +289,17 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
                               paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, 
                               espEscalaFija=NULL, espEscalaAdaptada=NULL, tsAInterpolar=1:nrow(valoresObservaciones)) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
-  if (is.null(listaMapas)) listaMapas <- createDefaultListaMapas(paramsIyM = paramsIyM, fechasObservaciones = fechasObservaciones)
+  if (is.null(listaMapas)) {
+    listaMapas <- createDefaultListaMapas(
+      paramsIyM=paramsIyM, fechasObservaciones=fechasObservaciones)
+  }
   
   # Preprocesamiento de los datos
-  if (length(coordsObservaciones) <= 500 | !(paramsIyM$incorporarCoordenadas | paramsIyM$incorporarDistanciaAlAgua | paramsIyM$incorporarAltitud | paramsIyM$incorporarTiempo)) {
+  if (length(coordsObservaciones) <= 500 | 
+      !(paramsIyM$incorporarCoordenadas | 
+        paramsIyM$incorporarDistanciaAlAgua | 
+        paramsIyM$incorporarAltitud | 
+        paramsIyM$incorporarTiempo)) {
     # Elimino estaciones que no tengan ninguna observación para mejorar performance, sobre todo de la CV
     # Aplico esto solo si hay menos de 500 observaciones, sino asumo que es un relleno de regresores en donde no conviene
     # sacar los NA porque hay que volver a cachear los regresores estáticos
@@ -301,19 +312,21 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
   if (paramsIyM$difMaxFiltradoDeOutliersRLM > 0) {
     # params = paramsIyM
     # factorMADHaciaAbajo = paramsIyM$difMaxFiltradoDeOutliersRLM
-    outliersRLM <- deteccionOutliersRLM(coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-                                        valoresObservaciones = valoresObservaciones, params = paramsIyM, 
-                                        pathsRegresores = pathsRegresores, listaMapas = listaMapas, 
-                                        factorMADHaciaAbajo = paramsIyM$difMaxFiltradoDeOutliersRLM)
+    outliersRLM <- deteccionOutliersRLM(
+      coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
+      valoresObservaciones = valoresObservaciones, params = paramsIyM, 
+      pathsRegresores = pathsRegresores, listaMapas = listaMapas, 
+      factorMADHaciaAbajo = paramsIyM$difMaxFiltradoDeOutliersRLM)
   } else { outliersRLM <- NULL }
   
   # Eliminación de outliers
   if (paramsIyM$difMaxFiltradoDeOutliersCV > 0) {
     # params = paramsIyM
     # maxOutlyingness = paramsIyM$difMaxFiltradoDeOutliersCV
-    outliersCV <- deteccionOutliersUniversalGriddingCV(coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-                                                       valoresObservaciones=valoresObservaciones, pathsRegresores = pathsRegresores, 
-                                                       params=paramsIyM, maxOutlyingness=paramsIyM$difMaxFiltradoDeOutliersCV)
+    outliersCV <- deteccionOutliersUniversalGriddingCV(
+      coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
+      valoresObservaciones=valoresObservaciones, pathsRegresores = pathsRegresores, 
+      params=paramsIyM, maxOutlyingness=paramsIyM$difMaxFiltradoDeOutliersCV)
   } else { outliersCV <- NULL }
   
   if (!is.null(outliersRLM) | !is.null(outliersCV)) {
@@ -390,8 +403,14 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
       nCoresAUsar = paramsIyM$nCoresAUsar)
   } else { valoresRegresoresSobreObservaciones <- NULL }
   
-  if (paramsIyM$incorporarCoordenadas | paramsIyM$incorporarTiempo | paramsIyM$incorporarDistanciaAlAgua | paramsIyM$incorporarAltitud) {
-    cachearRegresoresEstaticos(coordsObservaciones = geometry(coordsObservaciones), coordsAInterpolar = geometry(coordsAInterpolar), nCoresAUsar = paramsIyM$nCoresAUsar)
+  if (paramsIyM$incorporarCoordenadas | 
+      paramsIyM$incorporarTiempo | 
+      paramsIyM$incorporarDistanciaAlAgua | 
+      paramsIyM$incorporarAltitud) {
+    cachearRegresoresEstaticos(
+      coordsObservaciones = geometry(coordsObservaciones), 
+      coordsAInterpolar = geometry(coordsAInterpolar), 
+      nCoresAUsar = paramsIyM$nCoresAUsar)
   }
   
   if (length(paramsIyM$tlagsAR) <= 0) {

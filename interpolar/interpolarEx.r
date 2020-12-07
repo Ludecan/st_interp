@@ -575,7 +575,10 @@ interpolarEx <- function(
   }
   
   # Shapefile con el contorno del país / Shapefile for the country boundaries
-  if (is.null(shpMask)) shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP=params$pathSHPMapaBase, grilla=coordsAInterpolar)
+  if (is.null(shpMask)) {
+    shpMask <- cargarSHPYObtenerMascaraParaGrilla(
+      pathSHP=params$pathSHPMapaBase, grilla=coordsAInterpolar)
+  }
   
   params <- setMinMaxVal(observacionesValue=observaciones$value, params)
   if (!is.null(valoresCampoBase) & !is.null(valoresCampoBaseSobreObservaciones)) {
@@ -610,12 +613,15 @@ interpolarEx <- function(
   varianzaObservaciones <- var(observaciones$value)
   if (varianzaObservaciones > 1E-6 && params$interpolationMethod !='none' && length(observaciones) >= 4) {
     if (!identicalCRS(observaciones, coordsAInterpolar)) { 
-      observaciones <- spTransform(observaciones, proj4StringAInterpolar@proj4string) 
+      observaciones <- spTransform(observaciones, coordsAInterpolar@proj4string) 
     }
   
     mapaConstante <- F
     
-    if (params$interpolationMethod == 'automatic') { params$interpolationMethod <- seleccionarMetodoInterpolacion(observaciones$value) }
+    if (params$interpolationMethod == 'automatic') { 
+      params$interpolationMethod <- seleccionarMetodoInterpolacion(observaciones$value) 
+    }
+    
     # exijo una cantidad mínima de puntos pq sino no vale la pena ni preparar los threads
     # Minimum amount of work for multicoreing
     if (params$nCoresAUsar <= 0) { if (length(coordsAInterpolar) > 100) { nCoresAUsar <- detectCores(T, T) } else { nCoresAUsar <- 1 }
@@ -624,10 +630,10 @@ interpolarEx <- function(
     # crear objeto intamap/create intamap object
     # interpolation has 4 basic steps
     
-    # interpolacion <- preProcess(interpolacion) 
-    # interpolacion <- estimateParameters(interpolacion) and interpolacion <- estimateAnisotropy(interpolacion)
-    # interpolacion <- spatialPredict(interpolacion)
-    # interpolacion <- postProcess(interpolacion)
+    # interpolacion <- intamap::preProcess(interpolacion) 
+    # interpolacion <- intamap::estimateParameters(interpolacion) and interpolacion <- estimateAnisotropy(interpolacion)
+    # interpolacion <- intamap::spatialPredict(interpolacion)
+    # interpolacion <- intamap::postProcess(interpolacion)
     
     # You can override any of the steps by adding the required fields to the interpolation object
     # We do this for the automap method to override variogram estimation
@@ -635,17 +641,18 @@ interpolarEx <- function(
     if (params$interpolationMethod != 'idw') { outputWhat <- list(mean=T, variance=T) 
     } else { outputWhat <- list(mean=T) }
     
-    interpolacion <- createIntamapObject(observations=observaciones, formulaString=value ~ 1,
-                                         predictionLocations=coordsAInterpolar[shpMask$mask, ],
-                                         intCRS=proj4StringAInterpolar, targetCRS=proj4StringAInterpolar, 
-                                         class=params$interpolationMethod, 
-                                         params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax, 
-                                                     maxdist=params$maxdist, beta=beta, debug.level = 0),
-                                         outputWhat=outputWhat)
+    interpolacion <- createIntamapObject(
+      observations=observaciones, formulaString=value ~ 1, 
+      predictionLocations=coordsAInterpolar[shpMask$mask, ],
+      intCRS=proj4StringAInterpolar, targetCRS=proj4StringAInterpolar, 
+      class=params$interpolationMethod, 
+      params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax, 
+                  maxdist=params$maxdist, beta=beta, debug.level = 0),
+      outputWhat=outputWhat)
     # mapearPuntosGGPlot(observaciones, shpMask$shp, dibujarTexto = length(observaciones) <= 50)
     # checkSetup(interpolacion)
-    interpolacion <- preProcess(interpolacion)
-  
+    interpolacion <- intamap::preProcess(interpolacion)
+    
     if (params$interpolationMethod == 'automap') {
       interpolacion$campoMedia <- 'var1.pred'
       interpolacion$campoVarianza <- 'var1.var'    

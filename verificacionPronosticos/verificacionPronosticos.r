@@ -171,7 +171,8 @@ calcValidationStatistics <- function(pronostico, observacion, climatologia) {
 calcValidationStatisticsTemporal <- function(pronosticos, observaciones, climatologias) {
   res <- matrix(NA, nrow=nrow(observaciones), ncol = length(StatNames))
   for (i in 1:nrow(observaciones)) {
-    res[i, ] <- calcValidationStatisticsEx(pronostico = pronosticos[i, ], observacion = observaciones[i, ], climatologia = climatologias[i, ])
+    res[i, ] <- calcValidationStatisticsEx(
+      pronostico=pronosticos[i, ], observacion=observaciones[i, ], climatologia=climatologias[i, ])
   }
   colnames(res) <- StatNames
   rownames(res) <- rownames(observaciones)
@@ -181,7 +182,8 @@ calcValidationStatisticsTemporal <- function(pronosticos, observaciones, climato
 calcValidationStatisticsEspacial <- function(pronosticos, observaciones, climatologias) {
   res <- matrix(NA, nrow=ncol(observaciones), ncol = length(StatNames))
   for (i in 1:ncol(observaciones)) {
-    res[i, ] <- calcValidationStatisticsEx(pronostico = pronosticos[,i], observacion = observaciones[,i], climatologia = climatologias[, i])
+    res[i, ] <- calcValidationStatisticsEx(
+      pronostico=pronosticos[,i], observacion=observaciones[,i], climatologia=climatologias[, i])
   }
   colnames(res) <- StatNames
   rownames(res) <- colnames(observaciones)

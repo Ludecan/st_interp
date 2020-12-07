@@ -225,7 +225,6 @@ calcValidationStatisticsMultipleModels <- function(
     validationStatsTemporales[[i]] <- calcValidationStatisticsTemporal(
       pronosticos = cvs[[i]], observaciones = valoresObservaciones, climatologias = climatologias)
   }
-  round(validationStatsOverall, 2)
   dir.create(pathResultados, showWarnings = F, recursive = T)
   write.table(x = validationStatsOverall, paste(pathResultados, 'validationStatsOverall.tsv'), 
               sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
@@ -233,4 +232,17 @@ calcValidationStatisticsMultipleModels <- function(
   return(list(validationStatsOverall=validationStatsOverall,
               validationStatsEspaciales=validationStatsEspaciales,
               validationStatsTemporales=validationStatsTemporales))
+}
+
+calcRainfallDetectionStatisticsMultipleModels <- function(
+    valoresObservaciones, cvs, thresholds, pathResultados='Resultados/4-Validacion/') {
+  rainfallDetectionStats <- t(sapply(
+    cvs, calcRainfallDetectionMultiThresholds, observacion=valoresObservaciones, 
+    thresholds=thresholds))
+  
+  dir.create(pathResultados, showWarnings = F, recursive = T)
+  write.table(x = rainfallDetectionStats, paste(pathResultados, 'rainfallDetectionStats.tsv'), 
+              sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
+  
+  return(rainfallDetectionStats)
 }
