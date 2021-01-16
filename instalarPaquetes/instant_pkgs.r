@@ -107,6 +107,7 @@ instant_pkgs_github <- function(reposgithub, pkgs=basename(reposgithub), minVers
       # write('IPG3', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
       # devtools tiene algún problema con la carga en los threads. Trato de limitar su carga lo más posible
       instant_pkgs('devtools')
+      library(devtools)
       # write('IPG4', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
       install_github(repo = reposgithub, quiet = FALSE)
       # write('IPG5', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)

@@ -66,7 +66,6 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
     p <- pronostico[i]
     o <- observacion[i]
     
-    #instant_pkgs('Metrics')
     #write.table(cbind(p, o), file = 'pruebaValidationStats.tsv', sep = '\t', dec = '.')
     # Auxiliares
     dif <- p - o

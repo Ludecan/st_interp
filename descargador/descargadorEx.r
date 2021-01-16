@@ -37,6 +37,14 @@ if (is.null(script.dir.descargadorEx)) { script.dir.descargadorEx <- ''
 source(paste0(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('RCurl', 'curl', 'parallel', 'digest', 'data.table', 'stringi', 'stringr', 'lubridate'))
+library(RCurl)
+library(curl)
+library(parallel)
+library(digest)
+library(data.table)
+library(stringi)
+library(stringr)
+library(lubridate)
 
 threadHandle <- getCurlHandle()
 

@@ -46,11 +46,50 @@ source(paste0(script.dir.interpolarEx, '../agregacion/agregacion.r'), encoding =
 source(paste0(script.dir.interpolarEx, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
 
 instant_pkgs(pkgs = c('unmarked', 'VGAM', 'cli', 'devtools'), silent = TRUE, doCargarPaquetes=FALSE)
-instant_pkgs(pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'Rcpp', 'raster', 
-                      'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 'rms',
-                      'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
-                      'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC'), 
-             silent = TRUE)
+instant_pkgs(
+  pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'Rcpp', 
+           'raster', 'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 
+           'rms', 'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
+           'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC'), 
+  silent = TRUE)
+library(unmarked)
+library(VGAM)
+library(cli)
+library(devtools)
+library(gridExtra)
+library(sp)
+library(digest)
+library(rgdal)
+library(parallel)
+library(doParallel)
+library(iterators)
+library(MASS)
+library(hash)
+library(Rcpp)
+library(raster)
+library(fields)
+library(xts)
+library(spacetime)
+library(lattice)
+library(numDeriv)
+library(Rmisc)
+library(nlme)
+library(glmnet)
+library(rms)
+library(leaps)
+library(AICcmodavg)
+library(zoo)
+library(FNN)
+library(gtools)
+library(gstat)
+library(automap)
+library(evd)
+library(htmltools)
+library(httr)
+library(stats)
+library(float)
+library(intamap)
+library(pROC)
 
 # instant_pkgs_github(reposgithub = 'Ludecan/intamap', minVersions = '1.4-4', silent = TRUE)
 # instant_pkgs_github(reposgithub = 'jskoien/intamap', minVersions = '1.4-6', silent = TRUE)

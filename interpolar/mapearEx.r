@@ -36,7 +36,19 @@ if (is.null(script.dir.mapearEx)) { script.dir.mapearEx <- ''
 
 source(paste0(script.dir.mapearEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.mapearEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c("sp", "RColorBrewer", "colorspace", "ggplot2", "rgeos", "maptools", "directlabels", "ggrepel", "Cairo", "mapproj"))
+instant_pkgs(
+  c("sp", "RColorBrewer", "colorspace", "ggplot2", "rgeos", "maptools", "directlabels", "ggrepel", 
+    "Cairo", "mapproj"))
+library(sp)
+library(RColorBrewer)
+library(colorspace)
+library(ggplot2)
+library(rgeos)
+library(maptools)
+library(directlabels)
+library(ggrepel)
+library(Cairo)
+library(mapproj)
 
 paletasInvertidas <- c('Spectral', 'RdBu', 'RdYlBu', 'RdYlGn')
 
