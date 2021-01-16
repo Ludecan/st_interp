@@ -64,7 +64,7 @@ if (!file.exists('C:/mch/ArchivosProcesosLocales/MascaraDeTierra/cuerposDeAguaUy
   }
   
   bbPoligono <- bbToSpatialPolygon(bb = bbGeneralExt, crsOBJ = coordsAInterpolar@proj4string)
-  bbPoligono <- spTransform(bbPoligono, crs(lc)))
+  bbPoligono <- spTransform(bbPoligono, crs(lc))
   
   lcRecortado <- crop(lc, bbPoligono)
   cuerposDeAgua <- sp::disaggregate(rasterToPolygons(lcRecortado, fun =  function(x) { x == 0 }, dissolve = T))

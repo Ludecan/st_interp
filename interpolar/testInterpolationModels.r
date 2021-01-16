@@ -55,9 +55,9 @@ testRegressors <- function(
   dir.create(pathResultados, showWarnings = FALSE, recursive = TRUE)
   serie <- unlist(c(valoresObservaciones))
   
-  res <- matrix(nrow=ncol(pathsRegresores), ncol = 7)
+  res <- matrix(nrow=ncol(pathsRegresores), ncol = 8)
   colnames(res) <- c(
-    'Pearson', 'Spearman', 'Adj. R^2', 'CantDatos', 'CoberturaMínima', 'CoberturaMedia', 
+    'Pearson', 'Spearman', 'Adj. R^2', 'RMSE', 'CantDatos', 'CoberturaMínima', 'CoberturaMedia', 
     'CoberturaMáxima')
   rownames(res) <- colnames(pathsRegresores)
   rainfallDetectionStats <- matrix(
@@ -95,7 +95,8 @@ testRegressors <- function(
       m <- lm(formula = 'y~x+1', data = data.frame(x=r, y=s))
       smry <- summary(m)
       res[i, 3] <- smry$adj.r.squared
-      res[i, 4] <- length(iNoNa)
+      res[i, 4] <- sqrt(mean((s - r) ^ 2))
+      res[i, 5] <- length(iNoNa)
       
       nNoNulosPorCuadrantes <- contarNoNulosPorCuadrantes(
         pathsGeoTiffs = pathsRegresores[, i, drop=F], shpMask=shpMaskNoNulos, nCoresAUsar = 0)
@@ -104,9 +105,9 @@ testRegressors <- function(
       # plot(nNoNulos)
       
       aux <- range(nNoNulos)
-      res[i, 5] <- aux[1] / nPixeles * 100
-      res[i, 6] <- mean(nNoNulos) / nPixeles * 100
-      res[i, 7] <- aux[2] / nPixeles * 100
+      res[i, 6] <- aux[1] / nPixeles * 100
+      res[i, 7] <- mean(nNoNulos) / nPixeles * 100
+      res[i, 8] <- aux[2] / nPixeles * 100
       
       arch <- paste(pathResultados, seriesName, '_vs_', colnames(pathsRegresores)[i], '.png', sep='')
       linePlot(

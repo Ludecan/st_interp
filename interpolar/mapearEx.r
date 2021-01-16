@@ -928,7 +928,7 @@ mapearGrillaGGPlot <- function(
   return(p)
 }
 
-mapearEx <- function(observaciones, grilla, shpMask=NULL, escalaObservaciones, escalaSD,
+mapearEx <- function(observaciones, grilla, shpMask=NULL, escalaObservaciones, escalaSD, continuo,
                      nomArchResultados, resXImagenes=640, resYImagenes=NULL, 
                      graficarObservaciones=T, graficarPrediccion=T, graficarVarianza=F, graficarSD=F, 
                      dibujarEscala=T, dibujarEjes=T) {
@@ -942,25 +942,28 @@ mapearEx <- function(observaciones, grilla, shpMask=NULL, escalaObservaciones, e
   } else { layoutSHP <- NULL }
   
   if (graficarObservaciones) {
-    mapearPuntosGGPlot(puntos=observaciones, shpBase = shpMask$shp, escala=escalaObservaciones, 
-                       nomArchResultados=changeFileExt(appendToFileName(nomArchResultados, postFijo='_Obs'), '.png'),
-                       xyLims=xyLims, dibujarEjes=dibujarEjes)
+    mapearPuntosGGPlot(
+      puntos=observaciones, shpBase = shpMask$shp, escala=escalaObservaciones, 
+      nomArchResultados=changeFileExt(appendToFileName(nomArchResultados, postFijo='_Obs'), '.png'),
+      xyLims=xyLims, dibujarEjes=dibujarEjes, continuo=continuo)
   }
 
   if (graficarPrediccion) {
     #shpBase=shpMask$shp
     #escala=escalaObservaciones
-    mapearGrillaGGPlot(grilla=grilla, shpBase=shpMask$shp, escala=escalaObservaciones,
-                       nomArchResultados=changeFileExt(appendToFileName(nomArchResultados, postFijo='_Pred'), '.png'),
-                       xyLims=xyLims, dibujarEscala=dibujarEscala, dibujarEjes=dibujarEjes)
+    mapearGrillaGGPlot(
+      grilla=grilla, shpBase=shpMask$shp, escala=escalaObservaciones,
+      nomArchResultados=changeFileExt(appendToFileName(nomArchResultados, postFijo='_Pred'), '.png'),
+      xyLims=xyLims, dibujarEscala=dibujarEscala, dibujarEjes=dibujarEjes, continuo=continuo)
   }
 
   if (graficarVarianza) {
     escalaVar <- escalaSD
     escalaVar$escala <- seq(0, escalaSD$escala[nrow(escalaSD)]^2, length.out=nrow(escalaSD))
-    mapearGrillaGGPlot(grilla=grilla, shpBase=shpMask$shp, escala=escalaVar,
-                       nomArchResultados=changeFileExt(appendToFileName(nomArchResultados, postFijo='_Var'), '.png'),
-                       xyLims=xyLims, dibujarEscala=dibujarEscala, dibujarEjes=dibujarEjes, zcol=2)
+    mapearGrillaGGPlot(
+      grilla=grilla, shpBase=shpMask$shp, escala=escalaVar,
+      nomArchResultados=changeFileExt(appendToFileName(nomArchResultados, postFijo='_Var'), '.png'),
+      xyLims=xyLims, dibujarEscala=dibujarEscala, dibujarEjes=dibujarEjes, zcol=2, continuo=continuo)
   }
   
   if (graficarSD) {
