@@ -234,10 +234,10 @@ calcAllValidationStatistics <- function(nombreModelo, pronosticos, observaciones
 saveAndPlotValidationStatistics <- function(validationStats, fechas, carpetaSalida='Resultados/Validacion/', 
                                             coordsObservaciones, shpBase=NULL) {
   crearDirectoriosSiNoExisten(carpetaSalida)
-  archivoStatsOverall <- paste(carpetaSalida, 'ValidationStats_', validationStats$nombreModelo, '.txt', sep='')
+  archivoStatsOverall <- paste0(carpetaSalida, 'ValidationStats_', validationStats$nombreModelo, '.txt')
   write.table(x = round(validationStats$statsOverall, 3), sep = '\t', file=archivoStatsOverall)  
   
-  archivoStatsTemporales <- paste(carpetaSalida, 'ValidationStatsTemporales_', validationStats$nombreModelo, '.png', sep='')
+  archivoStatsTemporales <- paste0(carpetaSalida, 'ValidationStatsTemporales_', validationStats$nombreModelo, '.png')
   
   png(archivoStatsTemporales, width=1920, height=1080)
   par(mfrow=c(4,3))
@@ -246,7 +246,7 @@ saveAndPlotValidationStatistics <- function(validationStats, fechas, carpetaSali
   par(mfrow=c(1,1))
   dev.off()
   
-  archivoStatsEspaciales <- paste(carpetaSalida, 'ValidationStatsEspaciales_', validationStats$nombreModelo, '.png', sep='')
+  archivoStatsEspaciales <- paste0(carpetaSalida, 'ValidationStatsEspaciales_', validationStats$nombreModelo, '.png')
   png(archivoStatsEspaciales, width=3940, height=2160)
   
   png(width=3940, height=2160)

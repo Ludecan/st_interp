@@ -29,7 +29,7 @@ evaluarConReintentos <- function(expr, maxNIntentos=5, segundosEntreIntentos=5) 
     result = tryCatch({
       eval.parent(expr)
     }, error = function(e) {
-      print(paste("MY_ERROR:  ", e))
+      print(paste0("MY_ERROR:  ", e))
       result <- list(error=e)
       class(result) <- 'try-error'
       return(result)

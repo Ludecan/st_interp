@@ -166,7 +166,7 @@ recolectarSalidasCDT <- function(carpetaSalidaCDT='F:/Tesis/CDT/QcTemp_DatosEsta
     idsEstaciones <- estaciones[,colIdEstaciones]
     pathsEstaciones <- pathsEstaciones[match(idsEstaciones, pathsEstaciones)]
   }
-  datos1 <- read.table(paste(carpetaSalidaCDT, '/', pathsEstaciones[1], '/', pathsEstaciones[1], '.txt', sep=''))
+  datos1 <- read.table(paste0(carpetaSalidaCDT, '/', pathsEstaciones[1], '/', pathsEstaciones[1], '.txt'))
   
   fechas <- strptime(datos1[,1], format = '%Y%m%d', tz = 'UTC')
   
@@ -177,7 +177,7 @@ recolectarSalidasCDT <- function(carpetaSalidaCDT='F:/Tesis/CDT/QcTemp_DatosEsta
   
   i <- 2
   for (i in seq.int(from = 2, to = length(pathsEstaciones), by = 1)) {
-    datosI <- read.table(paste(carpetaSalidaCDT, '/', pathsEstaciones[i], '/', pathsEstaciones[i], '.txt', sep=''))
+    datosI <- read.table(paste0(carpetaSalidaCDT, '/', pathsEstaciones[i], '/', pathsEstaciones[i], '.txt'))
     res[, i] <- datosI[, 2]
   }
   
