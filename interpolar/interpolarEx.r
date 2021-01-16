@@ -125,10 +125,10 @@ crearSpatialPointsDataFrame <- function(
   # observaciones <- data.frame(x=x, y=y, value=value)
   if (is.character(x) & is.character(y)) {
     observaciones <- value
-    coordinates(observaciones) <- c(x, y)
+    sp::coordinates(observaciones) <- c(x, y)
   } else {
     observaciones <- cbind(data.frame(x=x, y=y), value)
-    coordinates(observaciones) <- c('x', 'y')
+    sp::coordinates(observaciones) <- c('x', 'y')
   }
   
   if (!is.null(nombresFilas)) row.names(observaciones) <- nombresFilas
@@ -220,7 +220,7 @@ crearCoordsAInterpolar <- function(
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
   if (grid) { coordsAInterpolar <- expand.grid(x=xs, y=ys)
   } else { coordsAInterpolar <- data.frame(x=xs, y=ys) }
-  coordinates(coordsAInterpolar) <- c('x','y')
+  sp::coordinates(coordsAInterpolar) <- c('x','y')
   projAInterpolar <- sp::CRS(projargs=proj4string, SRS_string=SRS_string)
   proj4string(coordsAInterpolar) <- projAInterpolar
   gridded(coordsAInterpolar) <- grid
@@ -233,7 +233,7 @@ crearGrillaAuxiliar <- function(
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
   grilla <- expand.grid(x=xs, y=ys)
   grilla$gridValue <- gridValues
-  coordinates(grilla) <- c('x', 'y')
+  sp::coordinates(grilla) <- c('x', 'y')
   gridded(grilla) <- T
   proj4string(grilla) <- sp::CRS(projargs=proj4string, SRS_string=SRS_string)
   return (grilla)
@@ -256,10 +256,10 @@ crearGrillaRectilineaParaArea <- function(
     boundingBox <- spTransform(
       boundingBox, CRS(projargs=proj4stringGrillaSalida, SRS_stringCoordenadasArea))
     
-    xMin <- min(coordinates(boundingBox)[,1])
-    xMax <- max(coordinates(boundingBox)[,1])
-    yMin <- min(coordinates(boundingBox)[,2])
-    yMax <- max(coordinates(boundingBox)[,2])
+    xMin <- min(sp::coordinates(boundingBox)[,1])
+    xMax <- max(sp::coordinates(boundingBox)[,1])
+    yMin <- min(sp::coordinates(boundingBox)[,2])
+    yMax <- max(sp::coordinates(boundingBox)[,2])
   }
   
   xs <- seq(from=xMin, to=xMax, by = deltaX)
@@ -591,7 +591,7 @@ interpolarEx <- function(
       params$valoresRegresoresSobreObservaciones <- lapply(
         params$valoresRegresoresSobreObservaciones, function(x) return(x[, i, drop=F]))
     }
-    i <- !duplicated(coordinates(observaciones))
+    i <- !duplicated(sp::coordinates(observaciones))
     observaciones <- observaciones[i, ]
     valoresCampoBaseSobreObservaciones <- valoresCampoBaseSobreObservaciones[i]
     if (!is.null(params$valoresRegresoresSobreObservaciones)) {
@@ -605,7 +605,7 @@ interpolarEx <- function(
       params$valoresRegresoresSobreObservaciones <- lapply(
         params$valoresRegresoresSobreObservaciones, function(x) return(x[, i, drop=F]))
     }
-    i <- !duplicated(coordinates(observaciones))
+    i <- !duplicated(sp::coordinates(observaciones))
     observaciones <- observaciones[i,]
     if (!is.null(params$valoresRegresoresSobreObservaciones)) {
       params$valoresRegresoresSobreObservaciones <- lapply(
@@ -866,7 +866,7 @@ interpolarEx <- function(
       predictions <- data.frame(var1.pred=rep(NA_real_, times=nPredictionLocations), var1.var=rep(x=NA_real_, times=nPredictionLocations))
     }
     
-    coordinates(predictions) <- coordinates(coordsAInterpolar[shpMask$mask,])
+    sp::coordinates(predictions) <- sp::coordinates(coordsAInterpolar[shpMask$mask,])
     proj4string(predictions) <- proj4string(coordsAInterpolar)
     gridded(predictions) <- gridded(coordsAInterpolar[shpMask$mask,])
     class(predictions@data[, 1]) <- 'numeric'
@@ -1835,7 +1835,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
   if (!file.exists(pathCacheDatosCoordsAInterpolar) | (file.info(pathCacheDatosCoordsAInterpolar)$size <= 0)) {
     dfDatosCoordsAInterpolar <- list()
     
-    cInterp <- coordinates(coordsAInterpolar)
+    cInterp <- sp::coordinates(coordsAInterpolar)
     dfDatosCoordsAInterpolar$x <- cInterp[, 1]
     dfDatosCoordsAInterpolar$y <- cInterp[, 2]
     
@@ -1869,7 +1869,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
   if (!file.exists(pathCacheDatosCoordsObservaciones) | (file.info(pathCacheDatosCoordsObservaciones)$size <= 0)) {
     dfDatosCoordsObservaciones <- list()
     
-    cObs <- coordinates(coordsObservaciones)
+    cObs <- sp::coordinates(coordsObservaciones)
     dfDatosCoordsObservaciones$x <- cObs[, 1]
     dfDatosCoordsObservaciones$y <- cObs[, 2]
     
@@ -2177,8 +2177,8 @@ ajusteRegresores <- function(
           }  
         }
         
-        # plot(x=coordinates(coordsObservaciones)[,1], y=as.numeric(valoresObservaciones[ti, ]))
-        # plot(x=coordinates(coordsObservaciones)[,2], y=as.numeric(valoresObservaciones[ti, ]))
+        # plot(x=sp::coordinates(coordsObservaciones)[,1], y=as.numeric(valoresObservaciones[ti, ]))
+        # plot(x=sp::coordinates(coordsObservaciones)[,2], y=as.numeric(valoresObservaciones[ti, ]))
         # plot(x=valsRegresoresObservaciones[,1], y=valoresObservacionesTsVentana)
         # mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpMask$shp, continuo = T)
         
@@ -2332,7 +2332,7 @@ ajusteRegresores <- function(
                   res2 <- tryExpr(modelo2 <- rms::Gls(model = x, data = df, correlation = corSpher(form = formulaCorStruct, nugget = params$usarNugget), control = glsControl(maxIter = 1000)), silent = T)
                   if (res1) {
                     if (res2) {
-                      if (AICc(modelo1) < AICc(modelo2)) { return(modelo1)
+                      if (AICcmodavg::AICc(modelo1) < AICcmodavg::AICc(modelo2)) { return(modelo1)
                       } else { return(modelo2) }
                     } else { return(modelo1) }
                   } else if (res2) { return(modelo2)
@@ -2376,7 +2376,7 @@ ajusteRegresores <- function(
                 
               if (length(modelos) > 0) {
                 if (length(modelos) == 1) { iModelo <- 1
-                } else { iModelo <- which.min(lapply(modelos, FUN = AICc)) }
+                } else { iModelo <- which.min(lapply(modelos, FUN = AICcmodavg::AICc)) }
                 formulaModelo <- as.formula(formulas[[iModelo]])
                 modelo <- modelos[[iModelo]]
                 coeficientes <- coefficients(modelo)
@@ -2393,8 +2393,8 @@ ajusteRegresores <- function(
                 
                 if (metodoIgualacionDistribuciones == 7 && !incorporarCoordenadas) {
                   newdata <- data.frame(valsRegresoresObservaciones[iesVals, , drop=F],
-                                   x=coordinates(coordsObservaciones)[iesVals, 1],
-                                   y=coordinates(coordsObservaciones)[iesVals, 2])
+                                   x=sp::coordinates(coordsObservaciones)[iesVals, 1],
+                                   y=sp::coordinates(coordsObservaciones)[iesVals, 2])
                 } else {
                   newdata <- data.frame(valsRegresoresObservaciones[iesVals, , drop=F])
                 }
@@ -2404,8 +2404,8 @@ ajusteRegresores <- function(
                 if (!invertir) {
                   if (metodoIgualacionDistribuciones == 7 && !incorporarCoordenadas) {
                     newdata <- data.frame(valoresRegresoresSobreCoordsAInterpolar_ti,
-                                          x=coordinates(coordsAInterpolar)[, 1],
-                                          y=coordinates(coordsAInterpolar)[, 2])
+                                          x=sp::coordinates(coordsAInterpolar)[, 1],
+                                          y=sp::coordinates(coordsAInterpolar)[, 2])
                   } else {
                     newdata <- data.frame(valoresRegresoresSobreCoordsAInterpolar_ti)
                   } 
@@ -3273,8 +3273,8 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
             
       # Si hay al menos minNDatosDisponibles valores no nulos en toda el área disponible
       if (distanciaMaximaMuestras > 0) {
-        aux1 <- coordinates(sp)[iMuestras,]
-        aux2 <- coordinates(sp)[iAInterpolar,]
+        aux1 <- sp::coordinates(sp)[iMuestras,]
+        aux2 <- sp::coordinates(sp)[iAInterpolar,]
         
         distancia <- numeric(nrow(aux1))  
         nBloque <- trunc(2^31 / (nrow(aux2) * 8))
@@ -3323,17 +3323,17 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
         # Ejecuto el método y acumulo el promedio en aux
         if (iMetodo == 1) {
           # Tps
-          suppressWarnings(tps <- Tps(x = coordinates(sp)[ies, ], Y = sp@data[ies, zcol], lon.lat = !is.projected(sp), miles=FALSE))
-          aux <- aux + predict(tps, x=coordinates(sp)[iAInterpolar,]) * invNRepeticiones
+          suppressWarnings(tps <- Tps(x = sp::coordinates(sp)[ies, ], Y = sp@data[ies, zcol], lon.lat = !is.projected(sp), miles=FALSE))
+          aux <- aux + predict(tps, x=sp::coordinates(sp)[iAInterpolar,]) * invNRepeticiones
         } else if (iMetodo == 2) {
           # fastTps
-          suppressWarnings(ftps <- fastTps(x=coordinates(sp)[ies,], Y = sp@data[iMuestras, zcol], lon.lat = !is.projected(sp), theta = 10000, lambda = 0.2))
-          aux <- aux + predict.fastTps(object = ftps, xnew = coordinates(sp)[iAInterpolar,]) * invNRepeticiones
+          suppressWarnings(ftps <- fastTps(x=sp::coordinates(sp)[ies,], Y = sp@data[iMuestras, zcol], lon.lat = !is.projected(sp), theta = 10000, lambda = 0.2))
+          aux <- aux + predict.fastTps(object = ftps, xnew = sp::coordinates(sp)[iAInterpolar,]) * invNRepeticiones
         } else if (iMetodo == 3) {
           # loess
-          data <- data.frame(x=coordinates(sp)[iMuestras, 1], y=coordinates(sp)[ies, 2], z=sp@data[iMuestras, zcol])
+          data <- data.frame(x=sp::coordinates(sp)[iMuestras, 1], y=sp::coordinates(sp)[ies, 2], z=sp@data[iMuestras, zcol])
           data.loess = loess(z ~ x * y, data=data)
-          data.fit = data.frame(x=coordinates(sp)[iAInterpolar, 1], y=coordinates(sp)[iAInterpolar, 2])
+          data.fit = data.frame(x=sp::coordinates(sp)[iAInterpolar, 1], y=sp::coordinates(sp)[iAInterpolar, 2])
           aux <- aux + predict(data.loess, newdata =data.fit) * invNRepeticiones
         } else if (iMetodo %in% c(4, 5)) {
           # idw, automap
@@ -3457,7 +3457,7 @@ reducirSpatialPointsDataFrame <- function(coordsObservaciones, radioReduccionSer
   if (is.null(iesACombinar)) { iesACombinar <- getIEsACombinarReduccionSeries(coordsObservaciones = coordsObservaciones, radioReduccionSeriesKm = radioReduccionSeriesKm) }
   if (length(iesACombinar) > 0) {
     rowNames <- row.names(coordsObservaciones)
-    coords <- coordinates(coordsObservaciones)
+    coords <- sp::coordinates(coordsObservaciones)
     
     rowNamesReducidos <- sapply(iesACombinar, FUN = function(x) {return(paste0(row.names(coordsObservaciones)[x], sep=',', collapse = ','))})
     coordsReducidas <- t(sapply(iesACombinar, FUN = function(x) { apply(coords[x, , drop=F], MARGIN = 2, FUN = naSiTodosNAFuncSiNo,

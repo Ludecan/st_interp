@@ -170,7 +170,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
   # mapearPuntosConEtiquetasGGPlot(puntos = coordsObservacionesVecinos, shpBase = shpBase, dibujar = F, zcol='Nombre')
   
   if (length(coordsObservacionesVecinos) >= 4 && var(coordsObservacionesVecinos$value) > 1E-6) {
-    coords <- coordinates(coordsObservacionesVecinos)
+    coords <- sp::coordinates(coordsObservacionesVecinos)
     
     if (F) {
       rX <- range(coords[,1])
@@ -203,7 +203,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
     invM <- -mPerpendicular
     
     # grilla <- grillaSobreBoundingBox(shpBase)
-    # grilla <- SpatialGridDataFrame(grilla, data=data.frame(value=predict(modelo, newdata=data.frame(x=(coordinates(grilla)[,1] - rX[1]) / maxD, y=(coordinates(grilla)[,2] - rY[1]) / maxD))))
+    # grilla <- SpatialGridDataFrame(grilla, data=data.frame(value=predict(modelo, newdata=data.frame(x=(sp::coordinates(grilla)[,1] - rX[1]) / maxD, y=(sp::coordinates(grilla)[,2] - rY[1]) / maxD))))
     # mapearGrillaGGPlot(grilla, shpBase, continuo = T, dibujar = F)
     
     # Sea r la recta definida por y = m * x + n y P el punto (x1, y1)
@@ -280,7 +280,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       shpBase <- spTransform(shpBase, coordsObservaciones@proj4string)
       xyLims <- getXYLims(c(coordsObservaciones, shpBase), ejesXYLatLong = F)
       grilla <- grillaSobreBoundingBox(shpBase)
-      grilla <- SpatialGridDataFrame(grilla, data=data.frame(value=predict(modelo, newdata=data.frame(x=coordinates(grilla)[,1], y=coordinates(grilla)[,2]))))
+      grilla <- SpatialGridDataFrame(grilla, data=data.frame(value=predict(modelo, newdata=data.frame(x=sp::coordinates(grilla)[,1], y=sp::coordinates(grilla)[,2]))))
       
       caja <- bbox(grilla)
       medioCoords <- rowMeans(caja)
@@ -315,7 +315,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       
       # x = (x1/m + y1 - c) / (m + 1/m)
       # Ubicaciones potenciales, proyección sobre perpendicular
-      coordsOrig <- coordinates(coordsObservacionesVecinos)
+      coordsOrig <- sp::coordinates(coordsObservacionesVecinos)
       xsAux <- as.numeric((coordsOrig[, 1] * invM + coordsOrig[, 2] - intercept) / (m + invM))
       ysAux <- xsAux * m + intercept
       
@@ -347,7 +347,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
     }  
     # row.names(coordsObservaciones)[iPuntoATestear]
     
-    coordsI <- as.numeric(coordinates(coordsObservaciones)[iPuntoATestear, ])
+    coordsI <- as.numeric(sp::coordinates(coordsObservaciones)[iPuntoATestear, ])
     coordsI[1] <- (coordsI[1] - rX[1]) / maxD
     coordsI[2] <- (coordsI[2] - rY[1]) / maxD
     
@@ -470,7 +470,7 @@ mapearResultadosDeteccionOutliers <- function(test, carpetaSalida=NULL, coordsOb
     if (length(iOutliers) > 1) {
       # Si hay más de un outlier los ordeno por latitud, longitud
       iEstaciones <- match(test$estacion[iOutliers], row.names(coordsObservaciones))
-      coordsIEstaciones <- coordinates(coordsObservaciones)[iEstaciones,, drop=F]
+      coordsIEstaciones <- sp::coordinates(coordsObservaciones)[iEstaciones,, drop=F]
       
       orden <- order(coordsIEstaciones[,2], coordsIEstaciones[,1], decreasing = c(TRUE, FALSE))
       iOutliers <- iOutliers[orden]
@@ -554,7 +554,7 @@ mapearResultadosDeteccionOutliersV2 <- function(
         if (length(iOutliers) > 1) {
           # Si hay más de un outlier los ordeno por latitud, longitud
           iEstaciones <- match(test$estacion[iOutliers], row.names(coordsObservaciones))
-          coordsIEstaciones <- coordinates(coordsObservaciones)[iEstaciones,, drop=F]
+          coordsIEstaciones <- sp::coordinates(coordsObservaciones)[iEstaciones,, drop=F]
           
           orden <- order(coordsIEstaciones[,2], coordsIEstaciones[,1], decreasing = c(TRUE, FALSE))
           iOutliers <- iOutliers[orden]
@@ -1167,7 +1167,7 @@ testEspacialPrecipitacionIV2 <- function(
     valoresVecinos <- valoresObservaciones[, iesVecinosI, drop=F]
     iNoNAsVecinos <- iNoNAs[, iesVecinosI, drop=F]
     
-    cuadrantesVecinos <- getICuadrantes(iPunto = i, iesVecinosI=iesVecinosI, coords = coordinates(coordsObservaciones))
+    cuadrantesVecinos <- getICuadrantes(iPunto = i, iesVecinosI=iesVecinosI, coords = sp::coordinates(coordsObservaciones))
     nVecinosPorCuadrante <- matrix(data = 0L, nrow = nrow(valoresObservaciones), ncol = 4)
     for (iFechaAux in 1:nrow(valoresObservaciones)) {
       cuadrantesVecinosI <- cuadrantesVecinos[iNoNAsVecinos[iFechaAux,]]
@@ -1177,7 +1177,7 @@ testEspacialPrecipitacionIV2 <- function(
     iFechasConVecinosSuficientes <- rowSums(nVecinosPorCuadrante >= minNVecinosPorCuadrante) >= minNCuadrantes
     #iFechasConVecinosSuficientes <- rowMins(nVecinosPorCuadrante) >= minNVecinosPorCuadrante
     
-    coords <- coordinates(coordsObservaciones)[c(i, iesVecinosI),]
+    coords <- sp::coordinates(coordsObservaciones)[c(i, iesVecinosI),]
     distsVecinos <- spDistsN1(pts = coords[2:nrow(coords), ,drop=F], pt = coords[1, ,drop=F])
     
     estimado <- simpleInvDistanceWeighting(data=valoresVecinos, dists=distsVecinos, iNoNA = iNoNAsVecinos)

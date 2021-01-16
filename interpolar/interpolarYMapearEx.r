@@ -212,7 +212,7 @@ interpolarYMapearI <- function(
     paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
     espEscalaAdaptada=NULL) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
-  # iTi <- 1187
+  # iTi <- 1
   # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-03')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))

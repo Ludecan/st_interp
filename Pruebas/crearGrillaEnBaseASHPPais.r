@@ -25,19 +25,19 @@
 require(rgdal)
 mod11a1 <- readGDAL('//192.168.1.223/mch/datosEnGrilla/fdg/MOD11A1/MOD11A1_LST_Day/MOD11A1_2011-12-25.LST_Day_1km.tif')
 # nX
-length(unique(coordinates(mod11a1)[,1]))
+length(unique(sp::coordinates(mod11a1)[,1]))
 # nY
-length(unique(coordinates(mod11a1)[,2]))
-length(unique(coordinates(mod11a1)[,1]))*length(unique(coordinates(mod11a1)[,2]))
+length(unique(sp::coordinates(mod11a1)[,2]))
+length(unique(sp::coordinates(mod11a1)[,1]))*length(unique(coordinates(mod11a1)[,2]))
 bbox(mod11a1)
 
 grillaUy <- readGDAL('//192.168.1.223/mch/ReportesWeb/Mapas/TempAire/2016_03_18_18_00_00_TempAire_Automaticas_Horaria.tif')
 
 # nX
-length(unique(coordinates(grillaUy)[,1]))
+length(unique(sp::coordinates(grillaUy)[,1]))
 # nY
-length(unique(coordinates(grillaUy)[,2]))
-length(unique(coordinates(grillaUy)[,1]))*length(unique(coordinates(grillaUy)[,2]))
+length(unique(sp::coordinates(grillaUy)[,2]))
+length(unique(sp::coordinates(grillaUy)[,1]))*length(unique(coordinates(grillaUy)[,2]))
 
 source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/interpolarEx.r', encoding = 'WINDOWS-1252')
 source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/mapearEx.r', encoding = 'WINDOWS-1252')

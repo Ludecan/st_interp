@@ -197,7 +197,10 @@ getBoundariesPVariogramaEmpiricoV4 <- function(fml, observaciones, minDivDist=5,
   # the best empirical variogram is the one with the least squared error around a linear variogram fit to the variogram cloud and with no nugget
   # this way the "ideal" variogram honors the actual observation as much as it can, is monotonically growing and is given by the data
   require(gstat)
-  if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(unique(coordinates(observaciones)))) }
+  if (proporcionDeLaDiagonalValida <= 0) { 
+    proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(
+      nrow(unique(sp::coordinates(observaciones)))) 
+  }
   
   if (is.na(cutoff)) {
     longlat <- !is.projected(observaciones)
@@ -250,7 +253,10 @@ getBoundariesPVariogramaEmpiricoV5 <- function(fml, observaciones, minNIntervalo
   # this way the "ideal" variogram honors the actual observation as much as it can, is monotonically growing and is given by the data
   require(gstat)
   if (is.na(cutoff)) {
-    if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(unique(coordinates(observaciones)))) }
+    if (proporcionDeLaDiagonalValida <= 0) { 
+      proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(
+        nrow(unique(sp::coordinates(observaciones)))) 
+    }
     longlat <- !is.projected(observaciones)
     if(is.na(longlat)) longlat <- FALSE
     cutoff <- max(spDists(observaciones, longlat=longlat)) * proporcionDeLaDiagonalValida # times the length of the central axis through the area
@@ -309,7 +315,10 @@ getBoundariesPVariogramaEmpiricoV6 <- function(fml, observaciones, minNIntervalo
   # this way the "ideal" variogram honors the actual observation as much as it can, is monotonically growing and is given by the data  
   require(gstat)
   if (is.na(cutoff)) {
-    if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(unique(coordinates(observaciones)))) }
+    if (proporcionDeLaDiagonalValida <= 0) { 
+      proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(
+        nrow(unique(sp::coordinates(observaciones)))) 
+    }
     longlat <- !is.projected(observaciones)
     if (is.na(longlat)) longlat <- FALSE
     cutoff <- max(spDists(observaciones, longlat=longlat)) * proporcionDeLaDiagonalValida
@@ -410,7 +419,10 @@ getBoundariesPVariogramaEmpiricoV8 <- function(fml, observaciones, minNIntervalo
   require(gstat)
   require(zoo)
   if (is.na(cutoff) || is.infinite(cutoff)) {
-    if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(unique(coordinates(observaciones)))) }
+    if (proporcionDeLaDiagonalValida <= 0) { 
+      proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(
+        nrow(unique(sp::coordinates(observaciones)))) 
+    }
     longlat <- !is.projected(observaciones)
     if (is.na(longlat)) longlat <- FALSE
     cutoff <- max(spDists(observaciones, longlat=longlat)) * proporcionDeLaDiagonalValida

@@ -636,7 +636,7 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
   # TO-DO: Revisar esto. Puede ser mejor usar un color distinto para los puntos sin datos
   # puntos <- puntos[!is.na(puntos@data[,zcol]), ]
 
-  coords <- coordinates(puntos)[iNoNA, , drop=F]
+  coords <- sp::coordinates(puntos)[iNoNA, , drop=F]
   value <- puntos@data[iNoNA, zcol]
   if (is.double(value) && !is.POSIXt(value)) { value <- round(x=value, nDigitos) }
   
@@ -719,7 +719,7 @@ mapearPuntosGGPlot <- function(
     if (!continuo) { v <- cut(v, breaks=c(escala$escala[1:ultimoI], valMax), right=FALSE, include.lowest=!is.infinite(valMax), dig.lab=15, ordered_result=T) }
   }
 
-  coords <- coordinates(puntos)[iNoNA, , drop=F]
+  coords <- sp::coordinates(puntos)[iNoNA, , drop=F]
   if (length(tamaniosPuntos) > 1) { tamaniosPuntos <- tamaniosPuntos[iNoNA] 
   } else { tamaniosPuntos <- rep(tamaniosPuntos, nrow(coords)) }
   df <- data.frame(x=as.numeric(coords[,1]), y=as.numeric(coords[,2]), value = v,
@@ -842,7 +842,7 @@ mapearGrillaGGPlot <- function(
     if (!continuo) { v <- cut(v, breaks=c(escala$escala[1:ultimoI], valMax), right=FALSE, include.lowest=!is.infinite(valMax), dig.lab=15, ordered_result=T) }
   }
   
-  coords <- coordinates(grilla)[iNoNa, , drop=F]
+  coords <- sp::coordinates(grilla)[iNoNa, , drop=F]
   df <- data.frame(x=coords[, 1], y=coords[, 2], value=v)
   if (is.projected(grilla)) { 
     ratio <- 1
@@ -915,7 +915,7 @@ mapearGrillaGGPlot <- function(
       #iMuestras <- order(coordsObsSobreShpBase$value, decreasing = TRUE)[1:10]
       coordsObsSobreShpBase <- coordsObsSobreShpBase[iMuestras,]
     }
-    coordsPuntos <- coordinates(coordsObsSobreShpBase)
+    coordsPuntos <- sp::coordinates(coordsObsSobreShpBase)
     if (is.numeric(coordsObsSobreShpBase@data[, zColObs])) {
       dfPuntos <- data.frame(x=coordsPuntos[, 1], y=coordsPuntos[, 2], value=round(coordsObsSobreShpBase@data[, zColObs], 1))
     } else {

@@ -91,7 +91,7 @@ leerDefinicionGrilla <- function(archivoDefinicion) {
   ejeY <- as.double(unlist(strsplit(tokens[3,2], ",")))
   
   grilla <- expand.grid(x=ejeX, y=ejeY)
-  coordinates(grilla) <- c('x', 'y')
+  sp::coordinates(grilla) <- c('x', 'y')
   if (tokens[1,2] != "")
     proj4string(grilla) <- tokens[1,2]
   gridded(grilla) <- T
@@ -137,7 +137,7 @@ leerGrillaBin <- function(archiBin, naValue=NULL) {
   
   gr <- expand.grid(x=x, y=y)
   result <- data.frame(x=gr$x, y=gr$y, values=values)
-  coordinates(result) <- c('x', 'y')
+  sp::coordinates(result) <- c('x', 'y')
   proj4string(result) <- proj4stringGrilla
   gridded(result) <- T
   
@@ -161,7 +161,7 @@ leerDatosGrillaBin <- function(archiBin, naValue=NULL) {
 guardarGrillaBin <- function(archiBin, grilla, naValue=NULL) {
   binFile <- file(archiBin, open="wb")
   
-  coords <- coordinates(grilla)
+  coords <- sp::coordinates(grilla)
   x <- unique(coords[,1])
   y <- unique(coords[,2])
 

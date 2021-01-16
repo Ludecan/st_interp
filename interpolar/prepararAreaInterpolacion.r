@@ -28,8 +28,8 @@ function(params, proyeccionEntrada, proyeccionSalida, shpPais) {
       xRange <- shpPais@bbox[1,]
       yRange <- shpPais@bbox[2,]
     } else {
-      xRange <- range(coordinates(observaciones)[,1])
-      yRange <- range(coordinates(observaciones)[,2])
+      xRange <- range(sp::coordinates(observaciones)[,1])
+      yRange <- range(sp::coordinates(observaciones)[,2])
     }
     
     params$xMin <- xRange[1]
@@ -58,7 +58,7 @@ function(params, proyeccionEntrada, proyeccionSalida, shpPais) {
     esquinas <- matrix(data=c(esquinas), ncol=2, byrow=T)
     esquinas <- data.frame(esquinas)
     
-    coordinates(esquinas) <- c('X1', 'X2')
+    sp::coordinates(esquinas) <- c('X1', 'X2')
     proj4string(esquinas) <- proyeccionEntrada
     
     esquinas <- spTransform(esquinas, CRSobj=proyeccionSalida)

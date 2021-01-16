@@ -122,7 +122,7 @@ getHsYVsBoundingBox <- function(
   #esquinas <- spTransform(esquinas, shpGrillaMODISSinusoidalV5@proj4string)
   #over(esquinas, shpGrillaMODISSinusoidalV5)
   
-  HyV <- xy2MODISTile(coordinates(esquinas)[1,1], coordinates(esquinas)[1,2])
+  HyV <- xy2MODISTile(sp::coordinates(esquinas)[1,1], sp::coordinates(esquinas)[1,2])
   minH <- HyV$h
   maxH <- minH
   minV <- HyV$v
@@ -301,7 +301,7 @@ getMODISEx <- function(
       campo@data[iNoNA, 1] <- campo@data[iNoNA, 1] * escala + offset
       
       if (utmSur) {
-        coords <- coordinates(campo)
+        coords <- sp::coordinates(campo)
         coords[,2] <- coords[,2] + 1E7
         centroides <- SpatialPoints(
           coords, proj4string=CRS(projargs=proj4stringResultados, SRS_string=SRS_stringResultados))

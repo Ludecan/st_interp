@@ -539,11 +539,11 @@ afvmod = function(formula, input_data, model = c("Sph", "Exp", "Gau", "Ste"),
 getBoundariesPVariogramaEmpiricoV4_MultiTime <- function(formula, input_data, input_data_t, cutoff=NA) {
   nFechas <- nrow(input_data_t[[1]])
   
-  spatialData <- do.call("rbind", rep(list(coordinates(input_data)), nFechas))
+  spatialData <- do.call("rbind", rep(list(sp::coordinates(input_data)), nFechas))
   spatialData <- data.frame(x=spatialData[,1], y=spatialData[,2])
   spatialData <- do.call("cbind", args = c(list(spatialData), lapply(input_data_t, function(x) { as.vector(t(x))})))
   spatialData <- na.omit(spatialData)
-  coordinates(spatialData) <- c('x', 'y')
+  sp::coordinates(spatialData) <- c('x', 'y')
   proj4string(spatialData) <- proj4string(input_data)
   # anis <- estimateAnisotropy(spatialData, depVar = 'value')
   boundaries <- getBoundariesPVariogramaEmpiricoV4(fml = formula, observaciones = spatialData, proporcionDeLaDiagonalValida = 1, minDivDist = 6, cutoff=cutoff)

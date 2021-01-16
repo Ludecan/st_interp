@@ -398,17 +398,17 @@ lala <- function() {
   
   estacionesINUMET <- spTransform(estacionesINUMET, twisre3_uy@proj4string)
   iNA <- which(is.na(twisre3_uy@data[shpMask$mask, ]))
-  coordsNA <- SpatialPoints(coordinates(aux2)[iNA,], proj4string = twisre3_uy@proj4string)
+  coordsNA <- SpatialPoints(sp::coordinates(aux2)[iNA,], proj4string = twisre3_uy@proj4string)
   
   twisre3_uy <- rellenarSP(sp = twisre3_uy, mascara = shpMask$mask, metodo='idw', zcol=1)
   mapearGrillaGGPlot(twisre3_uy, shpMask$shp, nomArchResultados = paste(pathDatos, 'TWISRE3/twisre3_uy.png', sep=''), continuo = T)
   
   if (FALSE) {
     iEstacionesNA <- which(is.na(over(estacionesINUMET, twisre3_uy)))
-    coordsEstacionesNA <- coordinates(estacionesINUMET)[iEstacionesNA, , drop=F]
+    coordsEstacionesNA <- sp::coordinates(estacionesINUMET)[iEstacionesNA, , drop=F]
     coordsEstacionesNA <- SpatialPoints(
       coords = coordsEstacionesNA, proj4string = estacionesINUMET@proj4string)
-    aux3 <- SpatialPoints(coords = coordinates(twisre3_uy), proj4string = aux2@proj4string)
+    aux3 <- SpatialPoints(coords = sp::coordinates(twisre3_uy), proj4string = aux2@proj4string)
     dist <- gDistance(coordsEstacionesNA, aux3, byid = T)
     i <- order(dist)
     twisre3_uy@data[over(coordsEstacionesNA, geometry(twisre3_uy)), 1] <- twisre3_uy@data[which.min(i), 1]
@@ -429,7 +429,7 @@ lala <- function() {
   coordsAInterpolarLatLong <- spTransform(
     coordsAInterpolar, CRSobj = CRS(projargs = proj4StringLatLong, SRS_string = wktLatLong))
   
-  lat <- coordinates(coordsAInterpolarLatLong)[, 2] * pi / 180
+  lat <- sp::coordinates(coordsAInterpolarLatLong)[, 2] * pi / 180
   range(cos(lat * pi / 180))
   
   minT <- 1000
@@ -903,7 +903,7 @@ filtrarRasters <- function(pathsRasters, minVal=NA, maxVal=NA, carpetaSalida='fi
 crearDFLeonardo <- function() {
   estacs <- spTransform(
     estaciones, CRS(projargs = "+proj=longlat +datum=WGS84", SRS_string = "EPSG:4326"))
-  coords <- coordinates(estacs)
+  coords <- sp::coordinates(estacs)
   
   # nro estacion | lon | lat | altura | año | mes | día | modis 1 | modis 2 |  temperaturas registradas ese día|
   iEstac <- integer()
@@ -981,13 +981,13 @@ rellenarRegresores <- function(pathsRegresores, carpetasSalida=paste(apply(X = p
 
 coarsenGridEx <- function(object, coarse = 2, offset = sample(c(0:(coarse - 1)), 2, replace = TRUE)) {
   objCor = as(object, "SpatialPoints")
-  xss = unique(coordinates(objCor)[, 1])
-  yss = unique(coordinates(objCor)[, 2])
+  xss = unique(sp::coordinates(objCor)[, 1])
+  yss = unique(sp::coordinates(objCor)[, 2])
   xi = c(1:(length(xss)/coarse))
   xs = sort(xss)[(xi - 1) * coarse + offset[1] + 1]
   yi = c(1:(length(yss)/coarse))
   ys = sort(yss)[(yi - 1) * coarse + offset[2] + 1]
-  sel = coordinates(objCor)[, 1] %in% xs & coordinates(objCor)[, 2] %in% ys
+  sel = sp::coordinates(objCor)[, 1] %in% xs & coordinates(objCor)[, 2] %in% ys
   newPoints = objCor[sel, ]
   if ("data" %in% names(getSlots(class(object)))) 
     newPoints = SpatialPointsDataFrame(newPoints, data = object@data[sel, , drop=F])
@@ -1193,7 +1193,7 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
     png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_Mapas.png', width = 1920, height = 1017, type='cairo')
     tryCatch(expr = print(multiplot(plotlist = list(g1, g2), cols=2)), finally = dev.off())
 
-    auxSP <- SpatialPoints(coords = coordinates(sp)[muestras,], proj4string = sp@proj4string) 
+    auxSP <- SpatialPoints(coords = sp::coordinates(sp)[muestras,], proj4string = sp@proj4string) 
     auxSP <- SpatialPointsDataFrame(coords = auxSP, data = data.frame(value=over(auxSP, sp))) 
     
     i1 <- over(cuadrantes, sp, returnList = T)
@@ -2161,7 +2161,7 @@ seleccionarMejorRegresorPorFechasI <- function(i, fechasObservaciones, valoresOb
       }
       
       regVals <- over(geometry(auxSP), reg)[1]
-      xMat <- cbind(regVals, coordinates(auxSP))
+      xMat <- cbind(regVals, sp::coordinates(auxSP))
       
       iNoNAsReg <- complete.cases(xMat)
       df <- na.omit(data.frame(y = valoresObservaciones[i, ], xMat))
@@ -2263,7 +2263,7 @@ convertirUnidadCoordenadasSpatialGrid <- function(spGrid, objSPProjDestino) {
     }
   }
   
-  coordinates(spGrid) <- coordinates(spGrid) / 1000
+  sp::coordinates(spGrid) <- sp::coordinates(spGrid) / 1000
 }
 
 SpatialGridDataFrameEnMtoSpatialGridDataFrameEnKm <- function(grillaM) {

@@ -576,14 +576,14 @@ agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, 
     }
     
     if (interpolarFaltantes != 'No' && any(iNA & mascara)) {
-      spCoords <- SpatialPoints(coordinates(res), proj4string = res@proj4string)
+      spCoords <- SpatialPoints(sp::coordinates(res), proj4string = res@proj4string)
       spRes <- SpatialPixelsDataFrame(points = spCoords, data = data.frame(value=getValues(res)))
       paramsRellenarSP <- createParamsInterpolarYMapear(coordsAInterpolarSonGrilla = gridded(spRes), interpolationMethod = interpolarFaltantes,
                                                         nmax=20, inverseDistancePower = 2)
       spRes <- as(rellenarSP(sp = spRes, mascara = mascara, metodo = 'idw', nMuestras = sum(!iNA), nRepeticiones = 1, 
                              zcol = 1, nCuadrantesX = 1, nCuadrantesY = 1, nCuadrantesZ = 1, params=paramsRellenarSP), 'SpatialGridDataFrame')
     } else {
-      spCoords <- SpatialPoints(coordinates(res), proj4string = res@proj4string)
+      spCoords <- SpatialPoints(sp::coordinates(res), proj4string = res@proj4string)
       spRes <- as(SpatialPixelsDataFrame(points = spCoords, data = data.frame(value=getValues(res))), 'SpatialGridDataFrame')
     }
     spRes@data[!mascara,] <- NA

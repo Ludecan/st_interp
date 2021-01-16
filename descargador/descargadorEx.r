@@ -472,14 +472,13 @@ chunks_by_size <- function(x, n) {
 }
 
 descargarArchivos <- function(
-    urls, nombresArchivosDestino=paste0(pathSalida, basename(urls)), 
-    nConexionesSimultaneas=4, forzarReDescarga=FALSE, curlOpts=NULL, 
-    pathSalida='', do_unzip=isCompressed(nombresArchivosDestino)) {
+    urls, nombresArchivosDestino=paste0(pathSalida, basename(urls)), nConexionesSimultaneas=4, 
+    forzarReDescarga=FALSE, curlOpts=NULL, pathSalida='',
+    do_unzip=isCompressed(nombresArchivosDestino)) {
   # Retorna:
   # 0 si no se pudo bajar el archivo
   # 1 si se bajo un archivo nuevo
   # 2 si el archivo ya existía
-  
   useCurl <- !is.null(curlOpts) && 'use_ssl' %in% names(curlOpts)
   
   if (length(urls) > 0) {

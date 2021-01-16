@@ -71,8 +71,8 @@ parsePDef <- function(PDef, formaTierra=formaDeLaTierra) {
     puntoRef <- spTransform(puntoRef, proj4string)
     proj4string <- paste0('+proj=lcc +lat_1=', STrueLat, ' +lat_2=', NTrueLat, 
                          ' +lat_0=', latRef, ' ', ' +lon_0=', sLon, ' ', formaTierra, 
-                         ' +x_0=', -coordinates(puntoRef)[1,1], 
-                         ' +y_0=', -coordinates(puntoRef)[1,2], ' +no_defs')
+                         ' +x_0=', -sp::coordinates(puntoRef)[1,1], 
+                         ' +y_0=', -sp::coordinates(puntoRef)[1,2], ' +no_defs')
     
     return (list(tipoProyeccion=tipoProyeccion, iSize=iSize, jSize=jSize, latRef=latRef, lonRef=lonRef, 
                  iRef=iRef, jRef=jRef, STrueLat=STrueLat, NTrueLat=NTrueLat, sLon=sLon, dx=dx, dy=dy, 
@@ -273,7 +273,7 @@ getGrillaNativa <- function(ctl) {
     if (ctl$pDef$tipoProyeccion %in% c('lcc', 'lccr')) {
       #coords <- expand.grid(x=seq(from = 0, by = ctl$pDef$dx, length.out = ctl$pDef$iSize), 
       #                      y=seq(from = 0, by = ctl$pDef$dy, length.out = ctl$pDef$jSize))
-      #coordinates(coords) <- c('x', 'y')
+      #sp::coordinates(coords) <- c('x', 'y')
       #grilla <- points2grid(coords)
       
       grilla <- GridTopology(cellcentre.offset = c(ctl$pDef$dx * (-ctl$pDef$iRef + 1), 
@@ -293,7 +293,7 @@ getGrillaNativa <- function(ctl) {
 
 getGrillaRectilineaLatLong <- function(ctl, formaTierra=formaDeLaTierra) {
   coords <- expand.grid(lon=ctl$xdef$vals, lat=ctl$ydef$vals)
-  coordinates(coords) <- c('lon', 'lat')
+  sp::coordinates(coords) <- c('lon', 'lat')
   grilla <- points2grid(coords)
   # proj4string <- CRS('+proj=longlat +ellps=WGS84 +no_defs')
   # WRF no usa el datum  WGS84 sino que usa un datum esférico
@@ -313,12 +313,12 @@ sampleSP <- function(origSP_DF, newSP_DF, samplingMethod = c('NearestNeighbor', 
   # newSP_DF <- SpatialGridDataFrame(grid = newSP_DF, data = data.frame(value=rep(NA_real_, length(newSP_DF))))
   if (!is(object = origSP_DF, class2 = 'SpatialPointsDataFrame')) {
     puntosOrigSP <- SpatialPointsDataFrame(
-      coordinates(origSP_DF), data = origSP_DF@data, proj4string = origSP_DF@proj4string)
+      sp::coordinates(origSP_DF), data = origSP_DF@data, proj4string = origSP_DF@proj4string)
   } else { puntosOrigSP <- origSP_DF }
   
   if (!is(object = newSP_DF, class2 = 'SpatialPointsDataFrame')) {
     samplePoints <- SpatialPointsDataFrame(
-      coordinates(newSP_DF), data = data.frame(value=rep(NA_real_, length(newSP_DF))), 
+      sp::coordinates(newSP_DF), data = data.frame(value=rep(NA_real_, length(newSP_DF))), 
       proj4string = newSP_DF@proj4string)
   } else { samplePoints <- newSP_DF }
   
@@ -329,15 +329,15 @@ sampleSP <- function(origSP_DF, newSP_DF, samplingMethod = c('NearestNeighbor', 
   
   #samplingMethod <- 'Bicubic'
   if (samplingMethod[1] == 'NearestNeighbor') {
-    idxs <- nn2(data = coordinates(puntosOrigSP), query = coordinates(samplePoints), k = 1)
+    idxs <- nn2(data = sp::coordinates(puntosOrigSP), query = sp::coordinates(samplePoints), k = 1)
     newSP_DF@data[,zcolNewSP] <- puntosOrigSP@data[idxs$nn.idx, zcolOrigSP]
   } else if (samplingMethod[1] == 'Bilinear') {
     vals <- interpp(x= puntosOrigSP, z=colnames(puntosOrigSP@data)[zcolOrigSP], xo = samplePoints, 
                     linear = TRUE)
     newSP_DF@data[,zcolNewSP] <- as.numeric(vals$z)
   } else if (samplingMethod[1] == 'Bilinear') {
-    coordsOrig <- coordinates(puntosOrigSP)
-    coordsSamplePoints <- coordinates(samplePoints)
+    coordsOrig <- sp::coordinates(puntosOrigSP)
+    coordsSamplePoints <- sp::coordinates(samplePoints)
     
     help(bilinear)
     
@@ -372,14 +372,14 @@ extraerSeriesTemporales <- function(ctl, dsetOverride=NA, tIni=1, tFin=ctl$tdef$
     spUbicaciones <- spTransform(spUbicaciones, CRS(ctl$pDef$proj4string))
     grillaXY <- getGrillaNativa(ctl)
     
-    x <- unique(coordinates(grillaXY)[,1])
-    y <- unique(coordinates(grillaXY)[,2])
+    x <- unique(sp::coordinates(grillaXY)[,1])
+    y <- unique(sp::coordinates(grillaXY)[,2])
   } else {
     x <- ctl$xdef$vals
     y <- ctl$ydef$vals
   }
   
-  coords <- coordinates(spUbicaciones)
+  coords <- sp::coordinates(spUbicaciones)
   
   tis <- seq.int(from = tIni, to = tFin, by = 1)
   res <- matrix(data = NA_real_, nrow = length(tis), ncol = length(spUbicaciones))
@@ -432,7 +432,7 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
   if (F) {
     # Obtengo los centroides de la grilla nativa
     puntosGrillaNativa <- SpatialPointsDataFrame(
-      coordinates(grillaXY), data = data.frame(value=as.numeric(datos)), 
+      sp::coordinates(grillaXY), data = data.frame(value=as.numeric(datos)), 
       proj4string = grillaXY@proj4string)
     
     if (F) {
@@ -445,12 +445,12 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
       
       puntosGrillaNativa <- spTransform(
         puntosGrillaNativa, CRS(projargs = prjLongLatWRF, SRS_string = SRS_string))
-      coordinates(puntosGrillaNativa)[c(1, 174), ]
+      sp::coordinates(puntosGrillaNativa)[c(1, 174), ]
       matrix(c(range(longs)[1], range(lats)[1], range(longs)[2], range(lats)[2]), nrow = 2, byrow = TRUE)
       matrix(c(longs[1, 1], lats[1, 1], longs[174, 174], lats[174, 174]), nrow = 2, byrow = TRUE)
       
       # Esto tiene que dar (0, 0). Es transformar el centro de la grilla de latlong a la pdef
-      coordinates(spTransform(
+      sp::coordinates(spTransform(
         SpatialPoints(
           coords = matrix(
             c(round((longs[trunc(ctl$pDef$iRef), trunc(ctl$pDef$jRef)] + longs[ceiling(ctl$pDef$iRef), ceiling(ctl$pDef$jRef)]) / 2, 3),
@@ -459,7 +459,7 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
         grillaXY@proj4string))
       
       # Estos dos tienen que dar iguales, es el inverso, convertir las coordenadas 0,0 en pdef a latlong
-      coordinates(spTransform(
+      sp::coordinates(spTransform(
         SpatialPoints(
           coords = matrix(c(0, 0), nrow = 1, byrow = TRUE), 
           proj4string = grillaXY@proj4string),
@@ -472,7 +472,7 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
       ctl$pDef
       (ctl$pDef$dx * ctl$pDef$iSize) / 2
       (ctl$pDef$dy * ctl$pDef$jSize) / 2
-      coordinates(spTransform(
+      sp::coordinates(spTransform(
         SpatialPoints(coords = matrix(c(longs[1, 1], lats[1, 1], longs[174, 174], lats[174, 174]), nrow = 2, byrow = TRUE), 
                       proj4string = CRS(projargs = prjLongLatWRF, SRS_string = SRS_string)),
         grillaXY@proj4string))
@@ -485,13 +485,13 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
           coords = matrix(c(as.numeric(longs), as.numeric(lats)), ncol = 2), 
           proj4string = CRS(projargs = prjLongLatWRF, SRS_string = SRS_string)), 
         grillaXY@proj4string)
-      matrix(c(as.numeric(longs), as.numeric(lats)), ncol = 2) - coordinates(coords)
+      matrix(c(as.numeric(longs), as.numeric(lats)), ncol = 2) - sp::coordinates(coords)
       lala <- SpatialGridDataFrame(
         grid = grillaXY, 
-        data = data.frame(value=matrix(c(as.numeric(longs), as.numeric(lats)), ncol = 2) - coordinates(coords)))
+        data = data.frame(value=matrix(c(as.numeric(longs), as.numeric(lats)), ncol = 2) - sp::coordinates(coords)))
       mapearGrillaGGPlot(lala, continuo = T, dibujar = F)
       
-      lala <- coordinates(spTransform(
+      lala <- sp::coordinates(spTransform(
         SpatialPoints(
           coords = matrix(c(longs, lats), ncol = 2), 
           proj4string = CRS(projargs = prjLongLatWRF, SRS_string = SRS_string)),
@@ -504,7 +504,7 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
     # Obtengo la grilla LatLong y sus centroides
     grillaLatLong <- getGrillaRectilineaLatLong(ctl)
     puntosGrillaLatLong <- SpatialPointsDataFrame(
-      coords = coordinates(grillaLatLong), 
+      coords = sp::coordinates(grillaLatLong), 
       proj4string = grillaLatLong@proj4string,
       data = data.frame(value=rep(NA_real_, length(grillaLatLong))))
     
