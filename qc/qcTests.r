@@ -38,8 +38,6 @@ source(paste0(script.dir.qcTests, '../instalarPaquetes/instant_pkgs.r'), encodin
 source(paste0(script.dir.qcTests, '../interpolar/interpolarEx.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.qcTests, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('sp', 'robustbase'))
-library(sp)
-library(robustbase)
 
 # Códigos para los distintos tipos de outliers detectables por los métodos
 TTO_SinProblemasDetectados = 0L

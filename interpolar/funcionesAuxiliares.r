@@ -41,16 +41,7 @@ source(paste0(script.dir.funcionesAuxiliares, '../sysutils/sysutils.r'), encodin
 instant_pkgs(
   pkgs = c('matrixStats', 'stringi', 'stringr', 'lubridate', 'gridExtra', 'sp', 'rgdal', 'Rmisc', 
            'gstat', 'grid'))
-library(matrixStats)
-library(stringi)
-library(stringr)
-library(lubridate)
-library(gridExtra)
-library(sp)
-library(rgdal)
-library(Rmisc)
-library(gstat)
-library(grid)
+
 
 graficarEstaciones <- function(estaciones, serieComparacion, tempAireMin, tempAireMax, fechaMin=NA, fechaMax=NA, 
                                lWidth=0.5, carpetaSalida='Resultados/Graficos/', prefijoArchivos='', nombresSeries=c('MODIS', 'TMin', 'TMax'),

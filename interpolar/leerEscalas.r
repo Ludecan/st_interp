@@ -36,7 +36,6 @@ source(paste0(script.dir.leerEscalas, 'mapearEx.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.leerEscalas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 
 instant_pkgs(c('jsonlite'))
-library(jsonlite)
 
 leerEscala <- function(nombreArchivo, datos, numDecimales=NULL) {
   if (file.exists(nombreArchivo)) {

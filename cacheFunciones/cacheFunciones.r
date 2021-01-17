@@ -36,7 +36,6 @@ if (is.null(script.dir.cacheFunciones)) { script.dir.cacheFunciones <- ''
 
 source(paste0(script.dir.cacheFunciones, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('digest'))
-library(digest)
 
 getPathCache <- function(objParametros, dirEjecucion='', prefijoNombreArchivoCache='') {
   return (paste0(dirEjecucion, 'RCache_', .Platform$OS.type, '/', prefijoNombreArchivoCache, 

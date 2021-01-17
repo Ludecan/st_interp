@@ -34,11 +34,6 @@ if (is.null(script.dir.ReadGrADS)) { script.dir.ReadGrADS <- ''
 
 source(paste0(script.dir.ReadGrADS, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('stringi', 'rgdal', 'sp', 'akima', 'RANN'))
-library(stringi)
-library(rgdal)
-library(sp)
-library(akima)
-library(RANN)
 
 formaWGS84 <- '+ellps=WGS84 +datum=WGS84 +units=m'
 formaEsferica <- '+a=6370000 +towgs84=0,0,0,0,0,0,0 +units=m'

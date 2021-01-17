@@ -34,11 +34,6 @@ if (is.null(script.dir.agregacion)) { script.dir.agregacion <- ''
 
 source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('stats', 'sp', 'Rcpp', 'raster', 'rgdal'))
-library(stats)
-library(sp)
-library(Rcpp)
-library(raster)
-library(rgdal)
 
 source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.agregacion, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')

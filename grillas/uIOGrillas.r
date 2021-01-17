@@ -34,8 +34,7 @@ if (is.null(script.dir.uIOGrillas)) { script.dir.uIOGrillas <- ''
 
 source(paste0(script.dir.uIOGrillas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('sp', 'rgdal'))
-library(sp)
-library(rgdal)
+
 
 # para todas las funciones grilla tiene que ser un objeto spatialPixelsDataFrame
 guardarDefinicionGrilla <- function(archivoDefinicion, grilla) {

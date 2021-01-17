@@ -72,10 +72,6 @@ colores269 <- c('#000000','#FFFF00','#1CE6FF','#FF34FF','#FF4A46',
 
 source(paste0(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c("colorspace", "ggplot2", "Cairo", 'reshape'))
-library(colorspace)
-library(ggplot2)
-library(Cairo)
-library(reshape)
 
 
 crearXYLims <- function(xMin, xMax, yMin, yMax, expand=0) {

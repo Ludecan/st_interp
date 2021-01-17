@@ -57,11 +57,3 @@ b <- substr(colores, 6, 7)
 
 paste('$', b, g, r, sep='')
 paste(paste('$', b, g, r, sep=''), collapse=',')
-
-
-
-install.packages("devtools")
-devtools::install_github("twitter/AnomalyDetection")
-library(AnomalyDetection)
-
-help(AnomalyDetectionTs)

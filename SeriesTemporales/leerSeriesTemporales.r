@@ -34,12 +34,7 @@ if (is.null(script.dir.lecturaDatos)) { script.dir.lecturaDatos <- ''
 
 source(paste0(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(pkgs = c('Rcpp', 'stringi', 'stringr', 'lubridate', 'jsonlite', 'openxlsx'))
-library(Rcpp)
-library(stringi)
-library(stringr)
-library(lubridate)
-library(jsonlite)
-library(openxlsx)
+
 
 setIdsEstaciones <- function(dfEstaciones, colId=1) {
   dfEstaciones[, colId] <- make.names(trimws(dfEstaciones[, colId]))
