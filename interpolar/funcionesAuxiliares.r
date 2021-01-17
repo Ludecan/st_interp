@@ -575,7 +575,7 @@ plotRasterI <- function(i, pathsRaster, shpBase=NULL, escala=NULL, carpetaSalida
     
     if (replot || !file.exists(archivoSalida) || file.info(archivoSalida)$size == 0) {
       rasterI <- readGDAL(pathsRaster[i], silent = T)
-      if (!is.null(shpBase) && proj4string(rasterI) != proj4string(shpBase)) { 
+      if (!is.null(shpBase) && !identicalCRS(rasterI, shpBase)) { 
         shpBase <- spTransform(shpBase, rasterI@proj4string)
       }
       if (!is.null(escala) && !all(is.na(rasterI@data[, 1]))) {
@@ -699,7 +699,7 @@ plotMultiRastersEnPanelesI <- function(i, pathsRasters, fechasRasters, shpBase=N
         grilla@data[,1] <- NA
       }
       
-      if (!is.null(shpBase) && proj4string(grilla) != proj4string(shpBase))  { 
+      if (!is.null(shpBase) && !identicalCRS(grilla, shpBase))  {
         shpBase <- spTransform(shpBase, grilla@proj4string)
       }
       if (!is.null(escalas[[j]]) && !all(is.na(grilla@data[, 1]))) {

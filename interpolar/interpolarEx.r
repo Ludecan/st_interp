@@ -136,8 +136,10 @@ crearSpatialPointsDataFrame <- function(
   return (observaciones)
 }
 
-imitarObjetoIntamap <- function(observaciones, formulaString=value~1, predictions, intCRS=proj4string(observaciones), 
-                                targetCRS=proj4string(predictions), class='automap', outputWhat=list(mean=T, variance=ncol(predictions@data) > 1)) {
+imitarObjetoIntamap <- function(
+    observaciones, formulaString=value~1, predictions, intCRS=proj4string(observaciones), 
+    targetCRS=proj4string(predictions), class='automap', 
+    outputWhat=list(mean=T, variance=ncol(predictions@data) > 1)) {
   res <- createIntamapObject(observations=observaciones, formulaString=formulaString, predictionLocations=geometry(predictions),
                              intCRS=intCRS, targetCRS=targetCRS, class=class, outputWhat=outputWhat)
   res$campoMedia <- names(predictions@data)[1]
@@ -1575,7 +1577,8 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
   
   if (puedoInterpolar) {
     if (params$metodoRemocionDeSesgo != 'ninguno' & gridded(coordsAInterpolar)) {
-      obs <- SpatialPointsDataFrame(coords = spObservaciones, data = data.frame(value=valoresVentana[iTiEnTsVentana, ]), proj4string = proj4string(spObservaciones))
+      obs <- SpatialPointsDataFrame(
+        coords=spObservaciones, data=data.frame(value=valoresVentana[iTiEnTsVentana, ]))
       interpolacionST <- simpleBiasAdjustmentEx(
         observaciones=obs, interpolacion=interpolacionST, interpolationParams=params,
         errorRelativoParaCorregir=0.15, inverseDistancePower=3, shpMask=shpMask)

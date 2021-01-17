@@ -563,7 +563,7 @@ agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, 
     } else if (!is.null(spSinMascara)) {
       grilla <- as(res, 'SpatialGrid')
       mascara <- !iNA
-      if (proj4string(grilla) != proj4string(spSinMascara)) {
+      if (!identicalCRS(grilla, spSinMascara)) {
         spSinMascara <- spTransform(spSinMascara, grilla@proj4string)
       }
       if (any(grepl(pattern = 'SpatialPoints', x = class(spSinMascara)))) { 
