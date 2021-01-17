@@ -64,7 +64,7 @@ cargarPaquetes <- function(pkgs, silent=T, nRetries=25) {
   return(NULL)
 }
 
-instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, doCargarPaquetes=FALSE) {
+instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, doCargarPaquetes=TRUE) {
   if (length(pkgs) > 0) {
     # write('IP1', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
     # write(pkgs, paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
