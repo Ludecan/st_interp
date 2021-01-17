@@ -3903,7 +3903,7 @@ getPoligonoBoundingBox <- function(
                           caja[1,1], caja[2,1]), ncol = 2, byrow = T)
   boundingBox <- Polygon(coords = boundingBox)
   boundingBoxPolygon <- SpatialPolygons(
-    list(Polygons(list(boundingBox), ID = "BoundingBox")), proj4string = objSP@proj4string)
+    list(Polygons(list(boundingBox), ID="BoundingBox")), proj4string=objSP@proj4string)
   if (is.null(outputCRS)) {
     return(boundingBoxPolygon)
   } else {
@@ -3912,25 +3912,25 @@ getPoligonoBoundingBox <- function(
 }
 
 grillaSobreBoundingBox <- function(
-    objSP, caja=bbox(getPoligonoBoundingBox(objSP = objSP, outputCRS = objSP@proj4string)), 
-    largoDimensiones=diff(t(caja)), nCeldasX=100, 
-    nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
+    objSP, caja=bbox(getPoligonoBoundingBox(objSP=objSP, outputCRS=outputCRS)),
+    outputCRS=objSP@proj4string, largoDimensiones=diff(t(caja)), nCeldasX=100, 
+    nCeldasY=round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
   cellsDim <- c(nCeldasX, nCeldasY)
   cellSize <- as.numeric(largoDimensiones / cellsDim)
   cellcentreOffset <- as.numeric(caja[, 1] + cellSize * 0.5)
   
   return(SpatialGrid(GridTopology(
-    cellcentre.offset = cellcentreOffset, cellsize = cellSize, cells.dim = cellsDim),
-    proj4string = objSP@proj4string))
+    cellcentre.offset=cellcentreOffset, cellsize=cellSize, cells.dim=cellsDim),
+    proj4string=outputCRS))
 }
 
 grillaPixelesSobreBoundingBox <- function(
-    objSP, caja=bbox(getPoligonoBoundingBox(objSP = objSP, outputCRS = objSP@proj4string)), 
-    largoDimensiones=diff(t(caja)), nCeldasX=100, 
-    nCeldasY = round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
+    objSP, caja=bbox(getPoligonoBoundingBox(objSP=objSP, outputCRS=outputCRS)), 
+    outputCRS=objSP@proj4string, largoDimensiones=diff(t(caja)), nCeldasX=100, 
+    nCeldasY=round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])) {
   return(as(grillaSobreBoundingBox(
-      objSP=objSP, caja=caja, largoDimensiones=largoDimensiones, nCeldasX=nCeldasX, 
-      nCeldasY = nCeldasY), 
+      objSP=objSP, caja=caja, outputCRS=outputCRS, largoDimensiones=largoDimensiones, 
+      nCeldasX=nCeldasX, nCeldasY = nCeldasY), 
     'SpatialPixels'))
 }
 
