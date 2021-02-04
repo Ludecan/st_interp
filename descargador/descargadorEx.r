@@ -370,21 +370,23 @@ descargarArchivo <- function(
     path = dirname(nombresArchivosDestino[i])
     if (!dir.exists(path)) dir.create(path, showWarnings = FALSE, recursive = T)
     
+    temp <- tempfile()
+    
     while (do_download & nRetries < maxRetries) {
       if (useCurl) {
         handle <- new_handle(verbose = FALSE)
-        if (!is.null(curlOpts)) { handle_setopt(handle, .list = curlOpts) }
+        if (!is.null(curlOpts)) { handle_setopt(handle, .list=curlOpts) }
         er2 <- try(er <- curl_download(
-          url = urls[i], destfile = nombresArchivosDestino[i], handle = handle, quiet = FALSE))    
+          url=urls[i], destfile=temp, handle=handle, quiet=FALSE))    
       } else {
-        f = CFILE(nombresArchivosDestino[i], mode="wb")
-        er2 <- try(er <- curlPerform(url = urls[i], curl=threadHandle, writedata = f@ref))
+        f = CFILE(temp, mode="wb")
+        er2 <- try(er <- curlPerform(url=urls[i], curl=threadHandle, writedata = f@ref))
         close(f)  
       }
       
       if (class(er2) == "try-error" || 
-          !file.exists(nombresArchivosDestino[i]) || 
-          length(readBin(nombresArchivosDestino[i], what='raw')) <= 0) {
+          !file.exists(temp) || 
+          length(readBin(temp, what='raw')) <= 0) {
         
         if (is_ftp) {
           # Handling FTP permanent error cases. Needs improvement
@@ -404,11 +406,15 @@ descargarArchivo <- function(
           # Reset handle if there's any error
           threadHandle <- getCurlHandle(.opts = curlOpts)
         }
-      } else { do_download <- FALSE }
+      } else { 
+        do_download <- FALSE
+        file.rename(from=temp, to=nombresArchivosDestino[i])
+      }
     }
   } else {
     results <- 2
   }
+  
   do_unzip_i <- !do_download && do_unzip[i] && (forzarReDescarga || !unzipExists)
   if (do_unzip_i) {
     ext <-  getFileExt(nombresArchivosDestino[i])
@@ -503,9 +509,9 @@ descargarArchivos <- function(
       stopCluster(cl)
     } else {
       if (!useCurl) { assign("threadHandle", getCurlHandle(.opts = curlOpts), envir = .GlobalEnv) }
-      results <- sapply(X=seq_along(urls), FUN = descargarArchivo, urls=urls,
+      results <- sapply(X=seq_along(urls), FUN=descargarArchivo, urls=urls,
                         nombresArchivosDestino=nombresArchivosDestino, 
-                        forzarReDescarga=forzarReDescarga, curlOpts = curlOpts, do_unzip=do_unzip,
+                        forzarReDescarga=forzarReDescarga, curlOpts=curlOpts, do_unzip=do_unzip,
                         useCurl=useCurl)
     }
   } else {
