@@ -480,12 +480,11 @@ descargarArchivos <- function(
   if (length(urls) > 0) {
     sapply(unique(dirname(nombresArchivosDestino)), dir.create, showWarnings=F, recursive=T)
     
-    # if (length(urls) * 4 < nConexionesSimultaneas) nConexionesSimultaneas <- max(trunc(length(urls) / 4), 1)
-    if (!useCurl) {
-      nConexionesAUsar <- min(nConexionesSimultaneas, length(urls))
-    } else {
-      nConexionesAUsar <- 1
-    }
+    #if (!useCurl) {
+    nConexionesAUsar <- min(nConexionesSimultaneas, length(urls))
+    #} else {
+    #  nConexionesAUsar <- 1
+    #}
     
     if (nConexionesAUsar > 1) {
       cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
