@@ -76,7 +76,6 @@ getParamValuesFromConstructorParams <- function(params, separadorTokens=';', fun
   paramDefaultValues <- list()
   length(paramDefaultValues) <- length(parametrosFunc)
 
-  i <- 2
   for (i in seq_along(parametrosFunc)) {
     if (class(parametrosFunc[[i]]) == 'NULL') {
       obligatorios[i] <- FALSE

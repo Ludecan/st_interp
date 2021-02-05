@@ -46,7 +46,8 @@ createDefaultListaMapas <- function(
     generarThumbnailFija=F, generarThumbnailAdaptada=F, 
     incluirIsolineaFija=F, incluirIsolineaAdaptada=F,
     dibujarPuntosObservacionesFija=F, dibujarPuntosObservacionesAdaptada=F,
-    salvarGeoTiff=!is.null(paramsIyM$tlagsAR), salvarBin=F, titulo='', incluirSubtitulo=F, 
+    salvarGeoTiff=!is.null(paramsIyM$tlagsAR), salvarBin=F, salvarNetCDF=F, 
+    titulo='', incluirSubtitulo=F, 
     recalcularSiYaExiste=T) {
   if (!is.null(fechasObservaciones)) {
     if (any(format(fechasObservaciones, format = "%H:%M") != "00:00")) { 
@@ -78,11 +79,13 @@ createDefaultListaMapas <- function(
   dibujarObservacionesEscalaFija <- rep(dibujarObservacionesEscalaFija, nObservacionesTemporales) 
   dibujarObservacionesEscalaAdaptada <- rep(dibujarObservacionesEscalaAdaptada, nObservacionesTemporales)
   
-  return(data.frame(nombreArchivo, dibujarObservacionesEscalaFija, dibujarEscalaFija, dibujarObservacionesEscalaAdaptada,
-                    dibujarEscalaAdaptada, generarThumbnailFija, generarThumbnailAdaptada, incluirIsolineasFija, 
-                    incluirIsolineasAdaptada, dibujarPuntosObservacionesFija, dibujarPuntosObservacionesAdaptada,
-                    salvarGeoTiff, salvarBin, titulo, incluirSubtitulo, recalcularSiYaExiste,
-                    stringsAsFactors = FALSE))
+  return(data.frame(
+    nombreArchivo, dibujarObservacionesEscalaFija, dibujarEscalaFija, 
+    dibujarObservacionesEscalaAdaptada, dibujarEscalaAdaptada, generarThumbnailFija, 
+    generarThumbnailAdaptada, incluirIsolineasFija, incluirIsolineasAdaptada, 
+    dibujarPuntosObservacionesFija, dibujarPuntosObservacionesAdaptada, 
+    salvarGeoTiff, salvarBin, salvarNetCDF, 
+    titulo, incluirSubtitulo, recalcularSiYaExiste, stringsAsFactors = FALSE))
 }
 
 mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, pathsRegresores=NULL, valoresRegresoresSobreObservaciones=NULL, coordsAInterpolar, 
@@ -263,11 +266,18 @@ interpolarYMapearI <- function(
   nomArch <- listaMapas$nombreArchivo[ti]
   if (listaMapas$salvarBin[ti]) { 
     salvarInterpolacion(baseNomArchResultados=nomArch, interpolacion, formatoSalida='binary', 
-                        salvarPrediccion=TRUE, salvarVarianza=FALSE) }
+                        salvarPrediccion=TRUE, salvarVarianza=FALSE) 
+  }
   
   if (!existia && listaMapas$salvarGeoTiff[ti]) { 
-    writeGDAL(dataset = interpolacion$predictions, fname = nomArchGeoTiff, 
-              options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9')) 
+    rgdal::writeGDAL(
+      dataset=interpolacion$predictions, fname=nomArchGeoTiff, 
+      options=c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9')) 
+  }
+  
+  if (listaMapas$salvarNetCDF[ti]) {
+    salvarInterpolacion(baseNomArchResultados=nomArch, interpolacion, formatoSalida='netCDF', 
+                        salvarPrediccion=TRUE, salvarVarianza=FALSE) 
   }
   
   if (listaMapas$dibujarObservacionesEscalaFija[ti] || listaMapas$dibujarEscalaFija[ti] || listaMapas$generarThumbnailFija[ti] || 

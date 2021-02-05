@@ -64,9 +64,10 @@ guardarGrillaArchDefYArchDatoBin <- function(archivoDefinicion, grilla) {
   guardarDatosGrilla(archivoDatos, grilla)
 }
 
-guardarGrillaGDAL <- function(nombreArchivo, grilla) {
+guardarGrillaGDAL <- function(
+    nombreArchivo, grilla, options=c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9')) {
   # el tipo de archivo queda determinado por nombreArchivo, p.ej: si es .tif guarda un geotiff
-  writeGDAL(grilla, nombreArchivo, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
+  writeGDAL(grilla, nombreArchivo, options=options)
 }
 
 leerGrillaGDAL <- function(nombreArchivo) {
@@ -203,6 +204,15 @@ guardarRasterBin <- function(archiBin, grillaRaster, naValue=NULL) {
   close(binFile)
 }
 
+guardarSPobj_netCDF <- function(
+    archivoSalida, objSp, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff'), zcol=1,
+    varname='Rainfall', varunit='mm', longname=varname) {
+  objRaster <- raster::raster(objSp[, zcol])
+  raster::writeRaster(
+    objRaster, "rstack.nc", overwrite=TRUE, format="CDF", varname=varname, varunit=varunit, 
+    longname=longname)
+}
+
 guardarSPobj <- function(
     archivoSalida, objSp, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff')) {
   formatoSalida <- formatoSalida[1]
@@ -212,7 +222,7 @@ guardarSPobj <- function(
   } else  if (formatoSalida == 'netCDF') {
     stop('uIOGrillas.guardarSPobj: formatoSalida "netCDF" no implementado')
   } else  if (formatoSalida == 'GeoTiff') {
-    writeGDAL(objSp, changeFileExt(archivoSalida, '.tif'), options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
+    writeGDAL(objSp, changeFileExt(archivoSalida, '.tif'), options=c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
   } else
     stop(paste('uIOGrillas.guardarSPobj: formatoSalida desconocido ', formatoSalida, sep=''))
 }

@@ -856,7 +856,6 @@ mapearGrillaGGPlot <- function(
   }
   
   if (!todosNA){
-    print(1)
     # Isolineas
     if (continuo && isolineas && nrow(df) > 0 && var(grilla@data[iNoNa,zcol]) > 1E-6) {
       print(2)
@@ -866,13 +865,11 @@ mapearGrillaGGPlot <- function(
         cortesIsolineas <- unique(round(quantile(df$value, seq(from = 1/nPuntos, to = 1 -1/nPuntos, length.out = nPuntos - 2)), 1))
       }
         
-      print(3)
       p <- p + geom_contour(aes(colour = ..level..), breaks=cortesIsolineas, color='gray30', na.rm=T, show.legend=T)# + scale_colour_gradient(guide = 'none')
       instant_pkgs("directlabels")
       #p <- direct.label(p, list("far.from.others.borders", "calc.boxes", "enlarge.box", 
       #                  hjust = 1, vjust = 1, box.color = NA, fill = "transparent", "draw.rects"))
       p <- direct.label(p, list("bottom.pieces", colour='gray30', size=3))
-      print(4)
     }
   }
   

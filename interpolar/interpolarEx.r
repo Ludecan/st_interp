@@ -50,7 +50,7 @@ instant_pkgs(
   pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'Rcpp', 
            'raster', 'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 
            'rms', 'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
-           'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC'), 
+           'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC', 'ncdf4'), 
   silent = TRUE)
 
 # instant_pkgs_github(reposgithub = 'Ludecan/intamap', minVersions = '1.4-4', silent = TRUE)
@@ -81,7 +81,7 @@ distKmToP4Str <- function(p4str, distKm) {
 }
 
 crearSpatialPointsDataFrame <- function(
-    x, y, value, proj4string='+proj=longlat +datum=WGS84', SRS_string, nombresFilas=NULL) {
+    x, y, value, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326", nombresFilas=NULL) {
   # crea un spatialPointsDataFrame a partir de las coordenadas x e y y una columna de valor value
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
   # observaciones <- data.frame(x=x, y=y, value=value)
@@ -112,7 +112,7 @@ imitarObjetoIntamap <- function(
 }
 
 cargarCoordenadas <- function(
-    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string, 
+    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326", 
     incluyeNombresObservaciones=FALSE) {
   if (incluyeNombresObservaciones) {
     observaciones <- read.table(file=pathArchivo, sep=' ', dec='.', header=T,
@@ -130,7 +130,7 @@ cargarCoordenadas <- function(
 }
 
 cargarObservaciones <- function(
-    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string, 
+    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326", 
     incluyeNombresObservaciones=FALSE) {
   if (incluyeNombresObservaciones) {
     observaciones <- read.table(
@@ -177,7 +177,7 @@ crearObservacionesBinarias <- function(observaciones, zcol=1) {
 }
 
 crearCoordsAInterpolar <- function(
-    xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84', SRS_string) {  
+    xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326") {  
   # crea un spatialPoints o spatialPixels a partir de las coordenadas xs e ys
   # si grid=T es un spatialPixels y xs e ys son los ejes de la grilla
   # si grid=F es un spatialPoints y xs e ys son las coordenadas de los puntos
@@ -192,7 +192,7 @@ crearCoordsAInterpolar <- function(
 }
 
 crearGrillaAuxiliar <- function(
-    xs, ys, gridValues, proj4string='+proj=longlat +datum=WGS84', SRS_string) {
+    xs, ys, gridValues, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326") {
   # crea un spatialPointsDataFrame a partir de las coordenadas x e y y una columna de valor value
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
   grilla <- expand.grid(x=xs, y=ys)
@@ -205,7 +205,7 @@ crearGrillaAuxiliar <- function(
 
 crearGrillaRectilineaParaArea <- function(
     xMin, xMax, yMin, yMax, deltaX=(xMax-xMin)/250, deltaY=deltaX, 
-    proj4stringCoordenadasArea='+proj=longlat +datum=WGS84', SRS_stringCoordenadasArea, 
+    proj4stringCoordenadasArea='+proj=longlat +datum=WGS84', SRS_stringCoordenadasArea="EPSG:4326", 
     proj4stringGrillaSalida, SRS_stringGrillaSalida) {
   
   if (proj4stringCoordenadasArea != proj4stringGrillaSalida || 
@@ -237,12 +237,12 @@ netCDFToSP <- function(
     fname, varName='rfe', p4string="+proj=longlat +datum=WGS84", SRS_string="EPSG:4326", 
     lonDimName='Lon', latDimName='Lat', spObj=NULL, zcol=1) {
   # TO-DO: handle multiple layer/times files
-  nc <- nc_open(filename = fname)
-  value <- as.vector(ncvar_get(nc, varid = varName))
+  nc <- ncdf4::nc_open(filename = fname)
+  value <- as.vector(ncdf4::ncvar_get(nc, varid = varName))
   
   if (is.null(spObj)) {
-    lon <- ncvar_get(nc, lonDimName)
-    lat <- ncvar_get(nc, latDimName)
+    lon <- ncdf4::ncvar_get(nc, lonDimName)
+    lat <- ncdf4::ncvar_get(nc, latDimName)
     coords <- as.matrix(expand.grid(lon=lon, lat=lat))
     spObj <- SpatialPixelsDataFrame(
       points = SpatialPoints(
@@ -253,7 +253,7 @@ netCDFToSP <- function(
     row.names(spObj) <- as.character(row.names(spObj))
   } else { spObj@data[,zcol] <- value }
   
-  nc_close(nc)
+  ncdf4::nc_close(nc)
   return(spObj)
 }
 
@@ -1021,7 +1021,7 @@ interpolarEx <- function(
 
 interpolarEx2 <- function(
     x, y, value, xs, ys, params, interpolateGrid=T, 
-    proj4stringObservaciones='+proj=longlat +datum=WGS84', SRS_stringObservaciones=NULL,
+    proj4stringObservaciones='+proj=longlat +datum=WGS84', SRS_stringObservaciones="EPSG:4326",
     proj4stringCoordsAInterpolar='+proj=longlat +datum=WGS84', SRS_stringCoordsAInterpolar, 
     shpMask=NULL, longitudesEnColumnas=T) {
   observaciones <- crearSpatialPointsDataFrame(
@@ -1032,16 +1032,16 @@ interpolarEx2 <- function(
 }
 
 
-stUniversalKriging <- function(ti=1, spObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar,
-                               valoresRegresoresSobreObservaciones=NULL, pathsRegresoresST=NULL, shpMask=NULL,
-                               modelosVariograma=c('Exp', 'Sph', 'Pen'),
-                               cutoff=spDists(t(bbox(spObservaciones)), longlat=!is.projected(spObservaciones))[1, 2] * 0.75,
-                               tlags=0:6, nTsST=max(tlags), tlagsAR=NULL,
-                               fixNugget=NA, tryFixNugget=T, nPuntosIniciales=2, 
-                               modelosVariogramaST=c('Separable', 'ProductSum', 'Metric', 'SimpleSumMetric', 'SumMetric'),
-                               ventanaIgualacionDistribuciones=8,
-                               ndeps=1E-4, fit.method=6, deltaT=difftime(fechasObservaciones[2], fechasObservaciones[1]),
-                               pathsSalida=NULL, verbose=F, params) {
+stUniversalKriging <- function(
+    ti=1, spObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar,
+    valoresRegresoresSobreObservaciones=NULL, pathsRegresoresST=NULL, shpMask=NULL,
+    modelosVariograma=c('Exp', 'Sph', 'Pen'), 
+    cutoff=spDists(t(bbox(spObservaciones)), longlat=!is.projected(spObservaciones))[1, 2] * 0.75,
+    tlags=0:6, nTsST=max(tlags), tlagsAR=NULL, fixNugget=NA, tryFixNugget=T, nPuntosIniciales=2, 
+    modelosVariogramaST=c('Separable', 'ProductSum', 'Metric', 'SimpleSumMetric', 'SumMetric'),
+    ventanaIgualacionDistribuciones=8, ndeps=1E-4, fit.method=6, 
+    deltaT=difftime(fechasObservaciones[2], fechasObservaciones[1]), pathsSalida=NULL, verbose=F, 
+    params) {
   if (!is.null(pathsRegresoresST)) {
     valoresRegresoresSobreCoordsAInterpolar_ti <- extraerValoresRegresoresSobreSP(coordsAInterpolar, pathsRegresores = pathsRegresoresST[ti, , drop=F])
     valoresRegresoresSobreCoordsAInterpolar_ti <- lapply(valoresRegresoresSobreCoordsAInterpolar_ti, FUN = function(x) { as.vector(t(x)) } )
@@ -3103,8 +3103,9 @@ seleccionarMetodoInterpolacion <- function(valoresObservados) {
   } else { return('automap') }
 }
 
-salvarInterpolacion <- function(baseNomArchResultados, interpolacion, formatoSalida = 'binary', salvarPrediccion=T, salvarVarianza=F, 
-                                NAValue=-.Machine$double.xmax) {
+salvarInterpolacion <- function(
+    baseNomArchResultados, interpolacion, formatoSalida = 'binary', salvarPrediccion=T, 
+    salvarVarianza=F, NAValue=-.Machine$double.xmax) {
   if (formatoSalida == 'binary') {
     if (salvarPrediccion) {
       nomArchResultados <- changeFileExt(appendToFileName(baseNomArchResultados, '_Pred'), '.bin')
