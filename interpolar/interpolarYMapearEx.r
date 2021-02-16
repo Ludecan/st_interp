@@ -279,7 +279,7 @@ interpolarYMapearI <- function(
   }
   
   if (listaMapas$salvarNetCDF[ti]) {
-    if (listaMapas$salvarEnGrillaLatLong) {
+    if (listaMapas$salvarEnGrillaLatLong[ti]) {
       auxInterpolacion <- projectedToGeodeticGrid(objSP=interpolacion$predictions)
     } else {
       auxInterpolacion <- interpolacion$predictions
