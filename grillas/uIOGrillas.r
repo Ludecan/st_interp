@@ -205,24 +205,71 @@ guardarRasterBin <- function(archiBin, grillaRaster, naValue=NULL) {
 }
 
 guardarSPobj_netCDF <- function(
-    archivoSalida, objSp, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff'), zcol=1,
-    varname='Rainfall', varunit='mm', longname=varname) {
-  objRaster <- raster::raster(objSp[, zcol])
-  raster::writeRaster(
-    objRaster, "rstack.nc", overwrite=TRUE, format="CDF", varname=varname, varunit=varunit, 
-    longname=longname)
+    archivoSalida, objSP, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff'), zcol=1,
+    NAflag=-9999, varname='precip', varunit='mm/month', zname='Date') {
+  objSP <- objSP[, zcol]
+  names(objSP) <- varname
+  
+  #zname='Date'
+  #rLayer <- raster::raster(objSP)
+  #raster::NAvalue(rLayer) <- NAflag
+  
+  #rBrick <- raster::brick(rLayer)
+  #zVals <- as.integer(
+  #  difftime(ymd(nombreArchSinPathNiExtension(listaMapas$nombreArchivo)), ymd('1980-01-01')))
+  #zVals <- ymd(nombreArchSinPathNiExtension(listaMapas$nombreArchivo))
+  #rBrick <- raster::setZ(x=rBrick, z=zVals, name=zname)
+  
+  #raster::writeRaster( 
+  #  rBrick, "rstack.nc", overwrite=TRUE, format="CDF", varname=varname, varunit=varunit, 
+  #  zname=zname, NAflag=NAflag)
+  
+  # TO-DO: Projected data sets not implemented
+  stopifnot(!is.projected(obj = objSP))
+  
+  # Longitude and Latitude dimensions
+  xvals <- unique(coordinates(objSP)[, 1])
+  yvals <- unique(coordinates(objSP)[, 2])
+  lon <- ncdf4::ncdim_def(name="longitude", units="degrees_east", vals=xvals)
+  lat <- ncdf4::ncdim_def(name="latitude", units="degrees_north", vals=yvals)
+  
+  # Time dimension
+  time <- ncdf4::ncdim_def(
+    name="time", units="days since 1980-1-1 0:0:0", unlim=TRUE, calendar="gregorian", 
+    vals=as.integer(
+      difftime(ymd(nombreArchSinPathNiExtension(listaMapas$nombreArchivo)), ymd('1980-01-01'))))
+  
+  # Define the precipitation variables
+  ncvar <- ncdf4::ncvar_def(
+    name=varname, units=varunit, dim=list(lon, lat, time), missval=NAflag, compression=9)
+  
+  ncout <- ncdf4::nc_create(filename=archivoSalida, vars=list(ncvar), force_v4=TRUE)
+  ncdf4::ncatt_put(ncout, 0, "title", "Monthly Rainfall")
+  ncdf4::ncatt_put(ncout, 0, "institution", "Instituto Uruguayo de Meteorología")
+  ncdf4::ncatt_put(ncout, 0, "date_created", as.character(Sys.Date()))
+  ncdf4::ncatt_put(ncout, 0, "creator_name", "Pablo Alfaro")
+  ncdf4::ncatt_put(ncout, 0, "creator_email", "palfaro@motionsoft.com.uy")
+  
+  vals <- objSP@data[, zcol]
+  vals[is.na(vals)] <- NAflag
+  ncdf4::ncvar_put(nc=ncout, varid=ncvar, vals=vals, start=c(1, 1, 1), count=c(-1, -1, 1))
+  
+  ncdf4::nc_close(ncout)
+  
+  ncdf4::nc_open('G:/chirps-v2.0.monthly.nc')
+  ncdf4::nc_open(archivoSalida)
 }
 
 guardarSPobj <- function(
-    archivoSalida, objSp, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff')) {
+    archivoSalida, objSP, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff')) {
   formatoSalida <- formatoSalida[1]
   if (formatoSalida == 'kml') {
     stop('uIOGrillas.guardarSPobj: formatoSalida ".kml" no implementado')
-    #writeGDAL(objSp, changeFileExt(archivoSalida, '.kml'))
+    #writeGDAL(objSP, changeFileExt(archivoSalida, '.kml'))
   } else  if (formatoSalida == 'netCDF') {
     stop('uIOGrillas.guardarSPobj: formatoSalida "netCDF" no implementado')
   } else  if (formatoSalida == 'GeoTiff') {
-    writeGDAL(objSp, changeFileExt(archivoSalida, '.tif'), options=c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
+    writeGDAL(objSP, changeFileExt(archivoSalida, '.tif'), options=c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
   } else
     stop(paste('uIOGrillas.guardarSPobj: formatoSalida desconocido ', formatoSalida, sep=''))
 }

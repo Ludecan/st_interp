@@ -41,14 +41,15 @@ source(paste0(script.dir.interpolarYMapearEx, '../sysutils/sysutils.r'), encodin
 
 createDefaultListaMapas <- function(
     paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
-    dibujarObservacionesEscalaFija=F, dibujarEscalaFija=T, 
-    dibujarObservacionesEscalaAdaptada=F, dibujarEscalaAdaptada=F, 
-    generarThumbnailFija=F, generarThumbnailAdaptada=F, 
-    incluirIsolineaFija=F, incluirIsolineaAdaptada=F,
-    dibujarPuntosObservacionesFija=F, dibujarPuntosObservacionesAdaptada=F,
-    salvarGeoTiff=!is.null(paramsIyM$tlagsAR), salvarBin=F, salvarNetCDF=F, 
-    titulo='', incluirSubtitulo=F, 
-    recalcularSiYaExiste=T) {
+    dibujarObservacionesEscalaFija=FALSE, dibujarEscalaFija=TRUE, 
+    dibujarObservacionesEscalaAdaptada=FALSE, dibujarEscalaAdaptada=FALSE, 
+    generarThumbnailFija=FALSE, generarThumbnailAdaptada=FALSE, 
+    incluirIsolineaFija=FALSE, incluirIsolineaAdaptada=FALSE,
+    dibujarPuntosObservacionesFija=FALSE, dibujarPuntosObservacionesAdaptada=FALSE,
+    salvarGeoTiff=!is.null(paramsIyM$tlagsAR), salvarBin=FALSE, salvarNetCDF=FALSE, 
+    salvarEnGrillaLatLong=FALSE,
+    titulo='', incluirSubtitulo=FALSE, 
+    recalcularSiYaExiste=TRUE) {
   if (!is.null(fechasObservaciones)) {
     if (any(format(fechasObservaciones, format = "%H:%M") != "00:00")) { 
       formatoFechasArchivo <- "%Y_%m_%d_%H_%M"
@@ -73,6 +74,7 @@ createDefaultListaMapas <- function(
   dibujarPuntosObservacionesAdaptada <- rep(dibujarPuntosObservacionesAdaptada, nObservacionesTemporales)
   salvarGeoTiff <- rep(salvarGeoTiff, nObservacionesTemporales)
   salvarBin <- rep(salvarBin, nObservacionesTemporales)
+  salvarEnGrillaLatLong <- rep(salvarEnGrillaLatLong, nObservacionesTemporales)
   titulo <- paste(titulo, format(fechasObservaciones, format=formatoFechasTitulo))
   incluirSubtitulo <- rep(incluirSubtitulo, nObservacionesTemporales)
   recalcularSiYaExiste <- rep(recalcularSiYaExiste, nObservacionesTemporales)
@@ -85,6 +87,7 @@ createDefaultListaMapas <- function(
     generarThumbnailAdaptada, incluirIsolineasFija, incluirIsolineasAdaptada, 
     dibujarPuntosObservacionesFija, dibujarPuntosObservacionesAdaptada, 
     salvarGeoTiff, salvarBin, salvarNetCDF, 
+    salvarEnGrillaLatLong,
     titulo, incluirSubtitulo, recalcularSiYaExiste, stringsAsFactors = FALSE))
 }
 
@@ -262,7 +265,7 @@ interpolarYMapearI <- function(
   }
   #setwd('C:/mch')
   #plotKML(interpolacion$predictions)
-  
+
   nomArch <- listaMapas$nombreArchivo[ti]
   if (listaMapas$salvarBin[ti]) { 
     salvarInterpolacion(baseNomArchResultados=nomArch, interpolacion, formatoSalida='binary', 
@@ -276,8 +279,15 @@ interpolarYMapearI <- function(
   }
   
   if (listaMapas$salvarNetCDF[ti]) {
-    salvarInterpolacion(baseNomArchResultados=nomArch, interpolacion, formatoSalida='netCDF', 
-                        salvarPrediccion=TRUE, salvarVarianza=FALSE) 
+    if (listaMapas$salvarEnGrillaLatLong) {
+      auxInterpolacion <- projectedToGeodeticGrid(objSP=interpolacion$predictions)
+    } else {
+      auxInterpolacion <- interpolacion$predictions
+    }
+    source(paste0(script.dir.interpolarYMapearEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
+    
+    guardarSPobj_netCDF(
+      archivoSalida=changeFileExt(nomArch, '.nc'), objSP=auxInterpolacion)
   }
   
   if (listaMapas$dibujarObservacionesEscalaFija[ti] || listaMapas$dibujarEscalaFija[ti] || listaMapas$generarThumbnailFija[ti] || 

@@ -119,23 +119,73 @@ crearEscalaDosPuntos <- function(inicio, fin, colores=NULL, nIntervalos=9, inter
   return(crearEscala(escala = escala, colores = colores, continuo = continuo, invertirPaleta = F))
 }
 
-crearEscalaTresPuntos <- function(inicio, medio, fin, colorInicio='blue', colorMedio='white', colorFin='red', nIntervalos=9,
-                                  intervaloFinalCerrado = TRUE, space='Lab', continuo=F) {
+crearEscalaTresPuntos <- function(
+    inicio, medio, fin, colorInicio='blue', colorMedio='white', colorFin='red', nIntervalos=9,
+    intervaloFinalCerrado=TRUE, space='Lab', continuo=F) {
   delta <- (fin - inicio) / (nIntervalos - 1)
   invDelta <- 1 / delta
   
   if (intervaloFinalCerrado && !continuo) { nColores <- nIntervalos - 1
   } else { nColores <- nIntervalos }
   
-  iMedio <- trunc((medio - inicio) * invDelta) + 1
+  if (inicio < medio) {
+    iMedio <- trunc((medio - inicio) * invDelta) + 1
+    if (medio < fin) {
+      # inicio < medio < fin
+      coloresInicioMedio <- colorRampPalette(colors = c(colorInicio, colorMedio), space=space)(iMedio)
+      coloresMedioFin <- colorRampPalette(colors = c(colorMedio, colorFin), space=space)(nColores - iMedio + 1)
+
+      escalaInicioMedio <- seq(from = inicio, to = medio, length.out = iMedio)
+      escalaMedioFin <- seq(from = medio, to = fin, length.out = nIntervalos - iMedio + 1)
+    } else {
+      # inicio < fin < medio
+      iFin <- trunc((fin - inicio) * invDelta) + 1
+      coloresInicioMedio <- colorRampPalette(colors = c(colorInicio, colorMedio), space=space)(iMedio)[1:iFin]
+      coloresMedioFin <- NULL
+      
+      escalaInicioMedio <- seq(from = inicio, to = fin, length.out = iFin)
+      escalaMedioFin <- NULL
+    }
+  } else {
+    # Assuming inicio < fin and given inicio > medio => medio < inicio < fin
+    stop('Not implemented')
+    iInicio <- trunc((inicio - medio) * invDelta) + 1
+    coloresInicioMedio <- colorRampPalette(colors = c(colorInicio, colorMedio), space=space)(iMedio)
+    coloresMedioFin <- colorRampPalette(colors = c(colorMedio, colorFin), space=space)(nColores - iMedio + 1)
+    
+    escalaInicioMedio <- seq(from = inicio, to = fin, length.out = iMedio)
+    escalaMedioFin <- seq(from = medio, to = fin, length.out = nIntervalos - iMedio + 1)
+  }
   
-  coloresInicioMedio <- colorRampPalette(colors = c(colorInicio, colorMedio), space=space)(iMedio)
-  coloresMedioFin <- colorRampPalette(colors = c(colorMedio, colorFin), space=space)(nColores - iMedio + 1)
-  colores <- c(coloresInicioMedio, coloresMedioFin[2:length(coloresMedioFin)])
   
-  escalaInicioMedio <- seq(from = inicio, to = medio, length.out = iMedio)
-  escalaMedioFin <- seq(from = medio, to = fin, length.out = nIntervalos - iMedio + 1)
-  escala <- c(escalaInicioMedio, escalaMedioFin[2:length(escalaMedioFin)])
+  if (length(coloresInicioMedio) > 0) {
+    if (length(coloresMedioFin) > 0) {
+      colores <- c(coloresInicioMedio, coloresMedioFin[2:length(coloresMedioFin)])
+    } else {
+      colores <- coloresInicioMedio
+    }
+  } else {
+    if (length(coloresMedioFin) > 1) {
+      colores <- coloresMedioFin[2:length(coloresMedioFin)]
+    } else {
+      colores <- NULL
+    }
+  }
+
+  
+  if (length(escalaInicioMedio) > 0) {
+    if (length(escalaMedioFin) > 0) {
+      escala <- c(escalaInicioMedio, escalaMedioFin[2:length(escalaMedioFin)])
+    } else {
+      escala <- escalaInicioMedio
+    }
+  } else {
+    if (length(escalaMedioFin) > 1) {
+      escala <- escalaMedioFin[2:length(escalaMedioFin)]
+    } else {
+      escala <- NULL
+    }
+  }
   
   return(crearEscala(escala = escala, colores = colores, continuo = continuo))
 }

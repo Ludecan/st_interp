@@ -3129,11 +3129,12 @@ salvarInterpolacion <- function(
       }
     }
   } else if (formatoSalida == 'netCDF') {
-    # TO-DO
-    stop('salvarInterpolacion: formatoSalida "netCDF" no implementado')
+    source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
+    guardarSPobj_netCDF(
+      archivoSalida=changeFileExt(baseNomArchResultados, '.nc'), objSP=interpolacion)
   } else if (formatoSalida == 'GeoTiff') {
     #if (i==9) { #para guardar el IBH en raster
-    source('../grillas/uIOGrillas.r', encoding = 'WINDOWS-1252')
+    source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
     if (salvarPrediccion) {
       guardarGrillaGDAL(changeFileExt(baseNomArchResultados, '.tif'), interpolacion$predictions)
     }    
@@ -3900,6 +3901,29 @@ grillaPixelesSobreBoundingBox <- function(
     'SpatialPixels'))
 }
 
+
+projectedToGeodeticGrid <- function(objSP, pixelSizeDegrees=0.05) {
+  # objSP=interpolacion$predictions
+  outputCRS <- CRS(SRS_string="EPSG:4326")
+  caja <- bbox(getPoligonoBoundingBox(objSP=objSP, outputCRS=outputCRS))
+  largoDimensiones <- diff(t(caja))
+  nCeldasX <- ceil(largoDimensiones[1] / pixelSizeDegrees)
+  nCeldasY=round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])
+  
+  caja[, 1] <- floor(caja[, 1] / pixelSizeDegrees) * pixelSizeDegrees
+  caja[, 2] <- caja[, 1] + c(pixelSizeDegrees * nCeldasX, pixelSizeDegrees * nCeldasY)
+  largoDimensiones <- diff(t(caja))
+  
+  newGrid <- grillaPixelesSobreBoundingBox(
+    objSP=objSP, caja=caja, outputCRS=outputCRS, largoDimensiones=largoDimensiones, 
+    nCeldasX=nCeldasX, nCeldasY=nCeldasY)
+  gridCentroids <- sp::SpatialPoints(newGrid, proj4string=newGrid@proj4string)
+  gridCentroids <- sp::spTransform(gridCentroids, CRSobj=interpolacion$predictions@proj4string)
+  newGrid <- sp::SpatialPixelsDataFrame(
+    points=geometry(newGrid), data=over(gridCentroids, interpolacion$predictions))
+  return(newGrid)
+}
+  
 filtradoRegresoresDiscontinuosPorVGM <- function(pathsRegresoresATestear, shpBase, nMuestras=5000, q1Dists=1/3, q2Dists=1-q1Dists, umbral=3) {
   # nMuestras=2500
   # q1Dists=1/3

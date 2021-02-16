@@ -59,7 +59,7 @@ limpiarDatos <- function(dfDatos, dfEstaciones, colIdEstaciones=-1L, header=T, o
   if (header && !is.null(dfEstaciones)) {
     ies <- na.omit(match(idsEstaciones, colnames(dfDatos)))
     datos <- matrix(data = NA_real_, nrow = nrow(dfDatos), ncol = nrow(dfEstaciones))
-    datos[, ies] <- dfDatos[,ies]
+    datos[, ] <- dfDatos[, ies]
   } else datos <- dfDatos
   
   rownames(datos) <- as.character(fechas)
@@ -82,10 +82,12 @@ leerEstaciones <- function(pathArchivoEstaciones, columnaId=1, fileEncoding = ''
 leerDatos <- function(
     pathArchivoDatos, dfEstaciones, skip=0L, formatoFechas='YmdHMS', truncated=5, tzFechas='UTC', 
     header=T, sep=',', dec='.', na.strings='-9999', fileEncoding = '', colIdEstaciones=-1L) {
-  dfDatos <- read.table(pathArchivoDatos, header=header, sep=sep, skip=skip, dec=dec, stringsAsFactors=F, na.strings=na.strings, fileEncoding = fileEncoding)
-  return (limpiarDatos(dfDatos = dfDatos, dfEstaciones = dfEstaciones, 
-                       colIdEstaciones = colIdEstaciones, header = header, 
-                       formatoFechas = formatoFechas, truncated = truncated, tzFechas = tzFechas))
+  dfDatos <- read.table(
+    pathArchivoDatos, header=header, sep=sep, skip=skip, dec=dec, stringsAsFactors=F, 
+    na.strings=na.strings, fileEncoding=fileEncoding)
+  return (limpiarDatos(
+    dfDatos=dfDatos, dfEstaciones=dfEstaciones, colIdEstaciones=colIdEstaciones, header=header, 
+    formatoFechas=formatoFechas, truncated=truncated, tzFechas=tzFechas))
 }
 
 grabarDatos <- function(pathArchivoDatos, fechas, datos, sep='\t', dec='.', na='-9999', append=F, col.names=T, formatoFechas='%Y-%m-%d') {

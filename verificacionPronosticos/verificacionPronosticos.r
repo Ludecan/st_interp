@@ -38,21 +38,26 @@ source(paste0(script.dir.verificacionPronosticos, '../Graficas/graficas.r'), enc
 
 # "Constantes"
 StatNames <- c(
-  'ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos')
+  'ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'L2/3', 'L2/5', 'Corr', 'RankCorr', 'CorrAnom', 
+  'RankCorrAnom', 'Cant. Datos')
 dfInfoValidationStats <- data.frame(
-  StatNames = c('ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'Corr', 'RankCorr', 'CorrAnom', 'RankCorrAnom', 'Cant. Datos', "POD", "FAR", "FBS"),
+  StatNames = c(
+    'ME', 'MAE', 'MAD', 'MSE', 'VarDif', 'RMSE', 'L2/3', 'L2/5', 'Corr', 'RankCorr', 'CorrAnom', 
+    'RankCorrAnom', 'Cant. Datos', "POD", "FAR", "FBS"),
   LongStatNames=c(
     'Mean Error', 'Mean Absolute Error', 'Mean Absolute Deviation', 'Mean Squared Error', 
-    'Difference Variance', 'Root Mean Squared Error', 'Pearson\'s Coefficient of Correlation', 
-    'Spearman\'s Coefficient of Correlation', 'Anomaly Correlation (Pearson)', 
-    'Anomaly Correlation (Spearman)', 'Cantidad de Datos Utilizados',
-    'Probability of Detection', 'False Alarm Rate', 'Frequency Bias'),
-  valoresPerfectos = c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 'max', 1, 0, 1),
-  peoresValores = c('max', 'max', 'max', 'max', 'max', 'max', 0, 0, 0, 0, 0, 0, 1, 'max'),
-  minEscala = c('min', 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0),
-  medioEscala = c(0, NA, NA, NA, NA, NA, 0, 0, 0, 0, NA, 0.5, 0.5, NA),
-  maxEscala = c('max', 'max', 'max', 'max', 'max', 'max', 1, 1, 1, 1, 'max', 1, 1, 'max'),
-  invertirColores = c(F, T, T, T, T, T, F, F, F, F, F, F, F, F), stringsAsFactors = F)
+    'Difference Variance', 'Root Mean Squared Error', '2/3 Norm', 'L2/5 Norm', 
+    'Pearson\'s Coefficient of Correlation', 'Spearman\'s Coefficient of Correlation', 
+    'Anomaly Correlation (Pearson)', 'Anomaly Correlation (Spearman)', 
+    'Cantidad de Datos Utilizados', 'Probability of Detection', 'False Alarm Rate', 
+    'Frequency Bias'),
+  valoresPerfectos = c(0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 'max', 1, 0, 1),
+  peoresValores = c('max', 'max', 'max', 'max', 'max', 'max', 'max', 'max', 0, 0, 0, 0, 0, 0, 1, 'max'),
+  minEscala = c('min', 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, 0, 0, 0, 0),
+  medioEscala = c(0, NA, NA, NA, NA, NA, NA, NA, 0, 0, 0, 0, NA, 0.5, 0.5, NA),
+  maxEscala = c(
+    'max', 'max', 'max', 'max', 'max', 'max', 'max', 'max', 1, 1, 1, 1, 'max', 1, 1, 'max'),
+  invertirColores = c(F, T, T, T, T, T, T, T, F, F, F, F, F, F, F, F), stringsAsFactors = F)
 
 #cbind(StatNames, valoresPerfectos, peoresValores, minEscala, medioEscala, maxEscala)
 
@@ -77,12 +82,17 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
     MAD <- mad(dif)
     MSE <- mean(dif^2)
     RMSE <- sqrt(MSE)
+    
+    L2_3 <- mean(absDif ^ (2/3)) ^ (3/2)
+    L2_5 <- mean(absDif ^ (2/5)) ^ (5/2)
   } else {
     ME <- NA
     MAE <- NA
     MAD <- NA
     MSE <- NA
     RMSE <- NA
+    L2_3 <- NA
+    L2_5 <- NA
   }
   
   if (CantDatos > 1) { VarDif <- var(dif)
@@ -126,7 +136,7 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
   #MSE_Clim <- mean(a_o^2)
   #SS_MSE <- 1 - (MSE / MSE_Clim)
   
-  return(c(ME, MAE, MAD, MSE, VarDif, RMSE, Corr, RankCorr, CorrAnom, RankCorrAnom, CantDatos))
+  return(c(ME, MAE, MAD, MSE, VarDif, RMSE, L2_3, L2_5, Corr, RankCorr, CorrAnom, RankCorrAnom, CantDatos))
 }
 
 calcRainfallDetectionStatistics <- function(
@@ -355,7 +365,7 @@ plotValidationStatsEspaciales <- function(
   escalaGraficos <- nColsPlots
   dir.create(carpetaSalida, showWarnings = F)
   
-  i <- 9
+  i <- 1
   for (i in seq_along(statsNames)) {
     statName <- statsNames[i]
     iEstadistico <- which(startsWith(x=statName, prefix=dfInfoValidationStats$StatNames))
@@ -375,8 +385,8 @@ plotValidationStatsEspaciales <- function(
     
     if (!is.na(infoVS$medioEscala)) {
       escala <- crearEscalaTresPuntos(
-        inicio = minEscala, medio = infoVS$medioEscala, fin = maxEscala, intervaloFinalCerrado = T, 
-        nIntervalos = 11, continuo = T, space = 'rgb')
+        inicio=minEscala, medio=infoVS$medioEscala, fin=maxEscala, intervaloFinalCerrado=T, 
+        nIntervalos=11, continuo=T, space='rgb')
     } else { 
       escala <- crearEscalaDosPuntos(
         inicio = minEscala, fin = maxEscala, brewerPal = 'RdYlGn', 
