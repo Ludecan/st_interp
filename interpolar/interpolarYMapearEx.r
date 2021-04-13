@@ -287,7 +287,8 @@ interpolarYMapearI <- function(
     source(paste0(script.dir.interpolarYMapearEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
     
     guardarSPobj_netCDF(
-      archivoSalida=changeFileExt(nomArch, '.nc'), objSP=auxInterpolacion)
+      archivoSalida=changeFileExt(nomArch, '.nc'), objSP=auxInterpolacion, 
+      zval=ymd_hms(row.names(valoresObservaciones)[ti], truncated=3))
   }
   
   if (listaMapas$dibujarObservacionesEscalaFija[ti] || listaMapas$dibujarEscalaFija[ti] || listaMapas$generarThumbnailFija[ti] || 
@@ -300,6 +301,7 @@ interpolarYMapearI <- function(
             shpMask=shpMask, xyLims=xyLims, listaMapas=listaMapas, espEscalaFija=espEscalaFija, 
             espEscalaAdaptada=espEscalaAdaptada, puntosAResaltar = paramsIyM$puntosAResaltar[[iTi]])
   }
+  
   if (returnInterpolacion) { return(interpolacion)
   } else { return(NULL) }
 }
@@ -407,14 +409,18 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
   if (paramsIyM$radioReduccionSeriesKm > 0) {
     # radioReduccionSeriesKm = paramsIyM$radioReduccionSeriesKm
     # funcionReduccionSeries = paramsIyM$funcionReduccionSeries
-    obsReducidas <- reducirSpatialPointsDataFrameYMatrizObservaciones(coordsObservaciones, valoresObservaciones, radioReduccionSeriesKm = paramsIyM$radioReduccionSeriesKm, 
-                                                                      funcionReduccionSeries = paramsIyM$funcionReduccionSeries)
+    obsReducidas <- reducirSpatialPointsDataFrameYMatrizObservaciones(
+      coordsObservaciones, valoresObservaciones, 
+      radioReduccionSeriesKm=paramsIyM$radioReduccionSeriesKm, 
+      funcionReduccionSeries=paramsIyM$funcionReduccionSeries)
     coordsObservaciones <- obsReducidas$coordsObservaciones
     valoresObservaciones <- obsReducidas$valoresObservaciones
     rm(obsReducidas)
   }
   
-  if (is.na(paramsIyM$cutoff)) paramsIyM$cutoff <- getDefaultSpatialCutoff(coordsObservaciones, params = paramsIyM)
+  if (is.na(paramsIyM$cutoff)) {
+    paramsIyM$cutoff <- getDefaultSpatialCutoff(coordsObservaciones, params = paramsIyM)
+  } 
   
   # Cargamos las observaciones de los regresores en las coordenadas de las estaciones
   if (!is.null(pathsRegresores)) {

@@ -205,8 +205,8 @@ guardarRasterBin <- function(archiBin, grillaRaster, naValue=NULL) {
 }
 
 guardarSPobj_netCDF <- function(
-    archivoSalida, objSP, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff'), zcol=1,
-    NAflag=-9999, varname='precip', varunit='mm/month', zname='Date') {
+    archivoSalida, objSP, zcol=1, NAflag=-9999, varname='precip', varunit='mm', 
+    zname='Date', zval) {
   objSP <- objSP[, zcol]
   names(objSP) <- varname
   
@@ -236,28 +236,27 @@ guardarSPobj_netCDF <- function(
   # Time dimension
   time <- ncdf4::ncdim_def(
     name="time", units="days since 1980-1-1 0:0:0", unlim=TRUE, calendar="gregorian", 
-    vals=as.integer(
-      difftime(ymd(nombreArchSinPathNiExtension(listaMapas$nombreArchivo)), ymd('1980-01-01'))))
+    vals=as.integer(difftime(zval, ymd('1980-01-01'))))
   
   # Define the precipitation variables
   ncvar <- ncdf4::ncvar_def(
     name=varname, units=varunit, dim=list(lon, lat, time), missval=NAflag, compression=9)
-  
-  ncout <- ncdf4::nc_create(filename=archivoSalida, vars=list(ncvar), force_v4=TRUE)
-  ncdf4::ncatt_put(ncout, 0, "title", "Monthly Rainfall")
-  ncdf4::ncatt_put(ncout, 0, "institution", "Instituto Uruguayo de Meteorología")
-  ncdf4::ncatt_put(ncout, 0, "date_created", as.character(Sys.Date()))
-  ncdf4::ncatt_put(ncout, 0, "creator_name", "Pablo Alfaro")
-  ncdf4::ncatt_put(ncout, 0, "creator_email", "palfaro@motionsoft.com.uy")
-  
   vals <- objSP@data[, zcol]
   vals[is.na(vals)] <- NAflag
-  ncdf4::ncvar_put(nc=ncout, varid=ncvar, vals=vals, start=c(1, 1, 1), count=c(-1, -1, 1))
   
-  ncdf4::nc_close(ncout)
-  
-  ncdf4::nc_open('G:/chirps-v2.0.monthly.nc')
-  ncdf4::nc_open(archivoSalida)
+  tryCatch(
+    expr = {
+      ncout <- ncdf4::nc_create(filename=archivoSalida, vars=list(ncvar), force_v4=TRUE)
+      ncdf4::ncatt_put(ncout, 0, "title", "Monthly Rainfall")
+      ncdf4::ncatt_put(ncout, 0, "institution", "Instituto Uruguayo de Meteorología")
+      ncdf4::ncatt_put(ncout, 0, "date_created", as.character(Sys.Date()))
+      ncdf4::ncatt_put(ncout, 0, "creator_name", "Pablo Alfaro")
+      ncdf4::ncatt_put(ncout, 0, "creator_email", "palfaro@motionsoft.com.uy")
+      
+      ncdf4::ncvar_put(nc=ncout, varid=ncvar, vals=vals, start=c(1, 1, 1), count=c(-1, -1, 1))
+    },
+    finally = ncdf4::nc_close(ncout)
+  )
 }
 
 guardarSPobj <- function(

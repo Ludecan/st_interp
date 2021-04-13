@@ -81,10 +81,14 @@ distKmToP4Str <- function(p4str, distKm) {
 }
 
 crearSpatialPointsDataFrame <- function(
-    x, y, value, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326", nombresFilas=NULL) {
+    x, y, value, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL, nombresFilas=NULL) {
   # crea un spatialPointsDataFrame a partir de las coordenadas x e y y una columna de valor value
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
   # observaciones <- data.frame(x=x, y=y, value=value)
+  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
+    SRS_string <- "EPSG:4326"
+  }
+  
   if (is.character(x) & is.character(y)) {
     observaciones <- value
     sp::coordinates(observaciones) <- c(x, y)
@@ -112,8 +116,12 @@ imitarObjetoIntamap <- function(
 }
 
 cargarCoordenadas <- function(
-    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326", 
+    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL, 
     incluyeNombresObservaciones=FALSE) {
+  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
+    SRS_string <- "EPSG:4326"
+  }
+  
   if (incluyeNombresObservaciones) {
     observaciones <- read.table(file=pathArchivo, sep=' ', dec='.', header=T,
                                 colClasses=c('character', 'numeric', 'numeric') , comment.char='')
@@ -130,8 +138,12 @@ cargarCoordenadas <- function(
 }
 
 cargarObservaciones <- function(
-    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326", 
+    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL, 
     incluyeNombresObservaciones=FALSE) {
+  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
+    SRS_string <- "EPSG:4326"
+  }
+  
   if (incluyeNombresObservaciones) {
     observaciones <- read.table(
       file=pathArchivo, sep=' ', dec='.', header=T, 
@@ -177,11 +189,15 @@ crearObservacionesBinarias <- function(observaciones, zcol=1) {
 }
 
 crearCoordsAInterpolar <- function(
-    xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326") {  
+    xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL) {
   # crea un spatialPoints o spatialPixels a partir de las coordenadas xs e ys
   # si grid=T es un spatialPixels y xs e ys son los ejes de la grilla
   # si grid=F es un spatialPoints y xs e ys son las coordenadas de los puntos
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
+  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
+    SRS_string <- "EPSG:4326"
+  }
+  
   if (grid) { coordsAInterpolar <- expand.grid(x=xs, y=ys)
   } else { coordsAInterpolar <- data.frame(x=xs, y=ys) }
   sp::coordinates(coordsAInterpolar) <- c('x','y')
@@ -192,9 +208,12 @@ crearCoordsAInterpolar <- function(
 }
 
 crearGrillaAuxiliar <- function(
-    xs, ys, gridValues, proj4string='+proj=longlat +datum=WGS84', SRS_string="EPSG:4326") {
+    xs, ys, gridValues, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL) {
   # crea un spatialPointsDataFrame a partir de las coordenadas x e y y una columna de valor value
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
+  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
+    SRS_string <- "EPSG:4326"
+  }  
   grilla <- expand.grid(x=xs, y=ys)
   grilla$gridValue <- gridValues
   sp::coordinates(grilla) <- c('x', 'y')
@@ -205,9 +224,13 @@ crearGrillaAuxiliar <- function(
 
 crearGrillaRectilineaParaArea <- function(
     xMin, xMax, yMin, yMax, deltaX=(xMax-xMin)/250, deltaY=deltaX, 
-    proj4stringCoordenadasArea='+proj=longlat +datum=WGS84', SRS_stringCoordenadasArea="EPSG:4326", 
+    proj4stringCoordenadasArea='+proj=longlat +datum=WGS84', SRS_stringCoordenadasArea=NULL, 
     proj4stringGrillaSalida, SRS_stringGrillaSalida) {
-  
+  if (proj4stringCoordenadasArea == '+proj=longlat +datum=WGS84' && 
+      is.null(SRS_stringCoordenadasArea)) {
+    SRS_stringCoordenadasArea <- "EPSG:4326"
+  }
+    
   if (proj4stringCoordenadasArea != proj4stringGrillaSalida || 
       SRS_stringCoordenadasArea != SRS_stringGrillaSalida) {
     # Creamos la caja en la proyección de entrada, proyectamos a la proyección de salida
@@ -234,8 +257,12 @@ crearGrillaRectilineaParaArea <- function(
 }
 
 netCDFToSP <- function(
-    fname, varName='rfe', p4string="+proj=longlat +datum=WGS84", SRS_string="EPSG:4326", 
+    fname, varName='rfe', p4string="+proj=longlat +datum=WGS84", SRS_string=NULL,
     lonDimName='Lon', latDimName='Lat', spObj=NULL, zcol=1) {
+  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
+    SRS_string <- "EPSG:4326"
+  }
+  
   # TO-DO: handle multiple layer/times files
   nc <- ncdf4::nc_open(filename = fname)
   value <- as.vector(ncdf4::ncvar_get(nc, varid = varName))
@@ -3395,8 +3422,10 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
   return(sp)
 }
 
-getIEsACombinarReduccionSeries <- function(coordsObservaciones, radioReduccionSeriesKm=1) {
-  radioReduccionSeries <- distKmToP4Str(p4str = proj4string(coordsObservaciones), distKm = radioReduccionSeriesKm)
+getIEsACombinarReduccionSeries <- function(
+    coordsObservaciones, radioReduccionSeriesKm=1) {
+  radioReduccionSeries <- distKmToP4Str(
+    p4str=proj4string(coordsObservaciones), distKm=radioReduccionSeriesKm)
   
   iesACombinar <- list()
   
@@ -3466,10 +3495,16 @@ reducirSpatialPointsDataFrame <- function(coordsObservaciones, radioReduccionSer
   return(res)
 }
 
-reducirSpatialPointsDataFrameYMatrizObservaciones <- function(coordsObservaciones, valoresObservaciones, radioReduccionSeriesKm=1, funcionReduccionSeries='mean', iesACombinar=NULL) {
-  if (is.null(iesACombinar)) { iesACombinar <- getIEsACombinarReduccionSeries(coordsObservaciones = coordsObservaciones, radioReduccionSeriesKm = radioReduccionSeriesKm) }
-  coordsObservaciones <- reducirSpatialPointsDataFrame(coordsObservaciones = coordsObservaciones, radioReduccionSeriesKm = radioReduccionSeriesKm, 
-                                                       funcionReduccionSeries = funcionReduccionSeries, iesACombinar = iesACombinar)  
+reducirSpatialPointsDataFrameYMatrizObservaciones <- function(
+    coordsObservaciones, valoresObservaciones, radioReduccionSeriesKm=1, 
+    funcionReduccionSeries='mean', iesACombinar=NULL) {
+  if (is.null(iesACombinar)) { 
+    iesACombinar <- getIEsACombinarReduccionSeries(
+      coordsObservaciones=coordsObservaciones, radioReduccionSeriesKm=radioReduccionSeriesKm) 
+  }
+  coordsObservaciones <- reducirSpatialPointsDataFrame(
+    coordsObservaciones=coordsObservaciones, radioReduccionSeriesKm=radioReduccionSeriesKm, 
+    funcionReduccionSeries=funcionReduccionSeries, iesACombinar=iesACombinar)  
   if (length(iesACombinar) > 0) {
     #i <- 2
     #for (i in (1:length(iesACombinar))) {
