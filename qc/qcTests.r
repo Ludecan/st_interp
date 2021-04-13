@@ -416,7 +416,7 @@ deteccionGradienteEnMatrizDeObservaciones <- function(coordsObservaciones, fecha
     } else { return(FALSE) }
   }
   
-  maxDist <- distKmToP4Str(proj4string(coordsObservaciones), maxDistKm)
+  maxDist <- distKmToP4Str(coordsObservaciones@proj4string, maxDistKm)
   iesPuntosVecinos <- getIVecinosAMenosDeMaxDist(coordsObservaciones = coordsObservaciones, maxDist = maxDist)
   # factorRMSE <- qnorm(1 - (1 - conf) / 2)
   
@@ -928,7 +928,7 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
       stdDif=stdDifs, reemplazar=0L, valorReemplazo=NA_real_))
   }
     
-  maxDist <- distKmToP4Str(proj4string(coordsObservaciones), maxDistKm)
+  maxDist <- distKmToP4Str(coordsObservaciones@proj4string, maxDistKm)
   ies <- getIVecinosAMenosDeMaxDist(coordsObservaciones = coordsObservaciones, maxDist = maxDist)
   
   dfValoresObservaciones <- as.data.frame(valoresObservaciones)
@@ -1318,7 +1318,7 @@ testEspacialPrecipitacion <- function(
     archivoSalida=NULL, nCoresAUsar=0, verbose=FALSE) {
 
   # verbose<-TRUE
-  maxDist <- distKmToP4Str(p4str = proj4string(coordsObservaciones), distKm = maxDistKm)
+  maxDist <- distKmToP4Str(p4str=coordsObservaciones@proj4string, distKm=maxDistKm)
   # cuadrantesIes <- lapply(seq_along(iesVecinos), FUN = iCuadrantes, iesVecinos=ies, coords=coords)
   if (F) {
     # TO-DO: Para permitir rotar los angulos de los cuadrantes

@@ -68,6 +68,9 @@ formulaConCoeficientes <- function(modelo, nDecimales=1, quitarCeros=TRUE) {
 }
 
 distKmToP4Str <- function(p4str, distKm) {
+  if (!is.character(p4str)) {
+    p4str <- as.character(p4str)
+  }
   if (grepl(pattern = "+proj=longlat", x = p4str, fixed = T)) {
     return(distKm)
   } else {
@@ -103,11 +106,11 @@ crearSpatialPointsDataFrame <- function(
 }
 
 imitarObjetoIntamap <- function(
-    observaciones, formulaString=value~1, predictions, intCRS=proj4string(observaciones), 
-    targetCRS=proj4string(predictions), class='automap', 
+    observaciones, formulaString=value~1, predictions, class='automap', 
     outputWhat=list(mean=T, variance=ncol(predictions@data) > 1)) {
-  res <- createIntamapObject(observations=observaciones, formulaString=formulaString, predictionLocations=geometry(predictions),
-                             intCRS=intCRS, targetCRS=targetCRS, class=class, outputWhat=outputWhat)
+  res <- createIntamapObject(
+    observations=observaciones, formulaString=formulaString, 
+    predictionLocations=geometry(predictions), class=class, outputWhat=outputWhat)
   res$campoMedia <- names(predictions@data)[1]
   if (ncol(predictions@data) > 1) { res$campoVarianza <- names(predictions@data)[2]
   } else { res$campoVarianza <- '' }
@@ -201,8 +204,7 @@ crearCoordsAInterpolar <- function(
   if (grid) { coordsAInterpolar <- expand.grid(x=xs, y=ys)
   } else { coordsAInterpolar <- data.frame(x=xs, y=ys) }
   sp::coordinates(coordsAInterpolar) <- c('x','y')
-  projAInterpolar <- sp::CRS(projargs=proj4string, SRS_string=SRS_string)
-  proj4string(coordsAInterpolar) <- projAInterpolar
+  proj4string(coordsAInterpolar) <- sp::CRS(projargs=proj4string, SRS_string=SRS_string)
   gridded(coordsAInterpolar) <- grid
   return (coordsAInterpolar)
 }
@@ -571,8 +573,6 @@ prepIDWEstimator <- function(interpolacion, params, objParameters) {
 interpolarEx <- function(
     observaciones, coordsAInterpolar, params, shpMask=NULL, longitudesEnColumnas=T, 
     objParameters=NULL, valoresCampoBaseSobreObservaciones=NULL, valoresCampoBase=NULL) {
-  proj4StringAInterpolar <- proj4string(coordsAInterpolar)
-
   # Saco las observaciones NA y las coordenadas duplicadas
   if (!is.null(valoresCampoBaseSobreObservaciones)) {
     i <- !is.na(observaciones$value) & !is.na(valoresCampoBaseSobreObservaciones)
@@ -642,12 +642,10 @@ interpolarEx <- function(
   # For small variances (all observations the same) the library gives an error, we handle the case separately
   varianzaObservaciones <- var(observaciones$value)
   if (varianzaObservaciones > 1E-6 && params$interpolationMethod !='none' && length(observaciones) >= 4) {
+    mapaConstante <- F
     if (!identicalCRS(observaciones, coordsAInterpolar)) { 
       observaciones <- spTransform(observaciones, coordsAInterpolar@proj4string) 
     }
-  
-    mapaConstante <- F
-    
     if (params$interpolationMethod == 'automatic') { 
       params$interpolationMethod <- seleccionarMetodoInterpolacion(observaciones$value) 
     }
@@ -674,7 +672,6 @@ interpolarEx <- function(
     interpolacion <- createIntamapObject(
       observations=observaciones, formulaString=value ~ 1, 
       predictionLocations=coordsAInterpolar[shpMask$mask, ],
-      intCRS=proj4StringAInterpolar, targetCRS=proj4StringAInterpolar, 
       class=params$interpolationMethod, 
       params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax, 
                   maxdist=params$maxdist, beta=beta, debug.level = 0),
@@ -858,15 +855,14 @@ interpolarEx <- function(
     }
     
     sp::coordinates(predictions) <- sp::coordinates(coordsAInterpolar[shpMask$mask,])
-    proj4string(predictions) <- proj4string(coordsAInterpolar)
+    predictions@proj4string <- coordsAInterpolar@proj4string
     gridded(predictions) <- gridded(coordsAInterpolar[shpMask$mask,])
     class(predictions@data[, 1]) <- 'numeric'
     class(predictions@data[, 2]) <- 'numeric'
     
     interpolacion <- imitarObjetoIntamap(
       observaciones=observaciones, formulaString=value~1, predictions=predictions, 
-      intCRS=proj4StringAInterpolar, targetCRS=proj4StringAInterpolar, class='automap', 
-      outputWhat=list(mean=T, variance=T))
+      class='automap', outputWhat=list(mean=T, variance=T))
   }
   
   if (params$modoDiagnostico & (!is.null(valoresCampoBase) & !is.null(valoresCampoBaseSobreObservaciones))) {
@@ -934,7 +930,7 @@ interpolarEx <- function(
         dibujar = F, dibujarTexto = T)
     }
   }
-
+  
   #escala <- crearEscalaEnQuantiles(interpolacion$predictions@data[,1], nDigitos = 1, brewerPal = 'Blues', nIntervalos = 8, continuo = F)
   #mapearGrillaGGPlot(grilla = interpolacion$predictions, shpBase = shpMask$shp, escala = escala)
   if (!mapaConstante) {
@@ -3425,7 +3421,7 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
 getIEsACombinarReduccionSeries <- function(
     coordsObservaciones, radioReduccionSeriesKm=1) {
   radioReduccionSeries <- distKmToP4Str(
-    p4str=proj4string(coordsObservaciones), distKm=radioReduccionSeriesKm)
+    p4str=coordsObservaciones@proj4string, distKm=radioReduccionSeriesKm)
   
   iesACombinar <- list()
   
@@ -3953,9 +3949,8 @@ projectedToGeodeticGrid <- function(objSP, pixelSizeDegrees=0.05) {
     objSP=objSP, caja=caja, outputCRS=outputCRS, largoDimensiones=largoDimensiones, 
     nCeldasX=nCeldasX, nCeldasY=nCeldasY)
   gridCentroids <- sp::SpatialPoints(newGrid, proj4string=newGrid@proj4string)
-  gridCentroids <- sp::spTransform(gridCentroids, CRSobj=interpolacion$predictions@proj4string)
-  newGrid <- sp::SpatialPixelsDataFrame(
-    points=geometry(newGrid), data=over(gridCentroids, interpolacion$predictions))
+  gridCentroids <- sp::spTransform(gridCentroids, CRSobj=objSP@proj4string)
+  newGrid <- sp::SpatialPixelsDataFrame(points=geometry(newGrid), data=over(gridCentroids, objSP))
   return(newGrid)
 }
   

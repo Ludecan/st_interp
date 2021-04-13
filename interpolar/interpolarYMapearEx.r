@@ -232,7 +232,9 @@ interpolarYMapearI <- function(
     existia <- evaluarConReintentos(
       interpolacion <- list(
         predictions = readGDAL(nomArchGeoTiff, silent = T)), segundosEntreIntentos = 1)
-  } else { existia <- F }
+  } else { 
+    existia <- F 
+  }
   
   if (!existia) {
     # paramsIyM$modoDiagnostico <- T
