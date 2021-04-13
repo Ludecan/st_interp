@@ -290,7 +290,8 @@ interpolarYMapearI <- function(
     
     guardarSPobj_netCDF(
       archivoSalida=changeFileExt(nomArch, '.nc'), objSP=auxInterpolacion, 
-      zval=ymd_hms(row.names(valoresObservaciones)[ti], truncated=3))
+      zval=ymd_hms(row.names(valoresObservaciones)[ti], truncated=3), lonDimName='lon', 
+      latDimName='lat')
   }
   
   if (listaMapas$dibujarObservacionesEscalaFija[ti] || listaMapas$dibujarEscalaFija[ti] || listaMapas$generarThumbnailFija[ti] || 

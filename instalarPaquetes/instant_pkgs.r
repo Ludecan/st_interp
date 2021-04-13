@@ -22,6 +22,18 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
+# Busca en el stack el path relativo a getwd() del script para poder hacer los source correctamente
+# Intenta con el frame actual - 3 primero que es donde estaba siempre cuando se hizo el programa
+iFrame <- sys.nframe()
+if (iFrame >= 3) { script.dir.instantPkgs <- sys.frame(iFrame - 3)$ofile 
+} else { script.dir.instantPkgs <- NULL }
+while ((is.null(script.dir.instantPkgs) || is.na(regexpr('instant_pkgs.r', script.dir.instantPkgs, fixed=T)[1])) && iFrame >= 0) {
+  script.dir.instantPkgs <- sys.frame(iFrame)$ofile
+  iFrame <- iFrame - 1
+}
+if (is.null(script.dir.instantPkgs)) { script.dir.instantPkgs <- ''
+} else { script.dir.instantPkgs <- paste0(dirname(script.dir.instantPkgs), '/') }
+
 # Los writes comentados son para debuggear el bug de library en R 3.4.0 cuando se usan procesos
 #write(getwd(), paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
 
@@ -132,3 +144,42 @@ detachAllPackages <- function() {
   package.list <- setdiff(package.list,basic.packages)
   if (length(package.list)>0)  for (package in package.list) detach(package, character.only=TRUE)
 }
+
+checkInstalledPackages <- function(minPkgVersionsPath) {
+  minPkgVersions <- read.table(minPkgVersionsPath, header=TRUE, sep='\t', encoding = 'UTF-8')
+  installedPackages <- installed.packages()
+  
+  toUpdatePkgs <- list()
+  toUpdatePkgVersions <- list()
+  
+  i_pkg <- 1
+  for (i_pkg in seq.int(from=1, to=nrow(installedPackages))) {
+    pkg <- installedPackages[i_pkg, 'Package']
+    version <- installedPackages[i_pkg, 'Version']
+    
+    i_minPkg = which(minPkgVersions[, 'Package'] == pkg)
+    
+    if (length(i_minPkg) > 0){
+      minVersion <- minPkgVersions[i_minPkg[1], 'Version']
+      
+      if (version < minVersion) {
+        n <- length(toUpdatePkgs) + 1
+        toUpdatePkgs[n] <- pkg
+        toUpdatePkgVersions[n] <- minVersion
+      }
+    }
+  }
+  
+  if (length(toUpdatePkgs)) {
+    toUpdatePkgs <- unlist(toUpdatePkgs)
+    toUpdatePkgVersions <- unlist(toUpdatePkgVersions)
+  
+    instant_pkgs(pkgs=toUpdatePkgs, minVersions=toUpdatePkgVersions, doCargarPaquetes=FALSE)
+  }
+}
+
+minPkgVersionsPath <- paste0(script.dir.instantPkgs, 'min_pkg_versions.tsv')
+if (!exists('installedPackagesChecked') && file.exists(minPkgVersionsPath)) {
+  checkInstalledPackages(minPkgVersionsPath)
+}
+installedPackagesChecked <- TRUE

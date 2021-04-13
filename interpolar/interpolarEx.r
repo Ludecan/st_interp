@@ -3154,7 +3154,8 @@ salvarInterpolacion <- function(
   } else if (formatoSalida == 'netCDF') {
     source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
     guardarSPobj_netCDF(
-      archivoSalida=changeFileExt(baseNomArchResultados, '.nc'), objSP=interpolacion)
+      archivoSalida=changeFileExt(baseNomArchResultados, '.nc'), objSP=interpolacion, 
+      lonDimName='lon', latDimName='lat')
   } else if (formatoSalida == 'GeoTiff') {
     #if (i==9) { #para guardar el IBH en raster
     source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')

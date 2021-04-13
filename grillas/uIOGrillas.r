@@ -206,7 +206,7 @@ guardarRasterBin <- function(archiBin, grillaRaster, naValue=NULL) {
 
 guardarSPobj_netCDF <- function(
     archivoSalida, objSP, zcol=1, NAflag=-9999, varname='precip', varunit='mm', 
-    zname='Date', zval) {
+    zname='Date', zval, lonDimName="longitude", latDimName="latitude") {
   objSP <- objSP[, zcol]
   names(objSP) <- varname
   
@@ -224,14 +224,14 @@ guardarSPobj_netCDF <- function(
   #  rBrick, "rstack.nc", overwrite=TRUE, format="CDF", varname=varname, varunit=varunit, 
   #  zname=zname, NAflag=NAflag)
   
-  # TO-DO: Projected data sets not implemented
+  # TODO: Projected data sets not implemented
   stopifnot(!is.projected(obj = objSP))
   
   # Longitude and Latitude dimensions
   xvals <- unique(coordinates(objSP)[, 1])
   yvals <- unique(coordinates(objSP)[, 2])
-  lon <- ncdf4::ncdim_def(name="longitude", units="degrees_east", vals=xvals)
-  lat <- ncdf4::ncdim_def(name="latitude", units="degrees_north", vals=yvals)
+  lon <- ncdf4::ncdim_def(name=lonDimName, units="degrees_east", vals=xvals)
+  lat <- ncdf4::ncdim_def(name=latDimName, units="degrees_north", vals=yvals)
   
   # Time dimension
   time <- ncdf4::ncdim_def(
