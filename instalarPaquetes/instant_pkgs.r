@@ -83,7 +83,13 @@ instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), sil
     
     paquetesInstalados <- installed.packages()
     iInstalados <- pkgs %in% rownames(paquetesInstalados)
-    iInstalados[iInstalados] <- is.na(minVersions[iInstalados]) | 
+    iInstalados[iInstalados] <- (
+      is.na(minVersions[iInstalados]) 
+      | compareVersion(
+          paquetesInstalados[pkgs[iInstalados], 'Version'], 
+          minVersions[iInstalados]
+        ) < 0
+      )
       paquetesInstalados[pkgs[iInstalados], 'Version'] >= minVersions[iInstalados]
     paquetesAInstalar <- pkgs[!iInstalados]
     # write('IP2', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
@@ -109,8 +115,13 @@ instant_pkgs_github <- function(reposgithub, pkgs=basename(reposgithub), minVers
     # write(pkgs, paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
     paquetesInstalados <- installed.packages()
     iInstalados <- pkgs %in% rownames(paquetesInstalados)
-    iInstalados[iInstalados] <- is.na(minVersions[iInstalados]) | 
-      paquetesInstalados[pkgs[iInstalados], 'Version'] >= minVersions[iInstalados]
+    iInstalados[iInstalados] <- (
+      is.na(minVersions[iInstalados]) 
+      | compareVersion(
+        paquetesInstalados[pkgs[iInstalados], 'Version'], 
+        minVersions[iInstalados]
+      ) < 0
+    )
     paquetesAInstalar <- pkgs[!iInstalados]
     reposgithub <- reposgithub[!iInstalados]
     # write('IPG2', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
@@ -146,33 +157,50 @@ detachAllPackages <- function() {
 }
 
 checkInstalledPackages <- function(minPkgVersionsPath) {
-  minPkgVersions <- read.table(minPkgVersionsPath, header=TRUE, sep='\t', encoding = 'UTF-8')
+  minPkgVersions <- read.table(
+    minPkgVersionsPath, header=TRUE, sep='\t', encoding = 'UTF-8', 
+    stringsAsFactors = FALSE)
   installedPackages <- installed.packages()
   
   toUpdatePkgs <- list()
   toUpdatePkgVersions <- list()
   
   i_pkg <- 1
+  i_pkg <- which(installedPackages[, 'Package'] == 'spatial')
   for (i_pkg in seq.int(from=1, to=nrow(installedPackages))) {
     pkg <- installedPackages[i_pkg, 'Package']
-    version <- installedPackages[i_pkg, 'Version']
-    
-    i_minPkg = which(minPkgVersions[, 'Package'] == pkg)
-    
-    if (length(i_minPkg) > 0){
-      minVersion <- minPkgVersions[i_minPkg[1], 'Version']
+    priority <- installedPackages[i_pkg, 'Priority']
+    if (is.na(priority) || priority != 'base') {
+      version <- installedPackages[i_pkg, 'Version']
       
-      if (version < minVersion) {
-        n <- length(toUpdatePkgs) + 1
-        toUpdatePkgs[n] <- pkg
-        toUpdatePkgVersions[n] <- minVersion
-      }
+      i_minPkg = which(minPkgVersions[, 'Package'] == pkg)
+      
+      if (length(i_minPkg) > 0) {
+        minVersion <- minPkgVersions[i_minPkg[1], 'Version']
+        
+        if (utils::compareVersion(version, minVersion) == -1) {
+          print(paste0('Updating ', pkg, ' from ', version, ' to ', minVersion))
+          
+          n <- length(toUpdatePkgs) + 1
+          toUpdatePkgs[n] <- pkg
+          toUpdatePkgVersions[n] <- minVersion
+        } # else {
+        #print(paste0('Skipping ', pkg, ' as installed version ', version, ' >= ', minVersion))
+        #}
+      }      
     }
   }
-  
+
   if (length(toUpdatePkgs)) {
     toUpdatePkgs <- unlist(toUpdatePkgs)
     toUpdatePkgVersions <- unlist(toUpdatePkgVersions)
+    idx <- order(toUpdatePkgs)
+    toUpdatePkgs <- toUpdatePkgs[idx]
+    toUpdatePkgVersions <- toUpdatePkgVersions[idx]
+    
+    toUpdatePkgVersions <- toUpdatePkgVersions[!duplicated(toUpdatePkgs)]
+    toUpdatePkgs <- toUpdatePkgs[!duplicated(toUpdatePkgs)]
+    
   
     instant_pkgs(pkgs=toUpdatePkgs, minVersions=toUpdatePkgVersions, doCargarPaquetes=FALSE)
   }
