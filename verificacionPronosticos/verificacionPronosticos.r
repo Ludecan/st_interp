@@ -423,6 +423,10 @@ plotValidationStatsTemporales <- function(
     ordenModelosPorColumnas=names(statsTemporales)) {
   statsNames <- colnames(statsTemporales[[1]])
   
+  if (is.character(fechas)) {
+    fechas <- lubridate::ymd_hms(fechas, truncated = 5)
+  }
+  
   meses <- months(fechas, abbreviate = TRUE)
   meses <- factor(meses, levels = unique(meses), ordered = T)
   gs <- list()

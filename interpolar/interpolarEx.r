@@ -366,6 +366,53 @@ extraerValoresRegresorSobreSP <- function(
   return(valoresSobreSP)
 }
 
+extraerValoresRegresorSingleNetCDFSobreSP <- function(
+  objSP, pathRegresor, setNames=T, 
+  lonDimName='longitude', latDimName='latitude', timeDimName='time', varName='precip',
+  ...) {
+  ncFile <- ncdf4::nc_open(filename = 'chirps-v2.0.monthly.nc')
+  
+  coords <- sp::coordinates(objSP)
+  xResolution <- mean(diff(ncFile$dim[[lonDimName]]$vals))
+  yResolution <- mean(diff(ncFile$dim[[latDimName]]$vals))
+  iLong <- findInterval(coords[, 1], ncFile$dim[[lonDimName]]$vals - xResolution)
+  iLat <- findInterval(coords[, 2], ncFile$dim[[latDimName]]$vals - yResolution)
+  
+  lonRange <- range(iLong)
+  latRange <- range(iLat)
+  
+  start <- c(lonRange[1], latRange[1], 1)
+  counts <- c(lonRange[2] - lonRange[1] + 1, latRange[2] - latRange[1] + 1, -1)
+  
+  vals <- ncdf4::ncvar_get(nc=ncFile, varid=varName, start=start, count=counts)
+  
+  iLong <- iLong - lonRange[1] + 1
+  iLat <- iLat - latRange[1] + 1
+  
+  valoresSobreSP <- sapply(
+    seq_along(iLong), 
+    FUN=function(i, vals, iLong, iLat) {
+      return(vals[iLong[i], iLat[i], ])
+    },
+    vals=vals, iLong=iLong, iLat=iLat
+  )
+  
+  if (setNames) {
+    colnames(valoresSobreSP) <- row.names(objSP)
+    
+    epoch <- as.Date(0)
+    ncEpoch <- as.Date(
+      gsub(pattern='days since ', replacement='', x=ncFile$dim[[timeDimName]]$units))
+    
+    reEpochedDays <- as.difftime(tim = ncFile$dim[[timeDimName]]$vals, units ='days')  - (epoch - ncEpoch)
+    reEpochedDays <- as.Date(as.numeric(reEpochedDays, units='days'))
+    rownames(valoresSobreSP) <- format(reEpochedDays, format="%Y-%m-%d")
+  }
+  
+  ncdf4::nc_close(ncFile)
+  return(valoresSobreSP)
+}
+
 extraerValoresRegresoresSobreSP <- function(
     objSP, pathsRegresores, iInicial = 1, iFinal = nrow(pathsRegresores), fn=NULL, zcol=1, silent=T, 
     nCoresAUsar=0, setNames=T, ...) {
@@ -2035,9 +2082,11 @@ ajusteRegresores <- function(
   }
   
   # Paso el método a integer para que la comparación sea más rápida abajo
-  metodoIgualacionDistribuciones <- which(c('ninguna', 'regresionLineal', 'regresionLinealRobusta', 
-                                            'regresionLinealConEliminacionDeOutliers', 'CDFMatching',
-                                            'Lasso', 'GLS') == params$metodoIgualacionDistribuciones)
+  metodoIgualacionDistribuciones <- which(
+    c('ninguna', 'regresionLineal', 'regresionLinealRobusta', 
+      'regresionLinealConEliminacionDeOutliers', 'CDFMatching', 'Lasso', 'GLS'
+    ) == params$metodoIgualacionDistribuciones
+  )
   if (length(metodoIgualacionDistribuciones) == 0) {
     stop(paste0('interpolarEx.r.universalGridding: metodoIgualacionDistribuciones desconocido "', params$metodoIgualacionDistribuciones, '"')) }
   
@@ -2151,7 +2200,7 @@ ajusteRegresores <- function(
         # algo como c(obsEst1, obsEst2, ..., obsEstN) donde obsEsti son los valores de todas las fechas en una estacion
         valoresObservacionesTsVentana <- as.numeric(valoresObservaciones[tsVentana, ])
         
-        if (params$preECDFMatching && 
+        if (!is.null(params$preECDFMatching) && params$preECDFMatching && 
             max(valoresRegresoresSobreCoordsAInterpolar_ti, na.rm=T) / max(valoresObservacionesTsVentana, na.rm=T) >= 2) {
           regECDF <- ecdf(valoresRegresoresSobreCoordsAInterpolar_ti[, 1])
           valsRegresoresObservaciones[, 1] <- quantile(
@@ -2543,9 +2592,10 @@ ajusteRegresores <- function(
               formulaRegresionCC=formulaRegresionCC))
 }
 
-universalGriddingEx <- function(ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
-                                valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL, 
-                                iObservacionesEnCoordsAInterpolar=NULL, shpMask=NULL, longitudesEnColumnas=T) {
+universalGriddingEx <- function(
+    ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
+    valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL, 
+    iObservacionesEnCoordsAInterpolar=NULL, shpMask=NULL, longitudesEnColumnas=T) {
   params <- setMinMaxVal(observacionesValue=as.numeric(valoresObservaciones[ti,]), params)
   if (params$interpolationMethod != 'stUniversalKriging') {
     # La idea es poder pedir el mapeo del campo de una variable usando una serie de campos auxiliares
@@ -2918,7 +2968,8 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
   if (rango[1] < 1E-3 & rango[2] > 1E-3) {
     obsBinarias <- crearObservacionesBinarias(observaciones=observaciones, zcol = 'value')
     valoresObservacionesBinarias <- t(obsBinarias@data)
-    binInterpParams <- params
+    binInterpParams <- createParamsInterpolarYMapear()
+    binInterpParams <- modifyList(binInterpParams, params)
     binInterpParams$modoDiagnostico <- F
     binInterpParams$mLimitarValoresInterpolados <- 'LimitarMinimoyMaximo'
     binInterpParams$minimoLVI <- 0
@@ -2931,6 +2982,7 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
     binInterpParams$descartarCoordenadasNoSignificativas <- FALSE
     binInterpParams$interpolationMethod <- 'automap'
     binInterpParams$minRatioRangosParaExtrapolacion <- 0
+    
     if (!is.null(params$valoresRegresoresSobreObservaciones)) {
       binInterpParams$signosValidosRegresores <- rep(
         x = 1, length = length(params$valoresRegresoresSobreObservaciones))
@@ -2940,10 +2992,12 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
     #binInterpParams$betaSimpleKriging <- 0
     binInterpShpMask <- interpolacion$shpMask
 
-    if (!is.null(binInterpShpMask)) binInterpShpMask$mask <- rep(
-      TRUE, length(interpolacion$predictionLocations))
+    if (!is.null(binInterpShpMask)) {
+      binInterpShpMask$mask <- rep(TRUE, length(interpolacion$predictionLocations))
+    }
+    
     interpBinaria <- universalGriddingEx(
-      ti=1, fechasObservaciones='', coordsObservaciones=obsBinarias, 
+      ti=1, fechasObservaciones='', coordsObservaciones=obsBinarias,
       valoresObservaciones=valoresObservacionesBinarias, 
       valoresRegresoresSobreObservaciones=params$valoresRegresoresSobreObservaciones,
       valoresRegresoresSobreCoordsAInterpolar_ti=params$valoresRegresoresSobreCoordsAInterpolar_ti,
@@ -2997,8 +3051,9 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
   return (interpolacion)
 }
 
-simpleBiasAdjustmentEx <- function(observaciones, interpolacion, interpolationParams, zcol=1, gridIndexes=NULL, 
-                                   errorRelativoParaCorregir=0.15, inverseDistancePower=NA, shpMask) {
+simpleBiasAdjustmentEx <- function(
+    observaciones, interpolacion, interpolationParams, zcol=1, gridIndexes=NULL, 
+    errorRelativoParaCorregir=0.15, inverseDistancePower=NA, shpMask) {
   if (interpolationParams$metodoRemocionDeSesgo != 'ninguno') {
     origModoDiagnostico <- interpolationParams$modoDiagnostico
     interpolationParams$modoDiagnostico <- F

@@ -34,21 +34,13 @@ while ((is.null(script.dir.instantPkgs) || is.na(regexpr('instant_pkgs.r', scrip
 if (is.null(script.dir.instantPkgs)) { script.dir.instantPkgs <- ''
 } else { script.dir.instantPkgs <- paste0(dirname(script.dir.instantPkgs), '/') }
 
-# Los writes comentados son para debuggear el bug de library en R 3.4.0 cuando se usan procesos
-#write(getwd(), paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
-
 cargarPaquetes <- function(pkgs, silent=T, nRetries=25) {
-  #write('CP1', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
   if (length(pkgs) > 0) {
-    #write('CP2', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
     attached <- search()
     attached_pkgs <- attached[grepl("package", attached)]
     need_to_attach <- pkgs[!pkgs %in% gsub("package:", "", attached_pkgs)]
-    #write('CP3', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
     
-    #write(need_to_attach, paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
     if (silent) {
-      # i <- seq_along(need_to_attach)[1]
       for (i in seq_along(need_to_attach)) { 
         nIntentos <- 0
         while (!try(suppressPackageStartupMessages(library(need_to_attach[i], character.only=T, logical.return = T, quietly = silent))) &
@@ -56,8 +48,6 @@ cargarPaquetes <- function(pkgs, silent=T, nRetries=25) {
           Sys.sleep(1)
           nIntentos <- nIntentos + 1
         }
-        #if (nIntentos >= nRetries)
-        #  write(need_to_attach[i], paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
       }
     } else {
       for (i in seq_along(need_to_attach)) { 
@@ -67,77 +57,64 @@ cargarPaquetes <- function(pkgs, silent=T, nRetries=25) {
           Sys.sleep(1)
           nIntentos <- nIntentos + 1
         }
-        #if (nIntentos >= nRetries)
-        #  write(need_to_attach[i], paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
       }
     }
-    # write('CP4', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
   }
   return(NULL)
 }
 
+i <- 1
+pkgs <- c('digest')
+
+checkInstallPackage <- function(i, pkgs, minVersions, paquetesInstalados) {
+  return(
+    !pkgs[i] %in% rownames(paquetesInstalados)
+    || (
+      !is.na(minVersions[i])
+      && utils::compareVersion(paquetesInstalados[pkgs[i], 'Version'], minVersions[i]) < 0
+    )
+  )
+}
+
+checkInstallPackages <- function(pkgs, minVersions) {
+  paquetesInstalados <- installed.packages()
+  paquetesInstalados <- paquetesInstalados[rownames(paquetesInstalados) %in% pkgs, , drop=F]
+  bPaquetesAInstalar <- sapply(
+    seq_along(pkgs), checkInstallPackage, pkgs, minVersions, paquetesInstalados)
+  return(bPaquetesAInstalar)
+}
+
 instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, doCargarPaquetes=TRUE) {
   if (length(pkgs) > 0) {
-    # write('IP1', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
-    # write(pkgs, paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
-    
-    paquetesInstalados <- installed.packages()
-    iInstalados <- pkgs %in% rownames(paquetesInstalados)
-    iInstalados[iInstalados] <- (
-      is.na(minVersions[iInstalados]) 
-      | compareVersion(
-          paquetesInstalados[pkgs[iInstalados], 'Version'], 
-          minVersions[iInstalados]
-        ) < 0
-      )
-      paquetesInstalados[pkgs[iInstalados], 'Version'] >= minVersions[iInstalados]
-    paquetesAInstalar <- pkgs[!iInstalados]
-    # write('IP2', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
+    bPaquetesAInstalar <- checkInstallPackages(pkgs, minVersions)
+    paquetesAInstalar <- pkgs[bPaquetesAInstalar]
 
     if (length(paquetesAInstalar) > 0) {
-      # write('IP3', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
       if (.Platform$OS.type == "windows") {
-        utils::install.packages(paquetesAInstalar, repos = 'https://cran.rstudio.com/', dependencies = TRUE, type='binary')
+        utils::install.packages(
+          paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, type='binary')
       } else {
-        utils::install.packages(paquetesAInstalar, repos = 'https://cran.rstudio.com/', dependencies = TRUE)
+        utils::install.packages(
+          paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE)
       }
-      # write('IP4', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
     }
     if (doCargarPaquetes) cargarPaquetes(pkgs, silent = silent)
-    # write('IP5', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
   }
   return(NULL)
 }
 
 instant_pkgs_github <- function(reposgithub, pkgs=basename(reposgithub), minVersions, silent=T) {
   if (length(pkgs) > 0) {
-    # write('IPG1', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
-    # write(pkgs, paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
-    paquetesInstalados <- installed.packages()
-    iInstalados <- pkgs %in% rownames(paquetesInstalados)
-    iInstalados[iInstalados] <- (
-      is.na(minVersions[iInstalados]) 
-      | compareVersion(
-        paquetesInstalados[pkgs[iInstalados], 'Version'], 
-        minVersions[iInstalados]
-      ) < 0
-    )
-    paquetesAInstalar <- pkgs[!iInstalados]
-    reposgithub <- reposgithub[!iInstalados]
-    # write('IPG2', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
-    # i <- seq_along(reposgithub)[1]
+    bPaquetesAInstalar <- checkInstallPackages(pkgs, minVersions)
+    paquetesAInstalar <- pkgs[bPaquetesAInstalar]
+    reposgithub <- reposgithub[bPaquetesAInstalar]
     if (length(reposgithub) > 0) {
-      # write('IPG3', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
       # devtools tiene algún problema con la carga en los threads. Trato de limitar su carga lo más posible
       instant_pkgs('devtools')
-      # write('IPG4', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
       install_github(repo = reposgithub, quiet = FALSE)
-      # write('IPG5', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
     }
     
     cargarPaquetes(pkgs, silent = silent)
-    # write('IPG6', paste('D:/testsMCH/instantPkgs/', Sys.getpid(), '.txt', sep=''), append = T)
-    # flock::unlock(file.lock = lock)
   }
   return(NULL)
 }
@@ -145,8 +122,6 @@ instant_pkgs_github <- function(reposgithub, pkgs=basename(reposgithub), minVers
 updateAllPkgs <- function() {
   update.packages(lib.loc = .libPaths()[1])
 }
-
-#instant_pkgs(pkgs = 'flock', silent = T)
 
 detachAllPackages <- function() {
   #Util para debugear. Descarga todos los paquetes  
