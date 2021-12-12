@@ -310,7 +310,7 @@ isInvalidVariogram <- function(v, minPsill = 1E-3, minRange = 0.05) {
    length(v) == 0 |
    any(!v$model %in% c('Nug', "Pow")  & ((v$psill < minPsill) | (v$range <= minRange))) |
    any(v$model == 'Nug' & v$psill < 0) |
-   any(v$model == 'Pow' & (v$range >= 2 | v$range <= 0))))
+   any(v$model == 'Pow' & (v$range > 2 | v$range <= 0))))
 }
 
 getModelVariogram <- function(experimental_variogram, formula, input_data = NULL, model = c("Sph", "Exp", "Gau", "Ste"),
@@ -1121,7 +1121,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   } else { fixNugget <- 0 }
 
   for (i in 1:length(model)) {
-    # i <- 3
+    # i <- 1
     if (verbose) print(paste0(i, ': ', model[[i]]))
     vgIni <- afvmod(
       formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, 
@@ -1150,17 +1150,14 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   }
   
   if (any(!is.na(mses))) {
+    bestMSE <- min(mses, na.rm = T)
     maxGamma <- max(vc$gamma)
     minPsill <- maxGamma * 0.001
     minRange <- 0.05
     
-    iesAConsiderar <- !sapply(X = fitModels, FUN = isInvalidVariogram, minPsill=minPsill, minRange=minRange)
-    fitModels <- fitModels[iesAConsiderar]
-    mses <- mses[iesAConsiderar]
-    bestMSE <- min(mses, na.rm = T)
-        
     # Considero todos los que tengan un MSE de como máximo 110% del mínimo
-    iesAConsiderar <- !is.na(mses) & mses / bestMSE < 1.1
+    iesAConsiderar <- !is.na(mses) & mses / bestMSE < 1.1 &
+      !sapply(X = fitModels, FUN = isInvalidVariogram, minPsill=minPsill, minRange=minRange)
     fitModels <- fitModels[iesAConsiderar]
     mses <- mses[iesAConsiderar]
     

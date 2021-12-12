@@ -50,7 +50,7 @@ instant_pkgs(
   pkgs = c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'Rcpp', 
            'raster', 'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 
            'rms', 'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
-           'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC', 'ncdf4'), 
+           'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC'), 
   silent = TRUE)
 
 # instant_pkgs_github(reposgithub = 'Ludecan/intamap', minVersions = '1.4-4', silent = TRUE)
@@ -68,9 +68,6 @@ formulaConCoeficientes <- function(modelo, nDecimales=1, quitarCeros=TRUE) {
 }
 
 distKmToP4Str <- function(p4str, distKm) {
-  if (!is.character(p4str)) {
-    p4str <- as.character(p4str)
-  }
   if (grepl(pattern = "+proj=longlat", x = p4str, fixed = T)) {
     return(distKm)
   } else {
@@ -84,14 +81,10 @@ distKmToP4Str <- function(p4str, distKm) {
 }
 
 crearSpatialPointsDataFrame <- function(
-    x, y, value, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL, nombresFilas=NULL) {
+    x, y, value, proj4string='+proj=longlat +datum=WGS84', SRS_string, nombresFilas=NULL) {
   # crea un spatialPointsDataFrame a partir de las coordenadas x e y y una columna de valor value
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
   # observaciones <- data.frame(x=x, y=y, value=value)
-  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
-    SRS_string <- "EPSG:4326"
-  }
-  
   if (is.character(x) & is.character(y)) {
     observaciones <- value
     sp::coordinates(observaciones) <- c(x, y)
@@ -106,11 +99,11 @@ crearSpatialPointsDataFrame <- function(
 }
 
 imitarObjetoIntamap <- function(
-    observaciones, formulaString=value~1, predictions, class='automap', 
+    observaciones, formulaString=value~1, predictions, intCRS=proj4string(observaciones), 
+    targetCRS=proj4string(predictions), class='automap', 
     outputWhat=list(mean=T, variance=ncol(predictions@data) > 1)) {
-  res <- createIntamapObject(
-    observations=observaciones, formulaString=formulaString, 
-    predictionLocations=geometry(predictions), class=class, outputWhat=outputWhat)
+  res <- createIntamapObject(observations=observaciones, formulaString=formulaString, predictionLocations=geometry(predictions),
+                             intCRS=intCRS, targetCRS=targetCRS, class=class, outputWhat=outputWhat)
   res$campoMedia <- names(predictions@data)[1]
   if (ncol(predictions@data) > 1) { res$campoVarianza <- names(predictions@data)[2]
   } else { res$campoVarianza <- '' }
@@ -119,12 +112,8 @@ imitarObjetoIntamap <- function(
 }
 
 cargarCoordenadas <- function(
-    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL, 
+    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string, 
     incluyeNombresObservaciones=FALSE) {
-  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
-    SRS_string <- "EPSG:4326"
-  }
-  
   if (incluyeNombresObservaciones) {
     observaciones <- read.table(file=pathArchivo, sep=' ', dec='.', header=T,
                                 colClasses=c('character', 'numeric', 'numeric') , comment.char='')
@@ -141,12 +130,8 @@ cargarCoordenadas <- function(
 }
 
 cargarObservaciones <- function(
-    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL, 
+    pathArchivo, proj4string='+proj=longlat +datum=WGS84', SRS_string, 
     incluyeNombresObservaciones=FALSE) {
-  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
-    SRS_string <- "EPSG:4326"
-  }
-  
   if (incluyeNombresObservaciones) {
     observaciones <- read.table(
       file=pathArchivo, sep=' ', dec='.', header=T, 
@@ -192,30 +177,24 @@ crearObservacionesBinarias <- function(observaciones, zcol=1) {
 }
 
 crearCoordsAInterpolar <- function(
-    xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL) {
+    xs, ys, grid=T, proj4string='+proj=longlat +datum=WGS84', SRS_string) {  
   # crea un spatialPoints o spatialPixels a partir de las coordenadas xs e ys
   # si grid=T es un spatialPixels y xs e ys son los ejes de la grilla
   # si grid=F es un spatialPoints y xs e ys son las coordenadas de los puntos
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
-  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
-    SRS_string <- "EPSG:4326"
-  }
-  
   if (grid) { coordsAInterpolar <- expand.grid(x=xs, y=ys)
   } else { coordsAInterpolar <- data.frame(x=xs, y=ys) }
   sp::coordinates(coordsAInterpolar) <- c('x','y')
-  proj4string(coordsAInterpolar) <- sp::CRS(projargs=proj4string, SRS_string=SRS_string)
+  projAInterpolar <- sp::CRS(projargs=proj4string, SRS_string=SRS_string)
+  proj4string(coordsAInterpolar) <- projAInterpolar
   gridded(coordsAInterpolar) <- grid
   return (coordsAInterpolar)
 }
 
 crearGrillaAuxiliar <- function(
-    xs, ys, gridValues, proj4string='+proj=longlat +datum=WGS84', SRS_string=NULL) {
+    xs, ys, gridValues, proj4string='+proj=longlat +datum=WGS84', SRS_string) {
   # crea un spatialPointsDataFrame a partir de las coordenadas x e y y una columna de valor value
   # por defecto asume que el CRS es lat/long y WGS84 pero se le puede especificar otro si es el caso
-  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
-    SRS_string <- "EPSG:4326"
-  }  
   grilla <- expand.grid(x=xs, y=ys)
   grilla$gridValue <- gridValues
   sp::coordinates(grilla) <- c('x', 'y')
@@ -226,13 +205,9 @@ crearGrillaAuxiliar <- function(
 
 crearGrillaRectilineaParaArea <- function(
     xMin, xMax, yMin, yMax, deltaX=(xMax-xMin)/250, deltaY=deltaX, 
-    proj4stringCoordenadasArea='+proj=longlat +datum=WGS84', SRS_stringCoordenadasArea=NULL, 
+    proj4stringCoordenadasArea='+proj=longlat +datum=WGS84', SRS_stringCoordenadasArea, 
     proj4stringGrillaSalida, SRS_stringGrillaSalida) {
-  if (proj4stringCoordenadasArea == '+proj=longlat +datum=WGS84' && 
-      is.null(SRS_stringCoordenadasArea)) {
-    SRS_stringCoordenadasArea <- "EPSG:4326"
-  }
-    
+  
   if (proj4stringCoordenadasArea != proj4stringGrillaSalida || 
       SRS_stringCoordenadasArea != SRS_stringGrillaSalida) {
     # Creamos la caja en la proyección de entrada, proyectamos a la proyección de salida
@@ -259,19 +234,15 @@ crearGrillaRectilineaParaArea <- function(
 }
 
 netCDFToSP <- function(
-    fname, varName='rfe', p4string="+proj=longlat +datum=WGS84", SRS_string=NULL,
+    fname, varName='rfe', p4string="+proj=longlat +datum=WGS84", SRS_string="EPSG:4326", 
     lonDimName='Lon', latDimName='Lat', spObj=NULL, zcol=1) {
-  if (proj4string == '+proj=longlat +datum=WGS84' && is.null(SRS_string)) {
-    SRS_string <- "EPSG:4326"
-  }
-  
   # TO-DO: handle multiple layer/times files
-  nc <- ncdf4::nc_open(filename = fname)
-  value <- as.vector(ncdf4::ncvar_get(nc, varid = varName))
+  nc <- nc_open(filename = fname)
+  value <- as.vector(ncvar_get(nc, varid = varName))
   
   if (is.null(spObj)) {
-    lon <- ncdf4::ncvar_get(nc, lonDimName)
-    lat <- ncdf4::ncvar_get(nc, latDimName)
+    lon <- ncvar_get(nc, lonDimName)
+    lat <- ncvar_get(nc, latDimName)
     coords <- as.matrix(expand.grid(lon=lon, lat=lat))
     spObj <- SpatialPixelsDataFrame(
       points = SpatialPoints(
@@ -282,7 +253,7 @@ netCDFToSP <- function(
     row.names(spObj) <- as.character(row.names(spObj))
   } else { spObj@data[,zcol] <- value }
   
-  ncdf4::nc_close(nc)
+  nc_close(nc)
   return(spObj)
 }
 
@@ -363,53 +334,6 @@ extraerValoresRegresorSobreSP <- function(
     }
   }
   
-  return(valoresSobreSP)
-}
-
-extraerValoresRegresorSingleNetCDFSobreSP <- function(
-  objSP, pathRegresor, setNames=T, 
-  lonDimName='longitude', latDimName='latitude', timeDimName='time', varName='precip',
-  ...) {
-  ncFile <- ncdf4::nc_open(filename = 'chirps-v2.0.monthly.nc')
-  
-  coords <- sp::coordinates(objSP)
-  xResolution <- mean(diff(ncFile$dim[[lonDimName]]$vals))
-  yResolution <- mean(diff(ncFile$dim[[latDimName]]$vals))
-  iLong <- findInterval(coords[, 1], ncFile$dim[[lonDimName]]$vals - xResolution)
-  iLat <- findInterval(coords[, 2], ncFile$dim[[latDimName]]$vals - yResolution)
-  
-  lonRange <- range(iLong)
-  latRange <- range(iLat)
-  
-  start <- c(lonRange[1], latRange[1], 1)
-  counts <- c(lonRange[2] - lonRange[1] + 1, latRange[2] - latRange[1] + 1, -1)
-  
-  vals <- ncdf4::ncvar_get(nc=ncFile, varid=varName, start=start, count=counts)
-  
-  iLong <- iLong - lonRange[1] + 1
-  iLat <- iLat - latRange[1] + 1
-  
-  valoresSobreSP <- sapply(
-    seq_along(iLong), 
-    FUN=function(i, vals, iLong, iLat) {
-      return(vals[iLong[i], iLat[i], ])
-    },
-    vals=vals, iLong=iLong, iLat=iLat
-  )
-  
-  if (setNames) {
-    colnames(valoresSobreSP) <- row.names(objSP)
-    
-    epoch <- as.Date(0)
-    ncEpoch <- as.Date(
-      gsub(pattern='days since ', replacement='', x=ncFile$dim[[timeDimName]]$units))
-    
-    reEpochedDays <- as.difftime(tim = ncFile$dim[[timeDimName]]$vals, units ='days')  - (epoch - ncEpoch)
-    reEpochedDays <- as.Date(as.numeric(reEpochedDays, units='days'))
-    rownames(valoresSobreSP) <- format(reEpochedDays, format="%Y-%m-%d")
-  }
-  
-  ncdf4::nc_close(ncFile)
   return(valoresSobreSP)
 }
 
@@ -620,6 +544,8 @@ prepIDWEstimator <- function(interpolacion, params, objParameters) {
 interpolarEx <- function(
     observaciones, coordsAInterpolar, params, shpMask=NULL, longitudesEnColumnas=T, 
     objParameters=NULL, valoresCampoBaseSobreObservaciones=NULL, valoresCampoBase=NULL) {
+  proj4StringAInterpolar <- proj4string(coordsAInterpolar)
+
   # Saco las observaciones NA y las coordenadas duplicadas
   if (!is.null(valoresCampoBaseSobreObservaciones)) {
     i <- !is.na(observaciones$value) & !is.na(valoresCampoBaseSobreObservaciones)
@@ -689,10 +615,12 @@ interpolarEx <- function(
   # For small variances (all observations the same) the library gives an error, we handle the case separately
   varianzaObservaciones <- var(observaciones$value)
   if (varianzaObservaciones > 1E-6 && params$interpolationMethod !='none' && length(observaciones) >= 4) {
-    mapaConstante <- F
     if (!identicalCRS(observaciones, coordsAInterpolar)) { 
       observaciones <- spTransform(observaciones, coordsAInterpolar@proj4string) 
     }
+  
+    mapaConstante <- F
+    
     if (params$interpolationMethod == 'automatic') { 
       params$interpolationMethod <- seleccionarMetodoInterpolacion(observaciones$value) 
     }
@@ -719,6 +647,7 @@ interpolarEx <- function(
     interpolacion <- createIntamapObject(
       observations=observaciones, formulaString=value ~ 1, 
       predictionLocations=coordsAInterpolar[shpMask$mask, ],
+      intCRS=proj4StringAInterpolar, targetCRS=proj4StringAInterpolar, 
       class=params$interpolationMethod, 
       params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax, 
                   maxdist=params$maxdist, beta=beta, debug.level = 0),
@@ -729,7 +658,7 @@ interpolarEx <- function(
     
     if (params$interpolationMethod == 'automap') {
       interpolacion$campoMedia <- 'var1.pred'
-      interpolacion$campoVarianza <- 'var1.var'
+      interpolacion$campoVarianza <- 'var1.var'    
       
       if (is.null(objParameters)) {
         # Variograma
@@ -737,15 +666,13 @@ interpolarEx <- function(
         require('gstat')
         
         if (params$imitarSurfer) {
-          maxDist <- max(spDists(observaciones, longlat = FALSE))
+          maxDist <- max(spDists(coordsObservaciones, longlat = FALSE))
           cutoff <- maxDist / 2.5
           limites <- seq(from = 0, to = cutoff, length.out = 25)
-          variogramas <- afvmod(
-            formula=interpolacion$formulaString, input_data=interpolacion$observations, 
-            model=c('Lin'), boundaries=limites, miscFitOptions=list(orig.behavior=F), 
-            fix.values=c(0, cutoff, NA), verbose=params$verbose, 
-            nPuntosIniciales=params$nPuntosIniciales, tryFixNugget=params$tryFixNugget, 
-            fit.method = 7)
+          variogramas <- afvmod(formula=interpolacion$formulaString, input_data=interpolacion$observations, 
+                                model=c('Lin'), boundaries=limites, miscFitOptions=list(orig.behavior=F), 
+                                fix.values=c(0, cutoff, NA), verbose=params$verbose, nPuntosIniciales=params$nPuntosIniciales,
+                                tryFixNugget=params$tryFixNugget, fit.method = 7)
           variogramas$var_model$range <- maxDist
         } else {
           usarAFVGLS <- (params$usarFitVariogramGLS == 'auto' && length(interpolacion$observations) <= 50) || (is.logical(params$usarFitVariogramGLS) && as.logical(params$usarFitVariogramGLS))
@@ -754,7 +681,7 @@ interpolarEx <- function(
           if (usarAFVGLS) {
             variogramas <- afvGLS(
               formula=interpolacion$formulaString, input_data=interpolacion$observations, 
-              cutoff=params$cutoff, model=params$modelosVariograma, verbose=params$verbose, 
+              cutoff = params$cutoff, model=params$modelosVariograma, verbose=params$verbose, 
               useNugget=params$usarNugget)
           }
           
@@ -772,12 +699,10 @@ interpolarEx <- function(
             #                        tryFixNugget=params$tryFixNugget, fit.method = 7)  
             #}
             
-            variogramas <- afvmod(
-              formula=interpolacion$formulaString, input_data=interpolacion$observations, 
-              model=params$modelosVariograma, boundaries=limites, miscFitOptions=list(orig.behavior=F), 
-              fix.values=c(fixNugget, NA, NA), verbose=params$verbose, 
-              nPuntosIniciales=params$nPuntosIniciales, tryFixNugget=params$tryFixNugget, 
-              fit.method = 7)
+            variogramas <- afvmod(formula=interpolacion$formulaString, input_data=interpolacion$observations, 
+                                  model=params$modelosVariograma, boundaries=limites, miscFitOptions=list(orig.behavior=F), 
+                                  fix.values=c(fixNugget, NA, NA), verbose=params$verbose, nPuntosIniciales=params$nPuntosIniciales,
+                                  tryFixNugget=params$tryFixNugget, fit.method = 7)
           }          
         }
         
@@ -906,14 +831,15 @@ interpolarEx <- function(
     }
     
     sp::coordinates(predictions) <- sp::coordinates(coordsAInterpolar[shpMask$mask,])
-    predictions@proj4string <- coordsAInterpolar@proj4string
+    proj4string(predictions) <- proj4string(coordsAInterpolar)
     gridded(predictions) <- gridded(coordsAInterpolar[shpMask$mask,])
     class(predictions@data[, 1]) <- 'numeric'
     class(predictions@data[, 2]) <- 'numeric'
     
     interpolacion <- imitarObjetoIntamap(
       observaciones=observaciones, formulaString=value~1, predictions=predictions, 
-      class='automap', outputWhat=list(mean=T, variance=T))
+      intCRS=proj4StringAInterpolar, targetCRS=proj4StringAInterpolar, class='automap', 
+      outputWhat=list(mean=T, variance=T))
   }
   
   if (params$modoDiagnostico & (!is.null(valoresCampoBase) & !is.null(valoresCampoBaseSobreObservaciones))) {
@@ -981,7 +907,7 @@ interpolarEx <- function(
         dibujar = F, dibujarTexto = T)
     }
   }
-  
+
   #escala <- crearEscalaEnQuantiles(interpolacion$predictions@data[,1], nDigitos = 1, brewerPal = 'Blues', nIntervalos = 8, continuo = F)
   #mapearGrillaGGPlot(grilla = interpolacion$predictions, shpBase = shpMask$shp, escala = escala)
   if (!mapaConstante) {
@@ -1095,7 +1021,7 @@ interpolarEx <- function(
 
 interpolarEx2 <- function(
     x, y, value, xs, ys, params, interpolateGrid=T, 
-    proj4stringObservaciones='+proj=longlat +datum=WGS84', SRS_stringObservaciones="EPSG:4326",
+    proj4stringObservaciones='+proj=longlat +datum=WGS84', SRS_stringObservaciones=NULL,
     proj4stringCoordsAInterpolar='+proj=longlat +datum=WGS84', SRS_stringCoordsAInterpolar, 
     shpMask=NULL, longitudesEnColumnas=T) {
   observaciones <- crearSpatialPointsDataFrame(
@@ -1106,16 +1032,16 @@ interpolarEx2 <- function(
 }
 
 
-stUniversalKriging <- function(
-    ti=1, spObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar,
-    valoresRegresoresSobreObservaciones=NULL, pathsRegresoresST=NULL, shpMask=NULL,
-    modelosVariograma=c('Exp', 'Sph', 'Pen'), 
-    cutoff=spDists(t(bbox(spObservaciones)), longlat=!is.projected(spObservaciones))[1, 2] * 0.75,
-    tlags=0:6, nTsST=max(tlags), tlagsAR=NULL, fixNugget=NA, tryFixNugget=T, nPuntosIniciales=2, 
-    modelosVariogramaST=c('Separable', 'ProductSum', 'Metric', 'SimpleSumMetric', 'SumMetric'),
-    ventanaIgualacionDistribuciones=8, ndeps=1E-4, fit.method=6, 
-    deltaT=difftime(fechasObservaciones[2], fechasObservaciones[1]), pathsSalida=NULL, verbose=F, 
-    params) {
+stUniversalKriging <- function(ti=1, spObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar,
+                               valoresRegresoresSobreObservaciones=NULL, pathsRegresoresST=NULL, shpMask=NULL,
+                               modelosVariograma=c('Exp', 'Sph', 'Pen'),
+                               cutoff=spDists(t(bbox(spObservaciones)), longlat=!is.projected(spObservaciones))[1, 2] * 0.75,
+                               tlags=0:6, nTsST=max(tlags), tlagsAR=NULL,
+                               fixNugget=NA, tryFixNugget=T, nPuntosIniciales=2, 
+                               modelosVariogramaST=c('Separable', 'ProductSum', 'Metric', 'SimpleSumMetric', 'SumMetric'),
+                               ventanaIgualacionDistribuciones=8,
+                               ndeps=1E-4, fit.method=6, deltaT=difftime(fechasObservaciones[2], fechasObservaciones[1]),
+                               pathsSalida=NULL, verbose=F, params) {
   if (!is.null(pathsRegresoresST)) {
     valoresRegresoresSobreCoordsAInterpolar_ti <- extraerValoresRegresoresSobreSP(coordsAInterpolar, pathsRegresores = pathsRegresoresST[ti, , drop=F])
     valoresRegresoresSobreCoordsAInterpolar_ti <- lapply(valoresRegresoresSobreCoordsAInterpolar_ti, FUN = function(x) { as.vector(t(x)) } )
@@ -2086,11 +2012,9 @@ ajusteRegresores <- function(
   }
   
   # Paso el método a integer para que la comparación sea más rápida abajo
-  metodoIgualacionDistribuciones <- which(
-    c('ninguna', 'regresionLineal', 'regresionLinealRobusta', 
-      'regresionLinealConEliminacionDeOutliers', 'CDFMatching', 'Lasso', 'GLS'
-    ) == params$metodoIgualacionDistribuciones
-  )
+  metodoIgualacionDistribuciones <- which(c('ninguna', 'regresionLineal', 'regresionLinealRobusta', 
+                                            'regresionLinealConEliminacionDeOutliers', 'CDFMatching',
+                                            'Lasso', 'GLS') == params$metodoIgualacionDistribuciones)
   if (length(metodoIgualacionDistribuciones) == 0) {
     stop(paste0('interpolarEx.r.universalGridding: metodoIgualacionDistribuciones desconocido "', params$metodoIgualacionDistribuciones, '"')) }
   
@@ -2204,7 +2128,7 @@ ajusteRegresores <- function(
         # algo como c(obsEst1, obsEst2, ..., obsEstN) donde obsEsti son los valores de todas las fechas en una estacion
         valoresObservacionesTsVentana <- as.numeric(valoresObservaciones[tsVentana, ])
         
-        if (!is.null(params$preECDFMatching) && params$preECDFMatching && 
+        if (params$preECDFMatching && 
             max(valoresRegresoresSobreCoordsAInterpolar_ti, na.rm=T) / max(valoresObservacionesTsVentana, na.rm=T) >= 2) {
           regECDF <- ecdf(valoresRegresoresSobreCoordsAInterpolar_ti[, 1])
           valsRegresoresObservaciones[, 1] <- quantile(
@@ -2596,10 +2520,9 @@ ajusteRegresores <- function(
               formulaRegresionCC=formulaRegresionCC))
 }
 
-universalGriddingEx <- function(
-    ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
-    valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL, 
-    iObservacionesEnCoordsAInterpolar=NULL, shpMask=NULL, longitudesEnColumnas=T) {
+universalGriddingEx <- function(ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
+                                valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL, 
+                                iObservacionesEnCoordsAInterpolar=NULL, shpMask=NULL, longitudesEnColumnas=T) {
   params <- setMinMaxVal(observacionesValue=as.numeric(valoresObservaciones[ti,]), params)
   if (params$interpolationMethod != 'stUniversalKriging') {
     # La idea es poder pedir el mapeo del campo de una variable usando una serie de campos auxiliares
@@ -2641,6 +2564,7 @@ universalGriddingEx <- function(
     # con la proyeccion y las coordenadas de los puntos a interpolar
     # params debe ser un objeto creado con createParamsUniversalGridding
     # params$descartarCoordenadasNoSignificativas <- FALSE
+
     regs <- ajusteRegresores(
       ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
       valoresObservaciones = valoresObservaciones, coordsAInterpolar=coordsAInterpolar, 
@@ -2971,8 +2895,7 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
   if (rango[1] < 1E-3 & rango[2] > 1E-3) {
     obsBinarias <- crearObservacionesBinarias(observaciones=observaciones, zcol = 'value')
     valoresObservacionesBinarias <- t(obsBinarias@data)
-    binInterpParams <- createParamsInterpolarYMapear()
-    binInterpParams <- modifyList(binInterpParams, params)
+    binInterpParams <- params
     binInterpParams$modoDiagnostico <- F
     binInterpParams$mLimitarValoresInterpolados <- 'LimitarMinimoyMaximo'
     binInterpParams$minimoLVI <- 0
@@ -2985,7 +2908,6 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
     binInterpParams$descartarCoordenadasNoSignificativas <- FALSE
     binInterpParams$interpolationMethod <- 'automap'
     binInterpParams$minRatioRangosParaExtrapolacion <- 0
-    
     if (!is.null(params$valoresRegresoresSobreObservaciones)) {
       binInterpParams$signosValidosRegresores <- rep(
         x = 1, length = length(params$valoresRegresoresSobreObservaciones))
@@ -2995,12 +2917,10 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
     #binInterpParams$betaSimpleKriging <- 0
     binInterpShpMask <- interpolacion$shpMask
 
-    if (!is.null(binInterpShpMask)) {
-      binInterpShpMask$mask <- rep(TRUE, length(interpolacion$predictionLocations))
-    }
-    
+    if (!is.null(binInterpShpMask)) binInterpShpMask$mask <- rep(
+      TRUE, length(interpolacion$predictionLocations))
     interpBinaria <- universalGriddingEx(
-      ti=1, fechasObservaciones='', coordsObservaciones=obsBinarias,
+      ti=1, fechasObservaciones='', coordsObservaciones=obsBinarias, 
       valoresObservaciones=valoresObservacionesBinarias, 
       valoresRegresoresSobreObservaciones=params$valoresRegresoresSobreObservaciones,
       valoresRegresoresSobreCoordsAInterpolar_ti=params$valoresRegresoresSobreCoordsAInterpolar_ti,
@@ -3054,9 +2974,8 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
   return (interpolacion)
 }
 
-simpleBiasAdjustmentEx <- function(
-    observaciones, interpolacion, interpolationParams, zcol=1, gridIndexes=NULL, 
-    errorRelativoParaCorregir=0.15, inverseDistancePower=NA, shpMask) {
+simpleBiasAdjustmentEx <- function(observaciones, interpolacion, interpolationParams, zcol=1, gridIndexes=NULL, 
+                                   errorRelativoParaCorregir=0.15, inverseDistancePower=NA, shpMask) {
   if (interpolationParams$metodoRemocionDeSesgo != 'ninguno') {
     origModoDiagnostico <- interpolationParams$modoDiagnostico
     interpolationParams$modoDiagnostico <- F
@@ -3184,9 +3103,8 @@ seleccionarMetodoInterpolacion <- function(valoresObservados) {
   } else { return('automap') }
 }
 
-salvarInterpolacion <- function(
-    baseNomArchResultados, interpolacion, formatoSalida = 'binary', salvarPrediccion=T, 
-    salvarVarianza=F, NAValue=-.Machine$double.xmax) {
+salvarInterpolacion <- function(baseNomArchResultados, interpolacion, formatoSalida = 'binary', salvarPrediccion=T, salvarVarianza=F, 
+                                NAValue=-.Machine$double.xmax) {
   if (formatoSalida == 'binary') {
     if (salvarPrediccion) {
       nomArchResultados <- changeFileExt(appendToFileName(baseNomArchResultados, '_Pred'), '.bin')
@@ -3210,13 +3128,11 @@ salvarInterpolacion <- function(
       }
     }
   } else if (formatoSalida == 'netCDF') {
-    source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
-    guardarSPobj_netCDF(
-      archivoSalida=changeFileExt(baseNomArchResultados, '.nc'), objSP=interpolacion, 
-      lonDimName='lon', latDimName='lat')
+    # TO-DO
+    stop('salvarInterpolacion: formatoSalida "netCDF" no implementado')
   } else if (formatoSalida == 'GeoTiff') {
     #if (i==9) { #para guardar el IBH en raster
-    source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
+    source('../grillas/uIOGrillas.r', encoding = 'WINDOWS-1252')
     if (salvarPrediccion) {
       guardarGrillaGDAL(changeFileExt(baseNomArchResultados, '.tif'), interpolacion$predictions)
     }    
@@ -3477,11 +3393,9 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
   return(sp)
 }
 
-getIEsACombinarReduccionSeries <- function(
-    coordsObservaciones, radioReduccionSeriesKm=1) {
-  radioReduccionSeries <- distKmToP4Str(
-    p4str=coordsObservaciones@proj4string, distKm=radioReduccionSeriesKm
-  )
+getIEsACombinarReduccionSeries <- function(coordsObservaciones, radioReduccionSeriesKm=1) {
+  radioReduccionSeries <- distKmToP4Str(p4str = proj4string(coordsObservaciones), distKm = radioReduccionSeriesKm)
+  
   iesACombinar <- list()
   
   if (radioReduccionSeries > 0) {
@@ -3550,16 +3464,10 @@ reducirSpatialPointsDataFrame <- function(coordsObservaciones, radioReduccionSer
   return(res)
 }
 
-reducirSpatialPointsDataFrameYMatrizObservaciones <- function(
-    coordsObservaciones, valoresObservaciones, radioReduccionSeriesKm=1, 
-    funcionReduccionSeries='mean', iesACombinar=NULL) {
-  if (is.null(iesACombinar)) { 
-    iesACombinar <- getIEsACombinarReduccionSeries(
-      coordsObservaciones=coordsObservaciones, radioReduccionSeriesKm=radioReduccionSeriesKm) 
-  }
-  coordsObservaciones <- reducirSpatialPointsDataFrame(
-    coordsObservaciones=coordsObservaciones, radioReduccionSeriesKm=radioReduccionSeriesKm, 
-    funcionReduccionSeries=funcionReduccionSeries, iesACombinar=iesACombinar)  
+reducirSpatialPointsDataFrameYMatrizObservaciones <- function(coordsObservaciones, valoresObservaciones, radioReduccionSeriesKm=1, funcionReduccionSeries='mean', iesACombinar=NULL) {
+  if (is.null(iesACombinar)) { iesACombinar <- getIEsACombinarReduccionSeries(coordsObservaciones = coordsObservaciones, radioReduccionSeriesKm = radioReduccionSeriesKm) }
+  coordsObservaciones <- reducirSpatialPointsDataFrame(coordsObservaciones = coordsObservaciones, radioReduccionSeriesKm = radioReduccionSeriesKm, 
+                                                       funcionReduccionSeries = funcionReduccionSeries, iesACombinar = iesACombinar)  
   if (length(iesACombinar) > 0) {
     #i <- 2
     #for (i in (1:length(iesACombinar))) {
@@ -3991,28 +3899,6 @@ grillaPixelesSobreBoundingBox <- function(
     'SpatialPixels'))
 }
 
-
-projectedToGeodeticGrid <- function(objSP, pixelSizeDegrees=0.05) {
-  # objSP=interpolacion$predictions
-  outputCRS <- CRS(SRS_string="EPSG:4326")
-  caja <- bbox(getPoligonoBoundingBox(objSP=objSP, outputCRS=outputCRS))
-  largoDimensiones <- diff(t(caja))
-  nCeldasX <- ceil(largoDimensiones[1] / pixelSizeDegrees)
-  nCeldasY=round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])
-  
-  caja[, 1] <- floor(caja[, 1] / pixelSizeDegrees) * pixelSizeDegrees
-  caja[, 2] <- caja[, 1] + c(pixelSizeDegrees * nCeldasX, pixelSizeDegrees * nCeldasY)
-  largoDimensiones <- diff(t(caja))
-  
-  newGrid <- grillaPixelesSobreBoundingBox(
-    objSP=objSP, caja=caja, outputCRS=outputCRS, largoDimensiones=largoDimensiones, 
-    nCeldasX=nCeldasX, nCeldasY=nCeldasY)
-  gridCentroids <- sp::SpatialPoints(newGrid, proj4string=newGrid@proj4string)
-  gridCentroids <- sp::spTransform(gridCentroids, CRSobj=objSP@proj4string)
-  newGrid <- sp::SpatialPixelsDataFrame(points=geometry(newGrid), data=over(gridCentroids, objSP))
-  return(newGrid)
-}
-  
 filtradoRegresoresDiscontinuosPorVGM <- function(pathsRegresoresATestear, shpBase, nMuestras=5000, q1Dists=1/3, q2Dists=1-q1Dists, umbral=3) {
   # nMuestras=2500
   # q1Dists=1/3

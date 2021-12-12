@@ -35,6 +35,7 @@ if (is.null(script.dir.uIOGrillas)) { script.dir.uIOGrillas <- ''
 source(paste0(script.dir.uIOGrillas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(c('sp', 'rgdal'))
 
+
 # para todas las funciones grilla tiene que ser un objeto spatialPixelsDataFrame
 guardarDefinicionGrilla <- function(archivoDefinicion, grilla) {
   if (!is.na(proj4string(grilla))) {
@@ -63,10 +64,9 @@ guardarGrillaArchDefYArchDatoBin <- function(archivoDefinicion, grilla) {
   guardarDatosGrilla(archivoDatos, grilla)
 }
 
-guardarGrillaGDAL <- function(
-    nombreArchivo, grilla, options=c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9')) {
+guardarGrillaGDAL <- function(nombreArchivo, grilla) {
   # el tipo de archivo queda determinado por nombreArchivo, p.ej: si es .tif guarda un geotiff
-  writeGDAL(grilla, nombreArchivo, options=options)
+  writeGDAL(grilla, nombreArchivo, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
 }
 
 leerGrillaGDAL <- function(nombreArchivo) {
@@ -203,71 +203,16 @@ guardarRasterBin <- function(archiBin, grillaRaster, naValue=NULL) {
   close(binFile)
 }
 
-guardarSPobj_netCDF <- function(
-    archivoSalida, objSP, zcol=1, NAflag=-9999, varname='precip', varunit='mm', 
-    zname='Date', zval, lonDimName="longitude", latDimName="latitude") {
-  objSP <- objSP[, zcol]
-  names(objSP) <- varname
-  
-  #zname='Date'
-  #rLayer <- raster::raster(objSP)
-  #raster::NAvalue(rLayer) <- NAflag
-  
-  #rBrick <- raster::brick(rLayer)
-  #zVals <- as.integer(
-  #  difftime(ymd(nombreArchSinPathNiExtension(listaMapas$nombreArchivo)), ymd('1980-01-01')))
-  #zVals <- ymd(nombreArchSinPathNiExtension(listaMapas$nombreArchivo))
-  #rBrick <- raster::setZ(x=rBrick, z=zVals, name=zname)
-  
-  #raster::writeRaster( 
-  #  rBrick, "rstack.nc", overwrite=TRUE, format="CDF", varname=varname, varunit=varunit, 
-  #  zname=zname, NAflag=NAflag)
-  
-  # TODO: Projected data sets not implemented
-  stopifnot(!is.projected(obj = objSP))
-  
-  # Longitude and Latitude dimensions
-  xvals <- unique(coordinates(objSP)[, 1])
-  yvals <- unique(coordinates(objSP)[, 2])
-  lon <- ncdf4::ncdim_def(name=lonDimName, units="degrees_east", vals=xvals)
-  lat <- ncdf4::ncdim_def(name=latDimName, units="degrees_north", vals=yvals)
-
-  # Time dimension
-  time <- ncdf4::ncdim_def(
-    name="time", units="days since 1980-1-1 0:0:0", unlim=TRUE, calendar="gregorian", 
-    vals=as.integer(difftime(zval, ymd('1980-01-01'))))
-  
-  # Define the precipitation variables
-  ncvar <- ncdf4::ncvar_def(
-    name=varname, units=varunit, dim=list(lon, lat, time), missval=NAflag, compression=9)
-  vals <- objSP@data[, zcol]
-  vals[is.na(vals)] <- NAflag
-  
-  tryCatch(
-    expr = {
-      ncout <- ncdf4::nc_create(filename=archivoSalida, vars=list(ncvar), force_v4=TRUE)
-      ncdf4::ncatt_put(ncout, 0, "title", "Monthly Rainfall")
-      ncdf4::ncatt_put(ncout, 0, "institution", "Instituto Uruguayo de Meteorología")
-      ncdf4::ncatt_put(ncout, 0, "date_created", as.character(Sys.Date()))
-      ncdf4::ncatt_put(ncout, 0, "creator_name", "Pablo Alfaro")
-      ncdf4::ncatt_put(ncout, 0, "creator_email", "palfaro@motionsoft.com.uy")
-      
-      ncdf4::ncvar_put(nc=ncout, varid=ncvar, vals=vals, start=c(1, 1, 1), count=c(-1, -1, 1))
-    },
-    finally = ncdf4::nc_close(ncout)
-  )
-}
-
 guardarSPobj <- function(
-    archivoSalida, objSP, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff')) {
+    archivoSalida, objSp, naValue=NULL, formatoSalida=c('kml', 'netCDF', 'GeoTiff')) {
   formatoSalida <- formatoSalida[1]
   if (formatoSalida == 'kml') {
     stop('uIOGrillas.guardarSPobj: formatoSalida ".kml" no implementado')
-    #writeGDAL(objSP, changeFileExt(archivoSalida, '.kml'))
+    #writeGDAL(objSp, changeFileExt(archivoSalida, '.kml'))
   } else  if (formatoSalida == 'netCDF') {
     stop('uIOGrillas.guardarSPobj: formatoSalida "netCDF" no implementado')
   } else  if (formatoSalida == 'GeoTiff') {
-    writeGDAL(objSP, changeFileExt(archivoSalida, '.tif'), options=c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
+    writeGDAL(objSp, changeFileExt(archivoSalida, '.tif'), options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
   } else
     stop(paste('uIOGrillas.guardarSPobj: formatoSalida desconocido ', formatoSalida, sep=''))
 }

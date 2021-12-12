@@ -91,13 +91,9 @@ leerEscalaJSON <- function(nombreArchivo) {
 }
 
 redondearEscala <- function(escala, nDigitos=1) {
-  if (nDigitos >= 0) {
-    n <- length(escala)
-    return(c(achicarToNDigitos(escala[1], nDigitos = nDigitos), round(escala[2:(n-1)], nDigitos), 
-             agrandarToNDigitos(escala[n], nDigitos = nDigitos)))
-  } else {
-    return(escala)
-  }
+  n <- length(escala)
+  return(c(achicarToNDigitos(escala[1], nDigitos = nDigitos), round(escala[2:(n-1)], nDigitos), 
+           agrandarToNDigitos(escala[n], nDigitos = nDigitos)))
 }
 
 leerEscalas <- function(params, datosGrillaPredicciones, datosGrillaSD) {

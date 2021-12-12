@@ -189,7 +189,7 @@ nombreModelo <- function(params, pathsRegresores=NULL) {
   } else { strInterpolacion <- params$interpolationMethod
   }
   
-  if (!is.null(params$preECDFMatching) && params$preECDFMatching) { strECDF <- '_ECDF'
+  if (params$preECDFMatching) { strECDF <- '_ECDF'
   } else { strECDF <- '' }
   
   strMetodo <- paste0(strMetodoIgualacion, strInterpolacion)
@@ -978,7 +978,7 @@ coarsenGridEx <- function(object, coarse = 2, offset = sample(c(0:(coarse - 1)),
   xs = sort(xss)[(xi - 1) * coarse + offset[1] + 1]
   yi = c(1:(length(yss)/coarse))
   ys = sort(yss)[(yi - 1) * coarse + offset[2] + 1]
-  sel = sp::coordinates(objCor)[, 1] %in% xs & sp::coordinates(objCor)[, 2] %in% ys
+  sel = sp::coordinates(objCor)[, 1] %in% xs & coordinates(objCor)[, 2] %in% ys
   newPoints = objCor[sel, ]
   if ("data" %in% names(getSlots(class(object)))) 
     newPoints = SpatialPointsDataFrame(newPoints, data = object@data[sel, , drop=F])
@@ -1365,7 +1365,7 @@ contarNoNulosPorCuadrantesEnObjSP <- function(
 }
 
 contarNoNulosPorCuadrantesTi <- function(pathGeoTiff, objCuadrantes = NULL, nCuadrantesX=2, nCuadrantesY=nCuadrantesX, zcol=1, shpMask=NULL) {
-  #print(pathGeoTiff)
+  print(pathGeoTiff)
   #pathGeoTiff <- "datos/satelites/GPM/20200531.tif"
   #pathGeoTiff <- pathsGeoTiffs[1,]
   if (!is.na(pathGeoTiff)) {
