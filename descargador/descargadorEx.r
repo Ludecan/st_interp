@@ -370,7 +370,7 @@ descargarArchivo <- function(
     path = dirname(nombresArchivosDestino[i])
     if (!dir.exists(path)) dir.create(path, showWarnings = FALSE, recursive = T)
     
-    temp <- tempfile(tmpdir = dirname(nombresArchivosDestino[i]))
+    temp <- tempfile(tmpdir=dirname(nombresArchivosDestino[i]))
     
     while (do_download & nRetries < maxRetries) {
       if (useCurl) {
@@ -468,9 +468,16 @@ chunks_by_size <- function(x, n) {
 }
 
 descargarArchivos <- function(
-    urls, nombresArchivosDestino=paste0(pathSalida, basename(urls)), nConexionesSimultaneas=4, 
-    forzarReDescarga=FALSE, maxRetries=5L, segundosEntreIntentos=5L, curlOpts=NULL, pathSalida='',
-    do_unzip=isCompressed(nombresArchivosDestino)) {
+  urls, 
+  nombresArchivosDestino=paste0(pathSalida, basename(urls)), 
+  nConexionesSimultaneas=4, 
+  forzarReDescarga=FALSE, 
+  maxRetries=5L, 
+  segundosEntreIntentos=5L, 
+  curlOpts=NULL, 
+  pathSalida='',
+  do_unzip=isCompressed(nombresArchivosDestino)
+) {
   # Retorna:
   # 0 si no se pudo bajar el archivo
   # 1 si se bajo un archivo nuevo
@@ -507,12 +514,15 @@ descargarArchivos <- function(
         do_unzip=do_unzip, useCurl=useCurl)
       stopCluster(cl)
     } else {
-      if (!useCurl) { assign("threadHandle", getCurlHandle(.opts = curlOpts), envir = .GlobalEnv) }
-      results <- sapply(X=seq_along(urls), FUN=descargarArchivo, urls=urls,
-                        nombresArchivosDestino=nombresArchivosDestino, 
-                        forzarReDescarga=forzarReDescarga, curlOpts=curlOpts, 
-                        maxRetries=maxRetries, segundosEntreIntentos=segundosEntreIntentos, 
-                        do_unzip=do_unzip, useCurl=useCurl)
+      if (!useCurl) { 
+        assign("threadHandle", getCurlHandle(.opts=curlOpts), envir=.GlobalEnv)
+      }
+      results <- sapply(
+        X=seq_along(urls), FUN=descargarArchivo, urls=urls,
+        nombresArchivosDestino=nombresArchivosDestino, 
+        forzarReDescarga=forzarReDescarga, curlOpts=curlOpts, 
+        maxRetries=maxRetries, segundosEntreIntentos=segundosEntreIntentos, 
+        do_unzip=do_unzip, useCurl=useCurl)
     }
   } else {
     results <- integer(0)

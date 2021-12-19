@@ -118,12 +118,12 @@ leerSeriesArchivoUnico <- function(
   return(list(estaciones=estaciones, fechas=datos$fechas, datos=datos$datos))
 }
 
-leerSeriesXLSX <- function(pathArchivoDatos, hojaEstaciones='InfoPluvios', headerEstaciones=T,
-                           colsEstaciones=1:4, colId=2, hojaDatos='Medidas', formatoFechas='YmdHMS',
-                           truncated=5, tzFechas='UTC', headerDatos=T, fileEncoding = '',
-                           na.strings=-1111) {
-  
-  
+leerSeriesXLSX <- function(
+  pathArchivoDatos, hojaEstaciones='InfoPluvios', headerEstaciones=T,
+  colsEstaciones=1:4, colId=2, hojaDatos='Medidas', formatoFechas='YmdHMS',
+  truncated=5, tzFechas='UTC', headerDatos=T, fileEncoding='', 
+  na.strings=-1111
+) {
   dfEstaciones <- read.xlsx(xlsxFile = pathArchivoDatos, sheet = hojaEstaciones, 
                             cols = colsEstaciones, colNames = headerEstaciones)
   dfEstaciones <- setIdsEstaciones(dfEstaciones, colId = colId)
