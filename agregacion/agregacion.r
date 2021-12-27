@@ -278,7 +278,9 @@ testAgregacion <- function() {
 
 agregacionTemporalGrillada_ti <- function(
   ti=1, fechas, pathsRegresor, nFechasAAgregar, minNfechasParaAgregar, funcionAgregacion, 
-  formatoNomArchivoSalida, paramsCTL, shpBase, iOver, borrarOriginales, overlap, funcEscalado) {
+  formatoNomArchivoSalida, paramsCTL, shpBase, iOver, borrarOriginales, overlap, funcEscalado,
+  archivoSalidaUsaFechaFinal=FALSE
+) {
   # fechas <- tempAireMin$fechas
   # pathsRegresor <- pathsRegresores[, 1]
   # formatoNomArchivoSalida <- paste0('Datos/MODIS/MOD11A1_LST_Day_3/MOD11A1_%Y-%m-%d.LST_Day_1km_', nFechasAAgregar, '.tif')
@@ -293,7 +295,7 @@ agregacionTemporalGrillada_ti <- function(
     tiMax <- ti + nFechasAAgregar - 1
   }
 
-  regresorTs <- vector(mode = "list", tiMax - tiMin + 1)
+  regresorTs <- vector(mode="list", tiMax - tiMin + 1)
   n <- 1
 
   #i <- 1
@@ -303,15 +305,17 @@ agregacionTemporalGrillada_ti <- function(
     if (!is.na(pathsRegresor[i])) {
       if (!is.null(paramsCTL)) { 
         regresorTs[[n]] <- try(
-          readXYGridSP(ctl = paramsCTL$ctl, dsetOverride = pathsRegresor[i], 
-                       grillaXY = paramsCTL$grilla))
+          readXYGridSP(
+            ctl=paramsCTL$ctl, dsetOverride=pathsRegresor[i], grillaXY=paramsCTL$grilla
+          )
+        )
       } else { 
         regresorTs[[n]] <- try(readGDAL(pathsRegresor[i], silent=T))
       }
       if (!('try-error' %in% class(regresorTs[[n]]))) {
         if (!is.null(iOver)) {
           if (is(regresorTs[[n]], 'SpatialGridDataFrame')) {
-            arrInd <- arrayInd(ind = iOver, .dim = regresorTs[[n]]@grid@cells.dim)
+            arrInd <- arrayInd(ind=iOver, .dim=regresorTs[[n]]@grid@cells.dim)
             xs <- unique(arrInd[,2])
             ys <- unique(arrInd[,1])
             # shpBaseAux <- spTransform(shpBase, regresorTs[[n]]@proj4string)
@@ -353,8 +357,15 @@ agregacionTemporalGrillada_ti <- function(
     
     # spplot(res)
     
-    nomArch <- format(x = fechas[ti], formatoNomArchivoSalida)
-    writeGDAL(dataset = res, fname = nomArch, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
+    if (archivoSalidaUsaFechaFinal) {
+      i_extra <- nFechasAAgregar - 1
+    } else {
+      i_extra <- 0
+    }
+    nomArch <- format(x=fechas[ti + i_extra], formatoNomArchivoSalida)
+    writeGDAL(
+      dataset=res, fname=nomArch, options=c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9')
+    )
     
     return(nomArch)
   } else { return(NA)}
@@ -364,14 +375,16 @@ agregacionTemporalGrillada <- function(
     fechas, pathsRegresor, formatoNomArchivoSalida=paste0('%.4d-%.2d-%.2d_', nFechasAAgregar, '.tif'), 
     nFechasAAgregar=3, minNfechasParaAgregar=max(trunc(nFechasAAgregar/2), 1), tIni=1, 
     tFin=length(pathsRegresor), funcionAgregacion=base::mean, ctl=NULL, shpBase=NULL,
-    borrarOriginales=FALSE, overlap=TRUE, funcEscalado=NULL, nCoresAUsar=0) {
+    borrarOriginales=FALSE, overlap=TRUE, funcEscalado=NULL, nCoresAUsar=0,
+    archivoSalidaUsaFechaFinal=FALSE
+) {
   # Para calcular agregaciones temporales de una serie temporal de un mismo regresor
   # pathsRegresor es una vector de rasters
   # Para cada fecha fi, se toman los píxeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) y se
   # calcula funcionAgregacion con ellos
   # Si no hay al menos minNfechasParaAgregar píxeles disponibles el píxel se devuelve nulo
   if (nCoresAUsar <= 0) {
-    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), tFin - tIni + 1)
+    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), (tFin - tIni + 1) / nFechasAAgregar)
   }
   
   dir.create(dirname(formatoNomArchivoSalida), showWarnings = F, recursive = T)
@@ -383,11 +396,14 @@ agregacionTemporalGrillada <- function(
   } else { paramsCTL <- NULL }
   
   if (!is.null(shpBase)) {
-    iAux <- 2
+    # iAux <- 2
     iAux <- which.min(!is.na(pathsRegresor))
     if (!is.null(paramsCTL)) {
-      regresorAux <- try(readXYGridSP(ctl = paramsCTL$ctl, dsetOverride = pathsRegresor[iAux],
-                                      grillaXY = paramsCTL$grilla))
+      regresorAux <- try(
+        readXYGridSP(
+          ctl=paramsCTL$ctl, dsetOverride=pathsRegresor[iAux], grillaXY=paramsCTL$grilla
+        )
+      )
     } else {
       regresorAux <- try(readGDAL(pathsRegresor[iAux], silent=T))
     }
@@ -407,19 +423,24 @@ agregacionTemporalGrillada <- function(
       if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
     })
 
-    parSapplyLB(cl=cl, X=tSeq, FUN=agregacionTemporalGrillada_ti,
-                fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar,
-                minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion,
-                formatoNomArchivoSalida=formatoNomArchivoSalida, paramsCTL=paramsCTL,
-                shpBase=shpBase, iOver=iOver, borrarOriginales=borrarOriginales, overlap=overlap, 
-                funcEscalado=funcEscalado)
+    parSapplyLB(
+      cl=cl, X=tSeq, FUN=agregacionTemporalGrillada_ti, fechas=fechas, pathsRegresor=pathsRegresor, 
+      nFechasAAgregar=nFechasAAgregar, minNfechasParaAgregar=minNfechasParaAgregar, 
+      funcionAgregacion=funcionAgregacion, formatoNomArchivoSalida=formatoNomArchivoSalida, 
+      paramsCTL=paramsCTL, shpBase=shpBase, iOver=iOver, borrarOriginales=borrarOriginales, 
+      overlap=overlap, funcEscalado=funcEscalado, 
+      archivoSalidaUsaFechaFinal=archivoSalidaUsaFechaFinal
+    )
     stopCluster(cl)
   } else {
-    sapply(X=tSeq, FUN=agregacionTemporalGrillada_ti,
-           fechas=fechas, pathsRegresor=pathsRegresor, nFechasAAgregar=nFechasAAgregar,
-           minNfechasParaAgregar=minNfechasParaAgregar, funcionAgregacion=funcionAgregacion,
-           formatoNomArchivoSalida=formatoNomArchivoSalida, paramsCTL=paramsCTL, shpBase=shpBase,
-           iOver=iOver, borrarOriginales=borrarOriginales, overlap=overlap, funcEscalado=funcEscalado)
+    sapply(
+      X=tSeq, FUN=agregacionTemporalGrillada_ti, fechas=fechas, pathsRegresor=pathsRegresor, 
+      nFechasAAgregar=nFechasAAgregar, minNfechasParaAgregar=minNfechasParaAgregar, 
+      funcionAgregacion=funcionAgregacion, formatoNomArchivoSalida=formatoNomArchivoSalida, 
+      paramsCTL=paramsCTL, shpBase=shpBase, iOver=iOver, borrarOriginales=borrarOriginales, 
+      overlap=overlap, funcEscalado=funcEscalado, 
+      archivoSalidaUsaFechaFinal=archivoSalidaUsaFechaFinal
+    )
   }
 }
 
