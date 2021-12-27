@@ -956,14 +956,20 @@ interpolarEx <- function(
       # Mapa de campo base
       if (gridded(coordsAInterpolar)) {
         spAux <- SpatialPixelsDataFrame(points = coordsAInterpolar, data = data.frame(value=valoresCampoBase))
-        mapearGrillaGGPlot(grilla = spAux, shpBase = shpMask$shp, zcol=1, continuo = params$especEscalaDiagnostico$continuo, titulo = paste0('Ajuste Regresores - ', params$strFecha),  
-                           subtitulo = params$formulaRegresionCC, nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
-                           dibujar = F)
+        mapearGrillaGGPlot(
+          grilla=spAux, shpBase=shpMask$shp, zcol=1, continuo=params$especEscalaDiagnostico$continuo, 
+          titulo=paste0('Ajuste Regresores - ', params$strFecha), subtitulo=params$formulaRegresionCC, 
+          nomArchResultados=paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
+          dibujar=F
+        )
       } else {
         spAux <- SpatialPointsDataFrame(coords = coordsAInterpolar, data = data.frame(value=valoresCampoBase))
-        mapearPuntosGGPlot(puntos = spAux, shpBase = shpMask$shp, zcol=1, continuo = params$especEscalaDiagnostico$continuo, titulo = paste0('Ajuste Regresores - ', params$strFecha), 
-                           subtitulo = params$formulaRegresionCC, nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
-                           dibujar = F, dibujarTexto = T)
+        mapearPuntosGGPlot(
+          puntos=spAux, shpBase=shpMask$shp, zcol=1, continuo=params$especEscalaDiagnostico$continuo, 
+          titulo=paste0('Ajuste Regresores - ', params$strFecha), subtitulo=params$formulaRegresionCC, 
+          nomArchResultados=paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
+          dibujar=F, dibujarTexto=T
+        )
       }
     }
     
@@ -2662,9 +2668,10 @@ universalGriddingEx <- function(
     # valoresCampoBaseSobreObservaciones <- regs$valoresCampoBaseSobreObservaciones
     # valoresCampoBase <- regs$valoresCampoBase
     interpolacion <- interpolarEx(
-      observaciones = coordsObservaciones, coordsAInterpolar = coordsAInterpolar, params = params, 
-      shpMask = shpMask, valoresCampoBaseSobreObservaciones=regs$valoresCampoBaseSobreObservaciones, 
-      valoresCampoBase=regs$valoresCampoBase, longitudesEnColumnas=longitudesEnColumnas)
+      observaciones=coordsObservaciones, coordsAInterpolar=coordsAInterpolar, params=params, 
+      shpMask=shpMask, valoresCampoBaseSobreObservaciones=regs$valoresCampoBaseSobreObservaciones, 
+      valoresCampoBase=regs$valoresCampoBase, longitudesEnColumnas=longitudesEnColumnas
+    )
     interpolacion$formulaRegresionCC <- regs$formulaRegresionCC
     
     # mapearPuntosGGPlot(puntos = observaciones, shpBase = shpMask$shp, continuo=T, zcol='value')

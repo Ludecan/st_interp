@@ -212,11 +212,12 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
 }
 
 interpolarYMapearI <- function(
-    iTi, tsAInterpolar=1:nrow(valoresObservaciones), coordsObservaciones, fechasObservaciones, 
-    valoresObservaciones, pathsRegresores=NULL, valoresRegresoresSobreObservaciones=NULL, 
-    coordsAInterpolar, paramsIyM, shpMask, xyLims, listaMapas, returnInterpolacion=TRUE, 
-    paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
-    espEscalaAdaptada=NULL) {
+  iTi, tsAInterpolar=1:nrow(valoresObservaciones), coordsObservaciones, fechasObservaciones, 
+  valoresObservaciones, pathsRegresores=NULL, valoresRegresoresSobreObservaciones=NULL, 
+  coordsAInterpolar, paramsIyM, shpMask, xyLims, listaMapas, returnInterpolacion=TRUE, 
+  paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
+  espEscalaAdaptada=NULL
+) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   # iTi <- 1
   # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-03')
@@ -261,7 +262,8 @@ interpolarYMapearI <- function(
       valoresRegresoresSobreObservaciones = valoresRegresoresSobreObservaciones, 
       coordsAInterpolar = coordsAInterpolar, params = paramsIyM, shpMask = shpMask, 
       paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
-      pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores)
+      pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores
+    )
     # mapearGrillaGGPlot(grilla=interpolacion$predictions, shpBase = shpMask$shp, continuo = T, dibujar=F)
     # mapearPuntosGGPlot(coordsObservaciones, shpBase = shpMask$shp, continuo = T, dibujar=F)
   }

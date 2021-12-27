@@ -954,10 +954,11 @@ mapearGrillaGGPlot <- function(
     } else {
       vals <- escala$escala
     }
+    
     limits <- c(vals[1], vals[length(vals)])
     if (limits[1] == limits[2]) {
       breaks <- levels(v)
-      labels <- gsub(pattern = ',', replacement = ', ', x = labels, fixed = T)
+      labels <- gsub(pattern=',', replacement=', ', x=breaks, fixed=T)
       p <- p + scale_fill_manual(
         breaks=breaks, drop=F, labels=labels, values=escala$colores[1:ultimoI], 
         na.value="gray95"
