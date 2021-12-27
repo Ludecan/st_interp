@@ -934,7 +934,8 @@ mapearGrillaGGPlot <- function(
     vals <- ggplot2:::rescale01(escala$escala)
     p <- p + scale_fill_gradientn(
       colours=escala$colores, values=vals, limits=c(escala$escala[1], valMax),
-                                  breaks=escala$escala, na.value="gray95") + theme(legend.key.height=alturaEscalaContinua)
+      breaks=escala$escala, na.value="gray95"
+    ) + theme(legend.key.height=alturaEscalaContinua)
   } else {
     if (is.infinite(escala$escala[1])) {
       if (is.infinite(valMax)) {
@@ -954,19 +955,27 @@ mapearGrillaGGPlot <- function(
       vals <- escala$escala
     }
     limits <- c(vals[1], vals[length(vals)])
-    
-    colores <- escala$colores[1:ultimoI]
-    showLimits <- !(is.infinite(escala$escala[1]) | is.infinite(valMax))
-    p <- p + 
-      binned_scale(aesthetics = "fill",
-                   scale_name = "value",
-                   palette = ggplot2:::binned_pal(scales::manual_pal(colores)),
-                   guide="coloursteps",
-                   breaks=vals,
-                   limits=limits,
-                   show.limits=showLimits,
-                   na.value="gray95") +
-      theme(legend.key.height=alturaEscalaContinua)
+    if (limits[1] == limits[2]) {
+      breaks <- levels(v)
+      labels <- gsub(pattern = ',', replacement = ', ', x = labels, fixed = T)
+      p <- p + scale_fill_manual(
+        breaks=breaks, drop=F, labels=labels, values=escala$colores[1:ultimoI], 
+        na.value="gray95"
+      )
+    } else {
+      colores <- escala$colores[1:ultimoI]
+      showLimits <- !(is.infinite(escala$escala[1]) | is.infinite(valMax))
+      p <- p + 
+        binned_scale(aesthetics = "fill",
+                     scale_name = "value",
+                     palette = ggplot2:::binned_pal(scales::manual_pal(colores)),
+                     guide="coloursteps",
+                     breaks=vals,
+                     limits=limits,
+                     show.limits=showLimits,
+                     na.value="gray95") +
+        theme(legend.key.height=alturaEscalaContinua)      
+    }
   }
   
   p <- aplicarOpcionesAMapa(

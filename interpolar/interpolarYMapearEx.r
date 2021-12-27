@@ -221,7 +221,7 @@ interpolarYMapearI <- function(
   # iTi <- 1
   # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-03')
   ti <- tsAInterpolar[iTi]
-  # print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
+  print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
 
   nomArchGeoTiff <- changeFileExt(listaMapas$nombreArchivo[ti], '.tif')
   dir.create(dirname(listaMapas$nombreArchivo[ti]), showWarnings = F, recursive = T)

@@ -717,10 +717,10 @@ interpolarEx <- function(
     } else { outputWhat <- list(mean=T) }
     
     interpolacion <- createIntamapObject(
-      observations=observaciones, formulaString=value ~ 1, 
+      observations=observaciones, formulaString=value ~ 1,
       predictionLocations=coordsAInterpolar[shpMask$mask, ],
-      class=params$interpolationMethod, 
-      params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax, 
+      class=params$interpolationMethod,
+      params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax,
                   maxdist=params$maxdist, beta=beta, debug.level = 0),
       outputWhat=outputWhat)
     # mapearPuntosGGPlot(observaciones, shpMask$shp, dibujarTexto = length(observaciones) <= 50)
@@ -969,10 +969,10 @@ interpolarEx <- function(
     
     if (gridded(coordsAInterpolar)) {
       mapearGrillaGGPlot(
-        grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-        continuo = params$especEscalaDiagnostico$continuo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
-        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '06-InterpolacionMasCampoBase.png'), 
-        dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
+        grilla=interpolacion$predictions, shpBase=shpMask$shp, zcol=interpolacion$campoMedia, 
+        continuo=params$especEscalaDiagnostico$continuo, titulo=paste0(params$nombreModelo, ' - ', params$strFecha), 
+        nomArchResultados=paste0(params$carpetaParaModoDiagnostico, '06-InterpolacionMasCampoBase.png'), 
+        dibujar=F, dibujarPuntosObservaciones=T, coordsObservaciones=observaciones)
     } else {
       mapearPuntosGGPlot(
         puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
@@ -1092,19 +1092,6 @@ interpolarEx <- function(
   
   return (interpolacion)
 }
-
-interpolarEx2 <- function(
-    x, y, value, xs, ys, params, interpolateGrid=T, 
-    proj4stringObservaciones='+proj=longlat +datum=WGS84', SRS_stringObservaciones="EPSG:4326",
-    proj4stringCoordsAInterpolar='+proj=longlat +datum=WGS84', SRS_stringCoordsAInterpolar, 
-    shpMask=NULL, longitudesEnColumnas=T) {
-  observaciones <- crearSpatialPointsDataFrame(
-    x, y, value, proj4stringObservaciones, SRS_stringObservaciones)
-  coordsAInterpolar <- crearCoordsAInterpolar(
-    xs, ys, interpolateGrid, proj4stringCoordsAInterpolar, SRS_stringCoordsAInterpolar)
-  return (interpolarEx(observaciones, coordsAInterpolar, params, shpMask))
-}
-
 
 stUniversalKriging <- function(
     ti=1, spObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar,
