@@ -289,14 +289,16 @@ netCDFToSP <- function(
 extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1, silent=T, ...) {
   # i <- 1
   if (!silent) print(i)
-
+  
   if (!is.na(pathsRegresor[i]) && file.exists(pathsRegresor[i]) && length(objSP) > 0) {
     ext <- getFileExt(pathsRegresor[i])
     if (ext == 'tif') { evaluarConReintentos(regresor <- readGDAL(pathsRegresor[i], silent = silent))
     } else if (ext == 'nc') {
       # TO-DO: receive varName as parameter
-      evaluarConReintentos(regresor <- netCDFToSP(fname = pathsRegresor[i]))
-    } else { stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresor[i], '"')) }
+      evaluarConReintentos(regresor <- netCDFToSP(fname=pathsRegresor[i]))
+    } else { 
+      stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresor[i], '"')) 
+    }
 
     # Obtengo los valores del regresor en las coordenadas de las observaciones
     if (!identicalCRS(x = objSP, y = regresor)) {
@@ -414,8 +416,9 @@ extraerValoresRegresorSingleNetCDFSobreSP <- function(
 }
 
 extraerValoresRegresoresSobreSP <- function(
-    objSP, pathsRegresores, iInicial = 1, iFinal = nrow(pathsRegresores), fn=NULL, zcol=1, silent=T, 
-    nCoresAUsar=0, setNames=T, ...) {
+  objSP, pathsRegresores, iInicial = 1, iFinal = nrow(pathsRegresores), fn=NULL, zcol=1, 
+  silent=T, nCoresAUsar=0, setNames=T, ...
+) {
   # TO-DO: paralelizar esta función. Hoy se está haciendo paralelo en el tiempo pero si solo se 
   # quiere cargar una fecha para más de un regresor se está serializando innecesariamente. Hay que 
   # hacer que decida si paralelizar por filas o columnas para aprovechar mejor los recursos
@@ -424,7 +427,7 @@ extraerValoresRegresoresSobreSP <- function(
   # i <- 1
   for (i in 1:ncol(pathsRegresores)) {
     res[[i]] <- extraerValoresRegresorSobreSP(
-      objSP=objSP, pathsRegresor=pathsRegresores[, i,drop=F], iInicial=iInicial, iFinal=iFinal, 
+      objSP=objSP, pathsRegresor=pathsRegresores[, i, drop=F], iInicial=iInicial, iFinal=iFinal, 
       fn=fn, zcol = zcol, silent=silent, nCoresAUsar=nCoresAUsar, setNames = setNames, ...=...)
   }
   
@@ -3717,12 +3720,13 @@ deteccionOutliersRLM <- function(
     #espEscalaAdaptada = NULL
     #returnInterpolacion = T
     #mapearGrillaGGPlot(SpatialPixelsDataFrame(points = coordsObservaciones, data = data.frame(value=valoresObservaciones[1,])), shpBase = shpMask$shp, continuo = T, dibujar = F)
-    interp <- interpolarYMapear(coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones,
-                                valoresObservaciones =  valoresObservaciones, pathsRegresores = pathsRegresores, 
-                                coordsAInterpolar = coordsObservaciones, xyLims = xyLims, paramsIyM = paramsAux, 
-                                shpMask = NULL, listaMapas = listaMapasAux, paramsParaRellenoRegresores = NULL, 
-                                pathsRegresoresParaRellenoRegresores = NULL, espEscalaFija = NULL, espEscalaAdaptada = NULL,
-                                returnInterpolacion = T)
+    interp <- interpolarYMapear(
+      coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones,
+      valoresObservaciones =  valoresObservaciones, pathsRegresores = pathsRegresores, 
+      coordsAInterpolar = coordsObservaciones, xyLims = xyLims, paramsIyM = paramsAux, 
+      shpMask = NULL, listaMapas = listaMapasAux, paramsParaRellenoRegresores = NULL, 
+      pathsRegresoresParaRellenoRegresores = NULL, espEscalaFija = NULL, espEscalaAdaptada = NULL,
+      returnInterpolacion = T)
     #mapearGrillaGGPlot(grilla = SpatialPixelsDataFrame(points = coordsObservaciones, data = interp[[1]]$predictions@data), shpBase = shpMask$shp, continuo = T, dibujar = F)
     pred <- do.call(rbind, lapply(interp, FUN = function(x) { x$predictions@data[,x$campoMedia] }))
     rm(interp)

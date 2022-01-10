@@ -333,7 +333,7 @@ postprocesarArchivosSinFecha <- function(nombresArchivosDestino) {
 }
 
 isCompressed <- function(paths) {
-  return( sapply(paths, FUN = function(x) {return(R.utils::isGzipped(x) | isBzipped(x))}) )
+  return(sapply(paths, FUN = function(x) {return(R.utils::isGzipped(x) | isBzipped(x))}))
 }
 
 descargarArchivo <- function(
@@ -351,14 +351,15 @@ descargarArchivo <- function(
       downloadExists <- FALSE
       unzipExists <- FALSE
     } else {
-      downloadExists <- file.exists(nombresArchivosDestino[i]) && 
-                        length(readBin(nombresArchivosDestino[i], what='raw')) > 0
-      unzipExists <- file.exists(unzippedFilename) && 
-                     length(readBin(unzippedFilename, what='raw')) > 0
+      unzipExists <- file.exists(unzippedFilename) && file.info(unzippedFilename)$size > 0
+      downloadExists <- unzipExists || (
+        file.exists(nombresArchivosDestino[i]) &&
+          file.info(nombresArchivosDestino[i])$size > 0
+      )
     }
   } else {
-    downloadExists <- !forzarReDescarga && file.exists(nombresArchivosDestino[i]) && 
-                      length(readBin(nombresArchivosDestino[i], what='raw')) > 0
+    downloadExists <- file.exists(nombresArchivosDestino[i]) && 
+      file.info(nombresArchivosDestino[i])$size > 0
     unzipExists <- FALSE
   }
   
@@ -372,43 +373,56 @@ descargarArchivo <- function(
     
     temp <- tempfile(tmpdir=dirname(nombresArchivosDestino[i]))
     
-    while (do_download & nRetries < maxRetries) {
-      if (useCurl) {
-        handle <- new_handle(verbose = FALSE)
-        if (!is.null(curlOpts)) { handle_setopt(handle, .list=curlOpts) }
-        er2 <- try(er <- curl_download(
-          url=urls[i], destfile=temp, handle=handle, quiet=FALSE))    
-      } else {
-        f = CFILE(temp, mode="wb")
-        er2 <- try(er <- curlPerform(url=urls[i], curl=threadHandle, writedata = f@ref))
-        close(f)  
-      }
-      
-      if (class(er2) == "try-error" || 
-          !file.exists(temp) || 
-          length(readBin(temp, what='raw')) <= 0) {
-        if (is_ftp && 
-            grepl(pattern = '5[[:digit:]]{2}', er2) || 
-            grepl(pattern = 'file does not exist', er2)) {
-          # Handling FTP permanent error cases. Needs improvement
-          nRetries <- maxRetries
-        } else if (is_http && grepl(pattern = '4[[:digit:]]{2}', er2)) {
-          # Handling HTTP client error cases. Needs improvement
-          nRetries <- maxRetries
-        } else {
-          nRetries <- nRetries + 1
-          Sys.sleep(segundosEntreIntentos)
+    tryCatch(
+      expr = {
+        while (do_download & nRetries < maxRetries) {
+          if (useCurl) {
+            handle <- new_handle(verbose = FALSE)
+            if (!is.null(curlOpts)) { handle_setopt(handle, .list=curlOpts) }
+            er2 <- try(er <- curl_download(
+              url=urls[i], destfile=temp, handle=handle, quiet=FALSE))    
+          } else {
+            f = CFILE(temp, mode="wb")
+            er2 <- try(er <- curlPerform(url=urls[i], curl=threadHandle, writedata = f@ref))
+            close(f)  
+          }
+          
+          if (class(er2) == "try-error" || 
+              !file.exists(temp) || 
+              file.info(temp)$size <= 0) {
+            if (is_ftp && 
+                grepl(pattern = '5[[:digit:]]{2}', er2) || 
+                grepl(pattern = 'file does not exist', er2) ||
+                grepl(pattern = 'Server denied you to change to the given directory', er2)
+            ) {
+              # Handling FTP permanent error cases. Needs improvement
+              nRetries <- maxRetries
+            } else if (is_http && grepl(pattern = '4[[:digit:]]{2}', er2)) {
+              # Handling HTTP client error cases. Needs improvement
+              nRetries <- maxRetries
+            } else {
+              nRetries <- nRetries + 1
+              if (nRetries < maxRetries) {
+                Sys.sleep(segundosEntreIntentos)  
+              }
+            }
+            
+            if (!useCurl) {
+              # Reset handle if there's any error
+              threadHandle <- getCurlHandle(.opts = curlOpts)
+            }
+          } else { 
+            do_download <- FALSE
+            file.rename(from=temp, to=nombresArchivosDestino[i])
+          }
         }
-        
-        if (!useCurl) {
-          # Reset handle if there's any error
-          threadHandle <- getCurlHandle(.opts = curlOpts)
+      },
+      finally = {
+        if (file.exists(temp)) {
+          unlink(temp)
         }
-      } else { 
-        do_download <- FALSE
-        file.rename(from=temp, to=nombresArchivosDestino[i])
       }
-    }
+    )
   } else {
     results <- 2
   }
@@ -419,8 +433,9 @@ descargarArchivo <- function(
     if (ext == "gz") { decompFunc <- gzfile 
     } else if (ext == "bz2") { decompFunc <- bzfile 
     } else { decompFunc <- NULL }
-    R.utils::decompressFile(filename=nombresArchivosDestino[i], ext=ext, overwrite=TRUE, 
-                            FUN=decompFunc)
+    R.utils::decompressFile(
+      filename=nombresArchivosDestino[i], ext=ext, overwrite=TRUE, FUN=decompFunc
+    )
   }
   
   if (do_download) { 
@@ -486,12 +501,7 @@ descargarArchivos <- function(
   
   if (length(urls) > 0) {
     sapply(unique(dirname(nombresArchivosDestino)), dir.create, showWarnings=F, recursive=T)
-    
-    #if (!useCurl) {
     nConexionesAUsar <- min(nConexionesSimultaneas, length(urls))
-    #} else {
-    #  nConexionesAUsar <- 1
-    #}
     
     if (nConexionesAUsar > 1) {
       cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
