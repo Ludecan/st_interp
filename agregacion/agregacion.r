@@ -279,7 +279,7 @@ testAgregacion <- function() {
 agregacionTemporalGrillada_ti <- function(
   ti=1, fechas, pathsRegresor, nFechasAAgregar, minNfechasParaAgregar, funcionAgregacion, 
   formatoNomArchivoSalida, paramsCTL, shpBase, iOver, borrarOriginales, overlap, funcEscalado,
-  archivoSalidaUsaFechaFinal=FALSE
+  archivoSalidaUsaFechaFinal=FALSE, borrarArchivosFallidos=FALSE
 ) {
   # fechas <- tempAireMin$fechas
   # pathsRegresor <- pathsRegresores[, 1]
@@ -329,6 +329,10 @@ agregacionTemporalGrillada_ti <- function(
         
         nPixeles <- nrow(regresorTs[[n]])
         n <- n + 1  
+      } else {
+        if (borrarArchivosFallidos) {
+          unlink(pathsRegresor[i])
+        }
       }
     }
   }
@@ -376,7 +380,7 @@ agregacionTemporalGrillada <- function(
     nFechasAAgregar=3, minNfechasParaAgregar=max(trunc(nFechasAAgregar/2), 1), tIni=1, 
     tFin=length(pathsRegresor), funcionAgregacion=base::mean, ctl=NULL, shpBase=NULL,
     borrarOriginales=FALSE, overlap=TRUE, funcEscalado=NULL, nCoresAUsar=0,
-    archivoSalidaUsaFechaFinal=FALSE
+    archivoSalidaUsaFechaFinal=FALSE, borrarArchivosFallidos=FALSE
 ) {
   # Para calcular agregaciones temporales de una serie temporal de un mismo regresor
   # pathsRegresor es una vector de rasters
@@ -429,7 +433,8 @@ agregacionTemporalGrillada <- function(
       funcionAgregacion=funcionAgregacion, formatoNomArchivoSalida=formatoNomArchivoSalida, 
       paramsCTL=paramsCTL, shpBase=shpBase, iOver=iOver, borrarOriginales=borrarOriginales, 
       overlap=overlap, funcEscalado=funcEscalado, 
-      archivoSalidaUsaFechaFinal=archivoSalidaUsaFechaFinal
+      archivoSalidaUsaFechaFinal=archivoSalidaUsaFechaFinal,
+      borrarArchivosFallidos=borrarArchivosFallidos
     )
     stopCluster(cl)
   } else {
@@ -439,7 +444,8 @@ agregacionTemporalGrillada <- function(
       funcionAgregacion=funcionAgregacion, formatoNomArchivoSalida=formatoNomArchivoSalida, 
       paramsCTL=paramsCTL, shpBase=shpBase, iOver=iOver, borrarOriginales=borrarOriginales, 
       overlap=overlap, funcEscalado=funcEscalado, 
-      archivoSalidaUsaFechaFinal=archivoSalidaUsaFechaFinal
+      archivoSalidaUsaFechaFinal=archivoSalidaUsaFechaFinal,
+      borrarArchivosFallidos=borrarArchivosFallidos
     )
   }
 }

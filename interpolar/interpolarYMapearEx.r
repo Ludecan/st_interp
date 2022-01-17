@@ -40,16 +40,17 @@ source(paste0(script.dir.interpolarYMapearEx, 'leerEscalas.r'), encoding = 'WIND
 source(paste0(script.dir.interpolarYMapearEx, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
 
 createDefaultListaMapas <- function(
-    paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
-    dibujarObservacionesEscalaFija=FALSE, dibujarEscalaFija=TRUE, 
-    dibujarObservacionesEscalaAdaptada=FALSE, dibujarEscalaAdaptada=FALSE, 
-    generarThumbnailFija=FALSE, generarThumbnailAdaptada=FALSE, 
-    incluirIsolineaFija=FALSE, incluirIsolineaAdaptada=FALSE,
-    dibujarPuntosObservacionesFija=FALSE, dibujarPuntosObservacionesAdaptada=FALSE,
-    salvarGeoTiff=!is.null(paramsIyM$tlagsAR), salvarBin=FALSE, salvarNetCDF=FALSE, 
-    salvarEnGrillaLatLong=FALSE,
-    titulo='', incluirSubtitulo=FALSE, 
-    recalcularSiYaExiste=TRUE) {
+  paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
+  dibujarObservacionesEscalaFija=FALSE, dibujarEscalaFija=TRUE, 
+  dibujarObservacionesEscalaAdaptada=FALSE, dibujarEscalaAdaptada=FALSE, 
+  generarThumbnailFija=FALSE, generarThumbnailAdaptada=FALSE, 
+  incluirIsolineaFija=FALSE, incluirIsolineaAdaptada=FALSE,
+  dibujarPuntosObservacionesFija=FALSE, dibujarPuntosObservacionesAdaptada=FALSE,
+  salvarGeoTiff=!is.null(paramsIyM$tlagsAR), salvarBin=FALSE, salvarNetCDF=FALSE, 
+  salvarEnGrillaLatLong=FALSE,
+  titulo='', incluirSubtitulo=FALSE, 
+  recalcularSiYaExiste=TRUE
+) {
   if (!is.null(fechasObservaciones)) {
     if (any(format(fechasObservaciones, format = "%H:%M") != "00:00")) { 
       formatoFechasArchivo <- "%Y_%m_%d_%H_%M"
@@ -59,9 +60,14 @@ createDefaultListaMapas <- function(
       formatoFechasTitulo <- "%Y-%m-%d"
     }
     
-    nombreArchivo <- pathParaGuardadoDeArchivos(filename=paste(paramsIyM$baseNomArchResultados, format(fechasObservaciones, format=formatoFechasArchivo), '.png', sep=''), pathProceso=paramsIyM$pathProceso)
+    nombreArchivo <- pathParaGuardadoDeArchivos(
+      filename=paste0(paramsIyM$baseNomArchResultados, format(fechasObservaciones, format=formatoFechasArchivo), '.png'), 
+      pathProceso=paramsIyM$pathProceso
+    )
   } else {
-    nombreArchivo <- pathParaGuardadoDeArchivos(filename=paste(paramsIyM$baseNomArchResultados, 1:nObservacionesTemporales, '.png', sep=''), pathProceso=paramsIyM$pathProceso)
+    nombreArchivo <- pathParaGuardadoDeArchivos(
+      filename=paste0(paramsIyM$baseNomArchResultados, 1:nObservacionesTemporales, '.png'), 
+      pathProceso=paramsIyM$pathProceso)
   }
     
   dibujarEscalaFija <- rep(dibujarEscalaFija, nObservacionesTemporales)

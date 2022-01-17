@@ -2251,7 +2251,7 @@ ajusteRegresores <- function(
                 # regressors range, we'll add artificial samples with 0 error, taken straight from
                 # the regressors unsampled values
                 rSobreObs <- range(df[, 2])
-                rSobreCoordsAInterpolar <- range(range(valoresRegresoresSobreCoordsAInterpolar_ti[, 1]))
+                rSobreCoordsAInterpolar <- range(valoresRegresoresSobreCoordsAInterpolar_ti[, 1], na.rm=TRUE)
                 
                 # Compare how much of the range of the regressor we have covered with the samples
                 # at the observation locations. If we haven't covered at least
@@ -2638,16 +2638,16 @@ universalGriddingEx <- function(
     # params debe ser un objeto creado con createParamsUniversalGridding
     # params$descartarCoordenadasNoSignificativas <- FALSE
     regs <- ajusteRegresores(
-      ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-      valoresObservaciones = valoresObservaciones, coordsAInterpolar=coordsAInterpolar, 
+      ti=ti, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      valoresObservaciones=valoresObservaciones, coordsAInterpolar=coordsAInterpolar, 
       params=params, valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
       valoresRegresoresSobreCoordsAInterpolar_ti=valoresRegresoresSobreCoordsAInterpolar_ti,
-      incorporarCoordenadas = params$incorporarCoordenadas, 
-      formulaCoordenadas = params$formulaCoordenadas,
-      incorporarTiempo = params$incorporarTiempo,
-      formulaTiempo = params$formulaTiempo,
+      incorporarCoordenadas=params$incorporarCoordenadas,
+      formulaCoordenadas=params$formulaCoordenadas,
+      incorporarTiempo=params$incorporarTiempo,
+      formulaTiempo=params$formulaTiempo,
       incorporarDistanciaAlAgua = params$incorporarDistanciaAlAgua,
-      formulaDistanciaAlAgua = params$formulaDistanciaAlAgua, 
+      formulaDistanciaAlAgua = params$formulaDistanciaAlAgua,
       incorporarAltitud = params$incorporarAltitud,
       formulaAltitud = params$formulaAltitud, 
       descartarCoordenadasNoSignificativas = params$descartarCoordenadasNoSignificativas,

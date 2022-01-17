@@ -390,6 +390,7 @@ descargarArchivo <- function(
           if (class(er2) == "try-error" || 
               !file.exists(temp) || 
               file.info(temp)$size <= 0) {
+            print(paste0("Error while downloading ", urls[i], ". ", er2))
             if (is_ftp && 
                 grepl(pattern = '5[[:digit:]]{2}', er2) || 
                 grepl(pattern = 'file does not exist', er2) ||
@@ -418,9 +419,7 @@ descargarArchivo <- function(
         }
       },
       finally = {
-        if (file.exists(temp)) {
-          unlink(temp)
-        }
+        unlink(temp)
       }
     )
   } else {
