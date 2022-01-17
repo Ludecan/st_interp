@@ -2067,14 +2067,15 @@ incorporarRegresoresEstaticos <- function(
 }
 
 ajusteRegresores <- function(
-    ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
-    valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL,
-    incorporarCoordenadas=FALSE, formulaCoordenadas='x + y', #formulaCoordenadas='I(x^2) + I(y^2) + I(x*y) + x + y',
-    incorporarTiempo=FALSE, formulaTiempo='t',
-    incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
-    incorporarAltitud=FALSE, formulaAltitud='alt',
-    descartarCoordenadasNoSignificativas=FALSE,
-    invertir=FALSE, shpMask=NULL) {
+  ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
+  valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL,
+  incorporarCoordenadas=FALSE, formulaCoordenadas='x + y', #formulaCoordenadas='I(x^2) + I(y^2) + I(x*y) + x + y',
+  incorporarTiempo=FALSE, formulaTiempo='t',
+  incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
+  incorporarAltitud=FALSE, formulaAltitud='alt',
+  descartarCoordenadasNoSignificativas=FALSE,
+  invertir=FALSE, shpMask=NULL
+) {
   if (invertir && length(valoresRegresoresSobreObservaciones) == 1) {
     aux <- valoresRegresoresSobreObservaciones[[1]]
     valoresRegresoresSobreObservaciones[[1]] <- valoresObservaciones
@@ -2652,7 +2653,8 @@ universalGriddingEx <- function(
       formulaAltitud = params$formulaAltitud, 
       descartarCoordenadasNoSignificativas = params$descartarCoordenadasNoSignificativas,
       invertir = FALSE,
-      shpMask = shpMask)
+      shpMask = shpMask
+    )
     # mean(valoresObservaciones, na.rm = T) + c(-3, 3) * sd(valoresObservaciones, na.rm = T)
     # range(valoresObservaciones, na.rm = T)
     
@@ -3702,7 +3704,7 @@ deteccionOutliersRLM <- function(
   listaMapasAux$incluirSubtitulo <- F
   listaMapasAux$recalcularSiYaExiste <- F
   
-  if (length(coordsObservaciones) <= 100) {
+  if (length(coordsObservaciones) <= 150) {
     # Si tengo pocas observaciones hago CV, sino hago una única regresión
     # params = paramsAux
     pred <- universalGriddingCV(
@@ -3721,12 +3723,12 @@ deteccionOutliersRLM <- function(
     #returnInterpolacion = T
     #mapearGrillaGGPlot(SpatialPixelsDataFrame(points = coordsObservaciones, data = data.frame(value=valoresObservaciones[1,])), shpBase = shpMask$shp, continuo = T, dibujar = F)
     interp <- interpolarYMapear(
-      coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones,
-      valoresObservaciones =  valoresObservaciones, pathsRegresores = pathsRegresores, 
-      coordsAInterpolar = coordsObservaciones, xyLims = xyLims, paramsIyM = paramsAux, 
-      shpMask = NULL, listaMapas = listaMapasAux, paramsParaRellenoRegresores = NULL, 
-      pathsRegresoresParaRellenoRegresores = NULL, espEscalaFija = NULL, espEscalaAdaptada = NULL,
-      returnInterpolacion = T)
+      coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones,
+      valoresObservaciones=valoresObservaciones, pathsRegresores=pathsRegresores, 
+      coordsAInterpolar=coordsObservaciones, xyLims=xyLims, paramsIyM=paramsAux, 
+      shpMask=NULL, listaMapas=listaMapasAux, paramsParaRellenoRegresores=NULL, 
+      pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
+      espEscalaAdaptada=NULL, returnInterpolacion=T)
     #mapearGrillaGGPlot(grilla = SpatialPixelsDataFrame(points = coordsObservaciones, data = interp[[1]]$predictions@data), shpBase = shpMask$shp, continuo = T, dibujar = F)
     pred <- do.call(rbind, lapply(interp, FUN = function(x) { x$predictions@data[,x$campoMedia] }))
     rm(interp)

@@ -263,10 +263,10 @@ interpolarYMapearI <- function(
     # params <- paramsIyM
     # objParameters <- NULL
     interpolacion <- universalGridding(
-      ti=ti, coordsObservaciones = coordsObservaciones, fechasObservaciones=fechasObservaciones, 
-      valoresObservaciones = valoresObservaciones, pathsRegresores = pathsRegresores, 
-      valoresRegresoresSobreObservaciones = valoresRegresoresSobreObservaciones, 
-      coordsAInterpolar = coordsAInterpolar, params = paramsIyM, shpMask = shpMask, 
+      ti=ti, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      valoresObservaciones=valoresObservaciones, pathsRegresores=pathsRegresores, 
+      valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
+      coordsAInterpolar=coordsAInterpolar, params=paramsIyM, shpMask=shpMask, 
       paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
       pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores
     )
