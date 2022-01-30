@@ -333,7 +333,7 @@ postprocesarArchivosSinFecha <- function(nombresArchivosDestino) {
 }
 
 isCompressed <- function(paths) {
-  return(sapply(paths, FUN = function(x) {return(R.utils::isGzipped(x) | isBzipped(x))}))
+  return(sapply(paths, FUN = function(x) {return(R.utils::isGzipped(x) | R.utils::isBzipped(x))}))
 }
 
 descargarArchivo <- function(

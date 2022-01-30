@@ -181,7 +181,9 @@ recolectarSalidasCDT <- function(carpetaSalidaCDT='F:/Tesis/CDT/QcTemp_DatosEsta
   return(list(fechas=fechas, datos=res))
 }
 
-leerDatosVarsEstacionesFechasDeJSON <- function(pathArchivoDatos, formatoFechas='YmdHMSz!*', truncated=6) {
+leerDatosVarsEstacionesFechasDeJSON <- function(
+  pathArchivoDatos, formatoFechas='YmdHMSz!*', truncated=6, colIdEstacion='NombreEstacion'
+) {
   # retorna una lista con 4 componentes:
   # - estaciones es un data.frame con la información de las nE estaciones. Lat, Long, automática, pluviométrica, etc.
   # str(datos$estaciones)
@@ -200,11 +202,10 @@ leerDatosVarsEstacionesFechasDeJSON <- function(pathArchivoDatos, formatoFechas=
   
   datos <- fromJSON(pathArchivoDatos)
   datos$fechas <- parse_date_time(datos$fechas, orders = formatoFechas, truncated = truncated)
-
   names(datos$observaciones$datos) <- datos$variables$variable
-  
-  datos$estaciones$NombreEstacionR <- make.names(datos$estaciones$NombreEstacion, unique = TRUE)
-  datos$estaciones <- datos$estaciones[, c(ncol(datos$estaciones),1:(ncol(datos$estaciones)-1))]
+  datos$estaciones$NombreEstacionR <- make.names(datos$estaciones[, colIdEstacion], unique = TRUE)
+  datos$estaciones <- datos$estaciones[, c(ncol(datos$estaciones), 1:(ncol(datos$estaciones)-1))]
+  rownames(datos$estaciones) <- datos$estaciones$NombreEstacionR
   strsFechas <- as.character(datos$fechas)
   
   i <- 1
@@ -230,4 +231,41 @@ extraerVariablesEstacionesDeFecha <- function(datosVarsEstacionesFechas, fecha) 
     rownames(res) <- names(datosVarsEstacionesFechas)[x]
     return(res)
   }, datosVarsEstacionesFechas, fecha)))
+}
+
+extraerVariableEstacionesDeFechas <- function(datosVarsEstacionesFechas, idStrVariable) {
+  # Una variable, fechas en filas, estaciones en columnas
+  iVariable <- which(datosVarsEstacionesFechas$variables$idStr == idStrVariable)
+  variable <- datosVarsEstacionesFechas$variables[iVariable, ]
+  
+  # + 1 because R arrays are 1 indexed
+  iFechas <- datosVarsEstacionesFechas$observaciones$iFechas[[iVariable]]+1
+  fechas <- datosVarsEstacionesFechas$fechas[iFechas]
+  
+  # TODO: terminar la implementación de esto
+  if (variable$periodicidad == 9) {
+    fechas <- trunc(fechas, units = "days")
+  } else if (variable$periodicidad > 9) {
+    stop(paste0(
+      'extraerVariableEstacionesDeFechas: periodicidad de la variable ', idStrVariable, 
+      ', ', variable$periodicidad, ', no soportada.'
+    ))
+  }
+  observaciones <- datosVarsEstacionesFechas$observaciones$datos[[iVariable]]
+  colnames(observaciones) <- datosVarsEstacionesFechas$estaciones[, 'NombreEstacionR']
+  rownames(observaciones) <- as.character(fechas)
+  
+  datos <- list(
+    estaciones=datosVarsEstacionesFechas$estaciones,
+    fechas=fechas,
+    datos=observaciones
+  )
+  return(datos)
+}
+
+concatenarDatos <- function(datos1, datos2) {
+  datosRes <- datos1
+  datosRes$estaciones <- rbind(datosRes$estaciones, datos2$estaciones)
+  datosRes$datos <- cbind(datosRes$datos, datos2$datos)
+  return(datosRes)
 }
