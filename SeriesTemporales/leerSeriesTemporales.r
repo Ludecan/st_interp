@@ -205,6 +205,7 @@ leerDatosVarsEstacionesFechasDeJSON <- function(
   names(datos$observaciones$datos) <- datos$variables$variable
   datos$estaciones$NombreEstacionR <- make.names(datos$estaciones[, colIdEstacion], unique = TRUE)
   datos$estaciones <- datos$estaciones[, c(ncol(datos$estaciones), 1:(ncol(datos$estaciones)-1))]
+  datos$estaciones <- setIdsEstaciones(dfEstaciones=datos$estaciones, colId=1)
   rownames(datos$estaciones) <- datos$estaciones$NombreEstacionR
   strsFechas <- as.character(datos$fechas)
   
