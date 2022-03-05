@@ -74,7 +74,7 @@ colores269 <- c('#000000','#FFFF00','#1CE6FF','#FF34FF','#FF4A46',
                 '#00CCFF','#674E60','#FC009C','#92896B')
 
 source(paste0(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c("colorspace", "ggplot2", "Cairo", 'reshape'))
+instant_pkgs(c("colorspace", "ggplot2", "ragg", 'reshape'))
 
 crearXYLims <- function(xMin, xMax, yMin, yMax, expand=0) {
   res <- list(xLim=c(xMin, xMax), yLim=c(yMin, yMax), expand=expand)
@@ -146,7 +146,7 @@ aplicarOpcionesAGrafico <- function(
 guardarGrafico <- function(p, nomArchSalida, DPI=120, widthPx=800, heightPx=800) {
   path <- dirname(nomArchSalida)
   if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
-  ggsave(p, file=nomArchSalida, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in', type='cairo')
+  ggsave(p, file=nomArchSalida, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in')
 }
 
 linePlot <- function(
@@ -259,7 +259,7 @@ scatterPlot <- function(
       p <- p + geom_point(shape=figurasPuntos, colour=df$color, size=tamaniosPuntos)
     }
   }
-  
+
   if (lineaRegresion) p <- p + stat_smooth(method=metodoRegresion, se=intervalosConfianza, formula=formulaRegresion, colour=colorLineaRegresion, size=escalaGraficos)
   p <- aplicarOpcionesAGrafico(p = p, titulo = titulo, tituloEjeX = tituloEjeX, tituloEjeY = tituloEjeY, dibujarEjes = dibujarEjes, 
                                xyLims = xyLims, tamanioFuenteTextos = tamanioFuenteTextos, escalaGraficos = escalaGraficos, sinFondo=sinFondo)
@@ -338,7 +338,7 @@ graficoCorrVsDistancia <- function(
                     
           coloresPuntos[idxClase1, idxClase2] <- colorMap[n, 'label']
           coloresPuntos[idxClase2, idxClase1] <- colorMap[n, 'label']
-        }
+    }
         n <- n + 1
       }
     }
@@ -363,7 +363,7 @@ graficoCorrVsDistancia <- function(
   # https://stackoverflow.com/questions/52009545/r-ggplot-for-hover-text
   return(scatterPlot(
     x=dist[upperTri], y=corr[upperTri], lineaRegresion=T, intervalosConfianza=F, 
-    formulaRegresion=formulaModeloAjustada, xyLims=xyLimsScatterPlot, 
+                     formulaRegresion=formulaModeloAjustada, xyLims=xyLimsScatterPlot,
     coloresPuntos=coloresPuntos[upperTri], colorMap=colorMap, 
     tituloEjeX='Distancia[km]', tituloEjeY='Correlación',
     dibujar=F, nomArchSalida=nomArchSalida, tamaniosPuntos=tamaniosPuntos,

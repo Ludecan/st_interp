@@ -37,7 +37,7 @@ if (is.null(script.dir.qcTests)) { script.dir.qcTests <- ''
 source(paste0(script.dir.qcTests, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.qcTests, '../interpolar/interpolarEx.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.qcTests, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c('sp', 'robustbase'))
+instant_pkgs(c('sp', 'robustbase', 'ragg'))
 
 # Códigos para los distintos tipos de outliers detectables por los métodos
 TTO_SinProblemasDetectados = 0L
@@ -300,16 +300,16 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
         geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), data = df, arrow = arrow(length=unit(0.30,"cm")), size=1) +
         geom_abline(slope = mPerpendicular, intercept = -mPerpendicular * medioCoords[1] + medioCoords[2])
       p
-      ggsave(p, file='D:/testsMCH/SRT/2-Gradiente2.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p, file='D:/testsMCH/SRT/2-Gradiente2.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
-      ggsave(p, file='D:/testsMCH/SRT/3-DireccionGradiente.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p, file='D:/testsMCH/SRT/3-DireccionGradiente.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # Dirección perpendicular del gradiente, sin ubicación
       p <- mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpBase, xyLims = xyLims, zcol = 'value',
                               continuo = T, dibujarTexto = T, dibujar = F) + 
         geom_abline(slope = m, intercept = -m * medioCoords[1] + medioCoords[2])
       p
-      ggsave(p, file='D:/testsMCH/SRT/4-PosicionGradiente1.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')    
+      ggsave(p, file='D:/testsMCH/SRT/4-PosicionGradiente1.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # x = (x1/m + y1 - c) / (m + 1/m)
       # Ubicaciones potenciales, proyección sobre perpendicular
@@ -321,7 +321,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       
       p2 <- p + geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), data = df2, arrow = arrow(length=unit(0.30,"cm")), size=0.5)
       p2
-      ggsave(p2, file='D:/testsMCH/SRT/4-PosicionGradiente2.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p2, file='D:/testsMCH/SRT/4-PosicionGradiente2.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # Ubicaciones potenciales, puntos
       xsAux <- as.numeric(sort((coordsOrig[, 1] * invM + coordsOrig[, 2] - intercept) / (m + invM)))
@@ -333,7 +333,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       df3 <- data.frame(x=nuevosXs, y=nuevosYs, value=NA)
       p3 <- p + geom_point(data = df3)
       p3
-      ggsave(p3, file='D:/testsMCH/SRT/4-PosicionGradiente3.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p3, file='D:/testsMCH/SRT/4-PosicionGradiente3.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # Gradiente final, ubicación y dirección
       i2 <- -mPerpendicular * (x0y0[1] * maxD + rX[1]) + (x0y0[2] * maxD + rY[1])
@@ -341,7 +341,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       p4 <- mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpBase, xyLims=xyLims, zcol = 'value', continuo = T, dibujarTexto = T,
                                dibujar = F) + geom_abline(slope = mPerpendicular, intercept = i2)
       p4
-      ggsave(p4, file='D:/testsMCH/SRT/4-PosicionGradiente4.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p4, file='D:/testsMCH/SRT/4-PosicionGradiente4.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
     }  
     # row.names(coordsObservaciones)[iPuntoATestear]
     

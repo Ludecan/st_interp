@@ -415,7 +415,7 @@ plotValidationStatsEspaciales <- function(
     
     nomArchMapa <- paste0(
       carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_Espacial.png')
-    png(nomArchMapa, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    png(nomArchMapa, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos)
     tryCatch(expr = print(multiplot(plotlist=gs, cols = nColsPlots)), finally = dev.off())
   }
 }
@@ -479,12 +479,12 @@ plotValidationStatsTemporales <- function(
     
     nomArchGraficos <- paste0(
       carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_Temporal.png')
-    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos)
     tryCatch(expr = print(multiplot(plotlist=gs, cols = nColsPlots)), finally = dev.off())
     
     nomArchGraficos <- paste0(
       carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_TemporalBoxPlots.png')
-    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos)
     tryCatch(expr = print(multiplot(plotlist=gs2, cols = nColsPlots)), finally = dev.off())
   }
 }

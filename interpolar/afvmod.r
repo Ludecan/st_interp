@@ -310,7 +310,7 @@ isInvalidVariogram <- function(v, minPsill = 1E-3, minRange = 0.05) {
    length(v) == 0 |
    any(!v$model %in% c('Nug', "Pow")  & ((v$psill < minPsill) | (v$range <= minRange))) |
    any(v$model == 'Nug' & v$psill < 0) |
-   any(v$model == 'Pow' & (v$range >= 2 | v$range <= 0))))
+   any(v$model == 'Pow' & ((v$psill < 1e-3) | v$range >= 2 | v$range <= 0))))
 }
 
 getModelVariogram <- function(experimental_variogram, formula, input_data = NULL, model = c("Sph", "Exp", "Gau", "Ste"),
@@ -1154,7 +1154,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
     minPsill <- maxGamma * 0.001
     minRange <- 0.05
     
-    iesAConsiderar <- !sapply(X = fitModels, FUN = isInvalidVariogram, minPsill=minPsill, minRange=minRange)
+    iesAConsiderar <- !sapply(X=fitModels, FUN=isInvalidVariogram, minPsill=minPsill, minRange=minRange)
     fitModels <- fitModels[iesAConsiderar]
     mses <- mses[iesAConsiderar]
     bestMSE <- min(mses, na.rm = T)

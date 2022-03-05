@@ -38,7 +38,7 @@ source(paste0(script.dir.mapearEx, '../pathUtils/pathUtils.r'), encoding = 'WIND
 source(paste0(script.dir.mapearEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(
   c("sp", "RColorBrewer", "colorspace", "ggplot2", "rgeos", "maptools", "directlabels", "ggrepel", 
-    "Cairo", "mapproj"))
+    "ragg", "mapproj"))
 
 paletasInvertidas <- c('Spectral', 'RdBu', 'RdYlBu', 'RdYlGn')
 
@@ -606,7 +606,7 @@ mapearPuntos <- function(observaciones, layoutSHP=NULL, escala, nomArchResultado
                    cuts=escala$escala, scales=list(draw=dibujarEjes), sp.layout=layoutSHP, 
                    xlim=xyLims$xLim, ylim=xyLims$yLim, colorkey=TRUE, par.settings=parSettings)
   }
-  png(nomArchResultados, height=xyLims$resYImagenes, width=xyLims$resXImagenes, type='cairo')
+  png(nomArchResultados, height=xyLims$resYImagenes, width=xyLims$resXImagenes)
   tryCatch(expr = print(plot), finally = dev.off())
   if (interactive()) { print(plot) }
 
@@ -626,7 +626,7 @@ mapearGrilla <- function(grilla, layoutSHP=NULL, escala, nomArchResultados, xyLi
                      at=escala$escala, pretty=F, scales=list(draw=dibujarEjes), sp.layout=layoutSHP, 
                      xlim=xyLims$xLim, ylim=xyLims$yLim, colorkey=dibujarEscala, par.settings=parSettings,
                      contour=contour, labels=labels)
-  png(nomArchResultados, height=xyLims$resYImagenes, width=xyLims$resXImagenes, type='cairo')
+  png(nomArchResultados, height=xyLims$resYImagenes, width=xyLims$resXImagenes)
   tryCatch(expr = print(plotPred), finally = dev.off())
   if (interactive()) { print(plotPred) }
   
@@ -710,7 +710,7 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
   if (!is.null(nomArchResultados)) {
     path <- dirname(nomArchResultados)
     if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
-    ggsave(p, file=nomArchResultados, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in', type='cairo')
+    ggsave(p, file=nomArchResultados, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in')
   }
   options(scipen=oldSciPen)
   
@@ -826,7 +826,7 @@ mapearPuntosGGPlot <- function(
     path <- dirname(nomArchResultados)
     if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
     ggsave(p, file=nomArchResultados, dpi=DPI * escalaGraficos, width = (widthPx / DPI) * escalaGraficos, 
-           height = (heightPx / DPI) * escalaGraficos, units = 'in', type='cairo')
+           height = (heightPx / DPI) * escalaGraficos, units = 'in')
   }
   options(scipen=oldSciPen)
   
@@ -975,7 +975,7 @@ mapearGrillaGGPlot <- function(
                      limits=limits,
                      show.limits=showLimits,
                      na.value="gray95") +
-        theme(legend.key.height=alturaEscalaContinua)      
+        theme(legend.key.height=alturaEscalaContinua)
     }
   }
   
@@ -1012,7 +1012,7 @@ mapearGrillaGGPlot <- function(
     path <- dirname(nomArchResultados)
     if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
     
-    ggsave(p, file=nomArchResultados, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in', type='cairo')
+    ggsave(p, file=nomArchResultados, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in')
   }
   options(scipen=oldSciPen)
   

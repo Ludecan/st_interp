@@ -87,13 +87,28 @@ instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), sil
     paquetesAInstalar <- pkgs[bPaquetesAInstalar]
 
     if (length(paquetesAInstalar) > 0) {
-      if (.Platform$OS.type == "windows") {
-        utils::install.packages(
-          paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, type='binary')
-      } else {
-        utils::install.packages(
-          paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE)
-      }
+      Ncpus <- parallel::detectCores(T, T)
+      
+      tryCatch(
+        expr = {
+          if (.Platform$OS.type == "windows") {
+            utils::install.packages(
+              paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, type='binary', Ncpus=Ncpus)
+          } else {
+            utils::install.packages(
+              paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, Ncpus=Ncpus)
+          }
+        },
+        except={
+          if (.Platform$OS.type == "windows") {
+            utils::install.packages(
+              paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, type='binary')
+          } else {
+            utils::install.packages(
+              paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE)
+          }
+        }
+      )
     }
     if (doCargarPaquetes) cargarPaquetes(pkgs, silent = silent)
   }
@@ -189,4 +204,3 @@ createMinPackageVersions <- function() {
   write.table(x = packages, file = minPkgVersionsPath, sep='\t', row.names = T, col.names = T, 
               fileEncoding = 'UTF-8')
 }
-
