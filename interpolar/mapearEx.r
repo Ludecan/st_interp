@@ -721,11 +721,13 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
 }
 
 mapearPuntosGGPlot <- function(
-    puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEjes=T, zcol=1, DPI=90, 
-    widthPx=630, heightPx=630, tamaniosPuntos=5, dibujarTexto=F, tamanioFuentePuntos=3, 
-    tamanioFuenteEjes=15, tamanioFuenteTitulo=14, nDigitos=1, escala=NULL, dibujar=interactive(), 
-    titulo='', subtitulo='', colorFillSHPBase=NA, contornearPuntos=FALSE, continuo, 
-    alturaEscalaContinua=unit(0.1, 'npc'), escalaGraficos = 1, puntosAResaltar=NULL) {
+  puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEjes=T, zcol=1, DPI=90, 
+  widthPx=630, heightPx=630, tamaniosPuntos=5, dibujarTexto=F, tamanioFuentePuntos=3, 
+  tamanioFuenteEjes=15, tamanioFuenteTitulo=14, nDigitos=1, escala=NULL, dibujar=interactive(), 
+  titulo='', subtitulo='', colorFillSHPBase=NA, contornearPuntos=FALSE, continuo, 
+  alturaEscalaContinua=unit(0.1, 'npc'), escalaGraficos=1, puntosAResaltar=NULL, 
+  tamanioResalto=0.8
+) {
   oldSciPen <- getOption("scipen")
   options(scipen=15)
   if (is.null(xyLims)) {
@@ -819,14 +821,17 @@ mapearPuntosGGPlot <- function(
     p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=T, dibujarEjes=dibujarEjes, 
     tamanioFuenteEjes=tamanioFuenteEjes * escalaGraficos, 
     tamanioFuenteTitulo=tamanioFuenteTitulo * escalaGraficos, titulo=titulo, subtitulo=subtitulo,
-    colorFillSHPBase=colorFillSHPBase, puntosAResaltar = puntosAResaltar, widthPx = widthPx)
+    colorFillSHPBase=colorFillSHPBase, puntosAResaltar=puntosAResaltar, 
+    tamanioResalto=tamanioResalto, widthPx = widthPx
+  )
 
   if (dibujar) print(p)
   if (!is.null(nomArchResultados)) {
-    path <- dirname(nomArchResultados)
-    if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
-    ggsave(p, file=nomArchResultados, dpi=DPI * escalaGraficos, width = (widthPx / DPI) * escalaGraficos, 
-           height = (heightPx / DPI) * escalaGraficos, units = 'in')
+    dir.create(dirname(nomArchResultados), showWarnings=F, recursive=T)
+    ggsave(
+      p, file=nomArchResultados, dpi=DPI * escalaGraficos, width=(widthPx / DPI) * escalaGraficos, 
+      height=(heightPx / DPI) * escalaGraficos, units='in'
+    )
   }
   options(scipen=oldSciPen)
   
@@ -842,11 +847,13 @@ map_aspect = function(x, y) {
 }
 
 mapearGrillaGGPlot <- function(
-    grilla, shpBase=NULL, escala=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEscala=TRUE, 
-    dibujarEjes=TRUE, zcol=1, isolineas=FALSE, DPI=90, widthPx=630, heightPx=630, 
-    dibujar=interactive(), titulo='', subtitulo='', continuo, 
-    alturaEscalaContinua=unit(0.15, 'npc'), dibujarPuntosObservaciones=FALSE, 
-    coordsObservaciones=NULL, tamaniosPuntos=0.8, tamanioFuentePuntos=3, puntosAResaltar=NULL) {
+  grilla, shpBase=NULL, escala=NULL, nomArchResultados=NULL, xyLims=NULL, 
+  dibujarEscala=TRUE, dibujarEjes=TRUE, zcol=1, isolineas=FALSE, DPI=90, widthPx=630, 
+  heightPx=630, dibujar=interactive(), titulo='', subtitulo='', continuo, 
+  alturaEscalaContinua=unit(0.15, 'npc'), dibujarPuntosObservaciones=FALSE, 
+  coordsObservaciones=NULL, tamaniosPuntos=0.8, tamanioFuentePuntos=3, 
+  puntosAResaltar=NULL, tamanioResalto=0.8
+) {
   #grilla <- coarsenGrid(grilla, coarse = 6)
   if (!is.null(shpBase) & !identicalCRS(grilla, shpBase)) { 
     shpBase <- spTransform(shpBase, grilla@proj4string)
@@ -980,8 +987,10 @@ mapearGrillaGGPlot <- function(
   }
   
   p <- aplicarOpcionesAMapa(
-    p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=dibujarEscala, dibujarEjes=dibujarEjes, 
-                            titulo=titulo, subtitulo=subtitulo, puntosAResaltar = puntosAResaltar, widthPx = widthPx)
+    p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=dibujarEscala, 
+    dibujarEjes=dibujarEjes, titulo=titulo, subtitulo=subtitulo, 
+    puntosAResaltar=puntosAResaltar, tamanioResalto=tamanioResalto, widthPx = widthPx
+  )
   
   if (dibujarPuntosObservaciones & !is.null(coordsObservaciones)) {
     zColObs <- max(which(colnames(coordsObservaciones@data) == 'value'), 1)

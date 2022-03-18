@@ -86,7 +86,7 @@ getColoresSetParaN <- function(n) {
   if (n == 1) { return(set1[2])
   } else if(n <= 9) { return(set1[1:n])
   } else if(n <= 12) { return(paired[1:n])
-  } else if(n <= 16) { return(unikn_pair[1:n])
+  #} else if(n <= 16) { return(unikn_pair[1:n])
   } else if(n <= 64) { return(colores64[1:n])
   } else { return(colores269[1:n]) }
   #} else if(n <= 269) { return(colores269[1:n]) 

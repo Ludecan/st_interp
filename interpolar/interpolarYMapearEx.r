@@ -220,7 +220,7 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
 interpolarYMapearI <- function(
   iTi, tsAInterpolar=1:nrow(valoresObservaciones), coordsObservaciones, fechasObservaciones, 
   valoresObservaciones, pathsRegresores=NULL, valoresRegresoresSobreObservaciones=NULL, 
-  coordsAInterpolar, paramsIyM, shpMask, xyLims, listaMapas, returnInterpolacion=TRUE, 
+  coordsAInterpolar, paramsIyM, shpMask, xyLims, listaMapas, returnInterpolacion=2L, 
   paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
   espEscalaAdaptada=NULL
 ) {
@@ -313,14 +313,22 @@ interpolarYMapearI <- function(
             espEscalaAdaptada=espEscalaAdaptada, puntosAResaltar = paramsIyM$puntosAResaltar[[iTi]])
   }
   
-  if (returnInterpolacion) { return(interpolacion)
-  } else { return(NULL) }
+  returnInterpolacion <- as.integer(returnInterpolacion) 
+  if (returnInterpolacion == 0L) {
+    return(NULL)
+  } else if (returnInterpolacion == 1L) {
+    interpolacion$predictions@data[, interpolacion$campoMedia]
+  } else {
+    return(interpolacion)
+  }
 }
 
-interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresObservaciones, pathsRegresores=NULL, 
-                              coordsAInterpolar, paramsIyM, shpMask, xyLims, listaMapas=NULL, returnInterpolacion=TRUE, 
-                              paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, 
-                              espEscalaFija=NULL, espEscalaAdaptada=NULL, tsAInterpolar=1:nrow(valoresObservaciones)) {
+interpolarYMapear <- function(
+  coordsObservaciones, fechasObservaciones, valoresObservaciones, pathsRegresores=NULL, 
+  coordsAInterpolar, paramsIyM, shpMask, xyLims, listaMapas=NULL, returnInterpolacion=2L, 
+  paramsParaRellenoRegresores=NULL, pathsRegresoresParaRellenoRegresores=NULL, 
+  espEscalaFija=NULL, espEscalaAdaptada=NULL, tsAInterpolar=1:nrow(valoresObservaciones)
+) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   if (is.null(listaMapas)) {
     listaMapas <- createDefaultListaMapas(
@@ -399,19 +407,21 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
       # paramsIyM = paramsAux
       # listaMapas = listaMapasAux
       # tsAInterpolar = fechasConOutliersInternos
-      # returnInterpolacion = F
+      # returnInterpolacion = 0L
       
-      interpolarYMapear(coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-                        valoresObservaciones = valoresObservaciones, pathsRegresores = pathsRegresores, 
-                        coordsAInterpolar = coordsAInterpolar, paramsIyM = paramsAux, shpMask = shpMask, 
-                        xyLims = xyLims, listaMapas = listaMapasAux,  returnInterpolacion = F, 
-                        paramsParaRellenoRegresores = paramsParaRellenoRegresores, 
-                        pathsRegresoresParaRellenoRegresores = pathsRegresoresParaRellenoRegresores, 
-                        espEscalaFija = espEscalaFija, espEscalaAdaptada = espEscalaAdaptada, 
-                        tsAInterpolar=fechasConOutliersInternos)
+      interpolarYMapear(
+        coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+        valoresObservaciones=valoresObservaciones, pathsRegresores=pathsRegresores, 
+        coordsAInterpolar=coordsAInterpolar, paramsIyM=paramsAux, shpMask=shpMask, 
+        xyLims=xyLims, listaMapas=listaMapasAux, returnInterpolacion=0L, 
+        paramsParaRellenoRegresores=paramsParaRellenoRegresores, 
+        pathsRegresoresParaRellenoRegresores=pathsRegresoresParaRellenoRegresores, 
+        espEscalaFija=espEscalaFija, espEscalaAdaptada=espEscalaAdaptada, 
+        tsAInterpolar=fechasConOutliersInternos
+      )
     }
     
-    write.table(outliers, paste(paramsIyM$pathProceso, 'dfOutliers.txt', sep=''), sep = '\t', dec = '.', row.names = F)
+    write.table(outliers, paste0(paramsIyM$pathProceso, 'dfOutliers.txt'), sep = '\t', dec = '.', row.names = F)
     valoresObservaciones[outliers$iOutlier] <- NA
     rm(outliers)
   }
@@ -468,7 +478,7 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
     # pathsRegresoresParaRellenoRegresores <- NULL
     if (!is.null(paramsParaRellenoRegresores)) paramsParaRellenoRegresores$nCoresAUsar <- paramsIyM$nCoresAUsar
     
-    #returnInterpolacion <- T
+    #returnInterpolacion <- 2L
     if (nCoresAUsar > 1) {
       cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
       clusterExport(cl, varlist = c('script.dir.interpolarYMapearEx'))
@@ -518,7 +528,9 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
       vRegsSobreObservacionesTLags[[i]] <- matrix(NA, nrow = nrow(valoresObservaciones), ncol=ncol(valoresObservaciones))
     names(vRegsSobreObservacionesTLags) <- paste('T_', paramsIyM$tlagsAR[i], sep='')
 
-    if (returnInterpolacion) { res <- vector(mode = "list", length = length(valoresObservaciones)) }
+    if (returnInterpolacion) { 
+      res <- vector(mode = "list", length = length(valoresObservaciones)) 
+    }
     
     # Primeros valores sin AR para inicializar la ventana
     # ti <- 2
@@ -538,7 +550,9 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
         }
       }
       
-      if (returnInterpolacion) res[[iTi]] <- interpolacionTi
+      if (returnInterpolacion) {
+        res[[iTi]] <- interpolacionTi
+      }
     }
     
     valoresRegresoresSobreObservaciones <- c(valoresRegresoresSobreObservaciones, vRegsSobreObservacionesTLags)
@@ -578,8 +592,15 @@ interpolarYMapear <- function(coordsObservaciones, fechasObservaciones, valoresO
         }
       }
       
-      if (returnInterpolacion) res[[iTi]] <- interpolacionTi
+      if (returnInterpolacion) {
+        res[[iTi]] <- interpolacionTi
+      }
     }
+  }
+  
+  if (identical(returnInterpolacion, 1L)) {
+    res <- do.call(rbind, res)
+    rownames(res) <- rownames(valoresObservaciones)[tsAInterpolar]
   }
   
   return(res)

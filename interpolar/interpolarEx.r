@@ -3644,35 +3644,13 @@ calcOutlyingnessMedianaMAD <- function(x, xEstimarMedianaYMAD=x, porFilas=T, ove
   }
 }
 
-deteccionOutliersMediaSD <- function(
-    x, factorSDHaciaAbajo=3.5, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA) {
-  estimados <- as.numeric(rowMeans(x, na.rm = T))
-  stdDifs <- as.numeric(t(apply(x, MARGIN = 1, FUN = outlyingnessMediaSD, sdMin=sdMin)))
-  
-  return(createDFTestsConEstimadosYStdDifs(
-    x, estimados=estimados, stdDifs=stdDifs, factorHaciaAbajo=factorSDHaciaAbajo, 
-    factorHaciaArriba=factorSDHaciaArriba))
-}
-
-deteccionOutliersMedianaMAD <- function(
-    x, factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, 
-    desvMedAbsMin=NA) {
-  
-  estimados <- as.numeric(rowMedians(x, na.rm = T, keep.names = F))
-  stdDifs <- as.numeric(t(apply(
-    x, MARGIN = 1, FUN = outlyingnessMedianaMAD, desvMedAbsMin=desvMedAbsMin)))
-  
-  return(createDFTestsConEstimadosYStdDifs(
-    x, estimados=estimados, stdDifs=stdDifs, factorHaciaAbajo=factorMADHaciaAbajo, 
-    factorHaciaArriba=factorMADHaciaArriba))
-}
-
 deteccionOutliersRLM <- function(
-    coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
-    listaMapas, 
-    factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, desvMedAbsMin=NA,
-    factorSDHaciaAbajo=NA, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA, 
-    returnTestDF=FALSE) {
+  coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
+  listaMapas, 
+  factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, desvMedAbsMin=NA,
+  factorSDHaciaAbajo=NA, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA, 
+  returnTestDF=FALSE
+) {
   if (!is.na(factorMADHaciaAbajo) && !is.na(factorSDHaciaAbajo)) {
     stop('interpolarEx.deteccionOutliersRLM: only one of factorMADHaciaAbajo and factorSDHaciaAbajo can be specified')
   }
@@ -3704,12 +3682,12 @@ deteccionOutliersRLM <- function(
   listaMapasAux$incluirSubtitulo <- F
   listaMapasAux$recalcularSiYaExiste <- F
   
-  if (length(coordsObservaciones) <= 150) {
+  if (length(coordsObservaciones) <= 200) {
     # Si tengo pocas observaciones hago CV, sino hago una única regresión
     # params = paramsAux
     pred <- universalGriddingCV(
-      coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-      valoresObservaciones = valoresObservaciones, params = paramsAux, 
+      coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      valoresObservaciones=valoresObservaciones, params=paramsAux, 
       pathsRegresores=pathsRegresores)
   } else {
     #coordsAInterpolar = coordsObservaciones
@@ -3720,7 +3698,7 @@ deteccionOutliersRLM <- function(
     #pathsRegresoresParaRellenoRegresores = NULL
     #espEscalaFija = NULL
     #espEscalaAdaptada = NULL
-    #returnInterpolacion = T
+    #returnInterpolacion = 2L
     #mapearGrillaGGPlot(SpatialPixelsDataFrame(points = coordsObservaciones, data = data.frame(value=valoresObservaciones[1,])), shpBase = shpMask$shp, continuo = T, dibujar = F)
     interp <- interpolarYMapear(
       coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones,
@@ -3728,9 +3706,9 @@ deteccionOutliersRLM <- function(
       coordsAInterpolar=coordsObservaciones, xyLims=xyLims, paramsIyM=paramsAux, 
       shpMask=NULL, listaMapas=listaMapasAux, paramsParaRellenoRegresores=NULL, 
       pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
-      espEscalaAdaptada=NULL, returnInterpolacion=T)
+      espEscalaAdaptada=NULL, returnInterpolacion=2L)
     #mapearGrillaGGPlot(grilla = SpatialPixelsDataFrame(points = coordsObservaciones, data = interp[[1]]$predictions@data), shpBase = shpMask$shp, continuo = T, dibujar = F)
-    pred <- do.call(rbind, lapply(interp, FUN = function(x) { x$predictions@data[,x$campoMedia] }))
+    pred <- do.call(rbind, lapply(interp, FUN = function(x) { x$predictions@data[, x$campoMedia] }))
     rm(interp)
   }
   residuos <- valoresObservaciones - pred
@@ -3829,8 +3807,9 @@ deteccionOutliersRLM <- function(
 }
 
 deteccionOutliersUniversalGriddingCV <- function(
-    coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
-    maxOutlyingness=3.5, maxNIters=5) {
+  coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
+  maxOutlyingness=3.5, maxNIters=5
+) {
   paramsAux <- params
   paramsAux$difMaxFiltradoDeOutliersRLM <- 0
   paramsAux$difMaxFiltradoDeOutliersCV <- 0

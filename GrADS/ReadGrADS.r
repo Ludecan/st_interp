@@ -216,7 +216,7 @@ parseVarDef <- function(varDef) {
                description=paste(varDef[4:length(varDef)], collapse=' '), arg1=varArg1, arg2=varArg2))
 }
 
-iFecha <- function(ctl, fecha) {
+getIFecha <- function(ctl, fecha) {
   return (as.integer((difftime(fecha, ctl$tdef$from, 'days') / ctl$tdef$by)))
 }
 
