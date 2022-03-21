@@ -104,6 +104,28 @@ createDFTestsConEstimadosYStdDifs <- function(
     tipoOutlier=tiposOutliers, stdDif=as.numeric(stdDifs), reemplazar=FALSE))
 }
 
+createDFTestsConEstimadosYStdDifsUmbralValor <- function(
+    x, estimados, stdDifs, factorHaciaAbajo, factorHaciaArriba, umbralValor, 
+    factorHaciaAbajoSiMayorAUmbralValor, factorHaciaArribaSiMayorAUmbralValor
+) {
+  estaciones <- as.character(sapply(colnames(x), FUN = function(name) { rep(name, nrow(x)) }))
+  fechas <- rep(rownames(x), ncol(x))
+  
+  tiposOutliers <- rep(TTO_SinProblemasDetectados, length(x))
+
+  idxUmbralValor <- as.logical(!is.na(x) & x < umbralValor)
+  tiposOutliers[idxUmbralValor & stdDifs < -factorHaciaAbajo] <- TTO_OutlierPorLoBajo
+  tiposOutliers[idxUmbralValor & stdDifs > factorHaciaArriba] <- TTO_OutlierPorLoAlto
+  
+  idxNotUmbralValor <- as.logical(!is.na(x) & x >= umbralValor)
+  tiposOutliers[idxNotUmbralValor & stdDifs < -factorHaciaAbajoSiMayorAUmbralValor] <- TTO_OutlierPorLoBajo
+  tiposOutliers[idxNotUmbralValor & stdDifs > factorHaciaArribaSiMayorAUmbralValor] <- TTO_OutlierPorLoAlto
+  
+  return(createDFTests(
+    estacion=estaciones, fecha=fechas, valor=as.numeric(x), estimado=as.numeric(estimados), 
+    tipoOutlier=tiposOutliers, stdDif=as.numeric(stdDifs), reemplazar=FALSE))
+}
+
 
 between <- function(x, minInclusivo, maxExclusivo) { return(minInclusivo <= x & x < maxExclusivo) }
 

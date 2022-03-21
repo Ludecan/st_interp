@@ -200,8 +200,9 @@ leerDatosVarsEstacionesFechasDeJSON <- function(
   # - pequeño. Usando rownames(datos[[iV]]) se obtienen las fechas correspondientes
   # str(datos$observaciones$datos)
   
+  
   datos <- fromJSON(pathArchivoDatos)
-  datos$fechas <- parse_date_time(datos$fechas, orders = formatoFechas, truncated = truncated)
+  datos$fechas <- parse_date_time(datos$fechas, orders=formatoFechas, truncated=truncated, tz='')
   names(datos$observaciones$datos) <- datos$variables$variable
   datos$estaciones$NombreEstacionR <- make.names(datos$estaciones[, colIdEstacion], unique = TRUE)
   datos$estaciones <- datos$estaciones[, c(ncol(datos$estaciones), 1:(ncol(datos$estaciones)-1))]
@@ -236,11 +237,11 @@ extraerVariablesEstacionesDeFecha <- function(datosVarsEstacionesFechas, fecha) 
 
 extraerVariableEstacionesDeFechas <- function(datosVarsEstacionesFechas, idStrVariable) {
   # Una variable, fechas en filas, estaciones en columnas
-  iVariable <- which(datosVarsEstacionesFechas$variables$idStr == idStrVariable)
+  iVariable <- which(datosVarsEstacionesFechas$variables$idStr==idStrVariable)
   variable <- datosVarsEstacionesFechas$variables[iVariable, ]
   
   # + 1 because R arrays are 1 indexed
-  iFechas <- datosVarsEstacionesFechas$observaciones$iFechas[[iVariable]]+1
+  iFechas <- datosVarsEstacionesFechas$observaciones$iFechas[[iVariable]] + 1
   fechas <- datosVarsEstacionesFechas$fechas[iFechas]
   
   # TODO: terminar la implementación de esto
