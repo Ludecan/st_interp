@@ -266,8 +266,16 @@ extraerVariableEstacionesDeFechas <- function(datosVarsEstacionesFechas, idStrVa
 }
 
 concatenarDatos <- function(datos1, datos2) {
-  datosRes <- datos1
-  datosRes$estaciones <- rbind(datosRes$estaciones, datos2$estaciones)
-  datosRes$datos <- cbind(datosRes$datos, datos2$datos)
-  return(datosRes)
+  if (!is.null(datos1)) {
+    if (!is.null(datos2)) {
+      datosRes <- datos1
+      datosRes$estaciones <- rbind(datosRes$estaciones, datos2$estaciones)
+      datosRes$datos <- cbind(datosRes$datos, datos2$datos)
+      return(datosRes)
+    } else {
+      return(datos1)
+    }
+  } else {
+    return(datos2)
+  }
 }
