@@ -43,7 +43,6 @@ getPathCache <- function(objParametros, dirEjecucion='', prefijoNombreArchivoCac
 }
 
 guardarCache <- function(pathCache, obj) {
-  print(pathCache)
   dir.create(dirname(pathCache), recursive=T, showWarnings=F)
   saveRDS(object=obj, file=pathCache)
 }
