@@ -455,9 +455,9 @@ interpolarYMapear <- function(
       paramsIyM$incorporarDistanciaAlAgua | 
       paramsIyM$incorporarAltitud) {
     cachearRegresoresEstaticos(
-      coordsObservaciones = geometry(coordsObservaciones), 
-      coordsAInterpolar = geometry(coordsAInterpolar), 
-      nCoresAUsar = paramsIyM$nCoresAUsar)
+      coordsObservaciones=geometry(coordsObservaciones), 
+      coordsAInterpolar=geometry(coordsAInterpolar),
+      nCoresAUsar=paramsIyM$nCoresAUsar)
   }
   
   if (length(paramsIyM$tlagsAR) <= 0) {
