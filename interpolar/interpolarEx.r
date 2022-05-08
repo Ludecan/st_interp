@@ -1866,7 +1866,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
   
   # Regresores estáticos sobre coordenadas a interpolar
   source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
-  pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros = list(coordsAInterpolar, version=2))
+  pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros=list(coordsAInterpolar, version=2))
   if (!file.exists(pathCacheDatosCoordsAInterpolar) | (file.info(pathCacheDatosCoordsAInterpolar)$size <= 0)) {
     dfDatosCoordsAInterpolar <- list()
     
