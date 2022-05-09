@@ -1866,7 +1866,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
   
   # Regresores estáticos sobre coordenadas a interpolar
   source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
-  pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros = list(coordsAInterpolar, version=2))
+  pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros=list(coordsAInterpolar, version=2))
   if (!file.exists(pathCacheDatosCoordsAInterpolar) | (file.info(pathCacheDatosCoordsAInterpolar)$size <= 0)) {
     dfDatosCoordsAInterpolar <- list()
     
@@ -1895,7 +1895,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     #lala$dist2 <- (lala$dist ^ (1/2)) ^(1/3)
     #mapearGrillaGGPlot(lala, shpMask$shp, continuo = T, zcol=4)
     
-    guardarCache(pathCache = pathCacheDatosCoordsAInterpolar, obj = dfDatosCoordsAInterpolar)
+    guardarCache(pathCache=pathCacheDatosCoordsAInterpolar, obj=dfDatosCoordsAInterpolar)
   }
   
   # Regresores estáticos sobre coordenadas de observaciones
@@ -1935,7 +1935,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     # lala <- SpatialPointsDataFrame(coords = coordsObservaciones, data = dfDatosCoordsObservaciones)
     # mapearPuntosConEtiquetasGGPlot(lala, shpMask$shp, zcol=1)
     
-    guardarCache(pathCache = pathCacheDatosCoordsObservaciones, obj = dfDatosCoordsObservaciones)
+    guardarCache(pathCache=pathCacheDatosCoordsObservaciones, obj=dfDatosCoordsObservaciones)
   }
   return(NULL)
 }

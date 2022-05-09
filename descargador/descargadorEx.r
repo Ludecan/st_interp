@@ -340,8 +340,8 @@ descargarArchivo <- function(
     i, urls, nombresArchivosDestino, forzarReDescarga=FALSE, maxRetries=5L, 
     segundosEntreIntentos=5L, curlOpts=NULL, do_unzip=isCompressed(nombresArchivosDestino),
     useCurl=FALSE) {
-  # print(i)
   # i <- 1
+  # print(i)
   nRetries <- 0
 
   # Check if unzipped file exists

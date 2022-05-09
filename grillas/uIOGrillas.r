@@ -231,7 +231,7 @@ guardarSPobj_netCDF <- function(
   yvals <- unique(coordinates(objSP)[, 2])
   lon <- ncdf4::ncdim_def(name=lonDimName, units="degrees_east", vals=xvals)
   lat <- ncdf4::ncdim_def(name=latDimName, units="degrees_north", vals=yvals)
-  
+
   # Time dimension
   time <- ncdf4::ncdim_def(
     name="time", units="days since 1980-1-1 0:0:0", unlim=TRUE, calendar="gregorian", 

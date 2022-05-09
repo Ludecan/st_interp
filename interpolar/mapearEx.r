@@ -961,7 +961,7 @@ mapearGrillaGGPlot <- function(
     } else {
       vals <- escala$escala
     }
-    
+
     limits <- c(vals[1], vals[length(vals)])
     if (limits[1] == limits[2]) {
       breaks <- levels(v)
@@ -991,7 +991,7 @@ mapearGrillaGGPlot <- function(
     dibujarEjes=dibujarEjes, titulo=titulo, subtitulo=subtitulo, 
     puntosAResaltar=puntosAResaltar, tamanioResalto=tamanioResalto, widthPx = widthPx
   )
-  
+
   if (dibujarPuntosObservaciones & !is.null(coordsObservaciones)) {
     zColObs <- max(which(colnames(coordsObservaciones@data) == 'value'), 1)
     if (!is.null(shpBase)) { coordsObsSobreShpBase <- coordsObservaciones[!is.na(over(coordsObservaciones, geometry(shpBase))),]
