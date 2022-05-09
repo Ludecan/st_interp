@@ -216,7 +216,9 @@ calcValidationStatisticsMultipleModels <- function(
       validationStatsOverall, 
       calcValidationStatisticsOverall(
         nombreModelo = nomModelo, pronosticos = cvs[[i]], observaciones = valoresObservaciones, 
-        climatologias = climatologias))
+        climatologias = climatologias
+      )
+    )
     
     validationStatsEspaciales[[i]] <- calcValidationStatisticsEspacial(
       pronosticos = cvs[[i]], observaciones = valoresObservaciones, climatologias = climatologias)

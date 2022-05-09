@@ -189,7 +189,7 @@ nombreModelo <- function(params, pathsRegresores=NULL) {
   } else { strInterpolacion <- params$interpolationMethod
   }
   
-  if (params$preECDFMatching) { strECDF <- '_ECDF'
+  if (!is.null(params$preECDFMatching) && params$preECDFMatching) { strECDF <- '_ECDF'
   } else { strECDF <- '' }
   
   strMetodo <- paste0(strMetodoIgualacion, strInterpolacion)
@@ -1181,7 +1181,7 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
     }
     
     g2 <- mapearPuntosGGPlot(sp[muestras,], tamaniosPuntos = 2, continuo = T, dibujar = F, titulo = 'Muestreo LST MODIS: 2002-07-20. n=2000')
-    png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_Mapas.png', width = 1920, height = 1017, type='cairo')
+    png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_Mapas.png', width = 1920, height = 1017)
     tryCatch(expr = print(multiplot(plotlist = list(g1, g2), cols=2)), finally = dev.off())
 
     auxSP <- SpatialPoints(coords = sp::coordinates(sp)[muestras,], proj4string = sp@proj4string) 
@@ -1192,7 +1192,7 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
     
     nombresCuadrantes <- apply(expand.grid(0:(nCuadrantesX-1), 0:(nCuadrantesY-1)), 1, function(x) paste(x,collapse="-"))
     
-    png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_ECDF_Cuadrantes.png', width = 1920, height = 1017, type='cairo')
+    png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_ECDF_Cuadrantes.png', width = 1920, height = 1017)
     tryCatch(expr = {  
       par(mfrow=c(nCuadrantesX,nCuadrantesY))
       for (i in 1:length(i1)) {
@@ -1204,7 +1204,7 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
       par(mfrow=c(1,1))
       dev.off() })
     
-    png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_ECDF.png', width = 1920, height = 1017, type='cairo')
+    png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_ECDF.png', width = 1920, height = 1017)
     tryCatch(expr = {  
       plot(ecdf(sp@data[,zcol]), main = 'ECDF LST MODIS: 2002-07-20', xlab='LST [°C]', xlim=range(sp@data[,zcol], na.rm=T))
       lines(ecdf(sp@data[muestras,zcol]), col='blue', lwd=2, pch='')
@@ -1752,7 +1752,7 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
             
             # print(multiplot(plotlist = plots, cols = cols))
             
-            png(agregarCarpetaAlFinal(changeFileExt(nomArchSalida, '.png'), 'plots'), width = 1920, height = 1048, type='cairo')
+            png(agregarCarpetaAlFinal(changeFileExt(nomArchSalida, '.png'), 'plots'), width = 1920, height = 1048)
             tryCatch(expr = print(multiplot(plotlist = plots, cols = cols)), finally = dev.off())
             rm(plots)
           }

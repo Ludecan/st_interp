@@ -319,13 +319,15 @@ calcAndPlotAllValidationStatisticsV2 <- function(
     carpetaSalida=carpetaSalida, shpBase=shpBase, xyLims=xyLims, nColsPlots=nColsPlots, 
     ordenModelosPorColumnas=ordenModelosPorColumnas, tamaniosPuntos=tamaniosPuntos,
     tamanioFuentePuntos=tamanioFuentePuntos, tamanioFuenteEjes=tamanioFuenteEjes, 
-    tamanioFuenteTitulo=tamanioFuenteTitulo)
+    tamanioFuenteTitulo=tamanioFuenteTitulo
+  )
 
   ####### Temporales ########
   plotValidationStatsTemporales(
     fechas=fechas, statsTemporales=validationStats$validationStatsTemporales[ordenModelosPorColumnas], 
     carpetaSalida=carpetaSalida, nColsPlots=nColsPlots, 
-    ordenModelosPorColumnas=ordenModelosPorColumnas)
+    ordenModelosPorColumnas=ordenModelosPorColumnas
+  )
   
   return(validationStats)
 }
@@ -394,7 +396,7 @@ plotValidationStatsEspaciales <- function(
     }
     escala <- ajustarExtremosEscala(escala=escala, datos=vsEspaciales, nDigitos=2, redondear=TRUE)
     
-    j <- 2
+    j <- 1
     for (j in seq_along(ordenModelosPorColumnas)) {
       print(paste0(statName, ': ', ordenModelosPorColumnas[j]))
       coordsObservaciones$value <- vsEspaciales[, j]
@@ -402,7 +404,8 @@ plotValidationStatsEspaciales <- function(
           carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '/', sprintf("%02d", j), '-', 
           ordenModelosPorColumnas[j], '.png')
       gs[[j]] <- mapearPuntosGGPlot(
-        puntos=coordsObservaciones, shpBase=shpBase, xyLims=xyLims, dibujarTexto=TRUE, 
+        puntos=coordsObservaciones, shpBase=shpBase, xyLims=xyLims, 
+        zcol='value', dibujarTexto=TRUE, 
         escala=escala, tamaniosPuntos=tamaniosPuntos, tamanioFuentePuntos=tamanioFuentePuntos,
         tamanioFuenteEjes=tamanioFuenteEjes, tamanioFuenteTitulo=tamanioFuenteTitulo, nDigitos=2, 
         titulo=paste0(ordenModelosPorColumnas[j], ': ', statsNames[i]), 
@@ -412,7 +415,7 @@ plotValidationStatsEspaciales <- function(
     
     nomArchMapa <- paste0(
       carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_Espacial.png')
-    png(nomArchMapa, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    png(nomArchMapa, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos)
     tryCatch(expr = print(multiplot(plotlist=gs, cols = nColsPlots)), finally = dev.off())
   }
 }
@@ -476,12 +479,12 @@ plotValidationStatsTemporales <- function(
     
     nomArchGraficos <- paste0(
       carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_Temporal.png')
-    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos)
     tryCatch(expr = print(multiplot(plotlist=gs, cols = nColsPlots)), finally = dev.off())
     
     nomArchGraficos <- paste0(
       carpetaSalida, sprintf("%02d", iEstadistico), '-', statName, '_TemporalBoxPlots.png')
-    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos, type='cairo')
+    png(nomArchGraficos, width = 1920 * escalaGraficos, height = 1017 * escalaGraficos)
     tryCatch(expr = print(multiplot(plotlist=gs2, cols = nColsPlots)), finally = dev.off())
   }
 }

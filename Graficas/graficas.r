@@ -33,6 +33,9 @@ if (is.null(script.dir.graficas)) { script.dir.graficas <- ''
 } else { script.dir.graficas <- paste0(dirname(script.dir.graficas), '/') }
 
 set1 <- c('#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999')
+paired <- c("#A6CEE3","#1F78B4","#B2DF8A","#33A02C","#FB9A99","#E31A1C","#FDBF6F","#FF7F00","#CAB2D6","#6A3D9A","#FFFF99","#B15928")
+set3 <- c("#8DD3C7","#FFFFB3","#BEBADA","#FB8072","#80B1D3","#FDB462","#B3DE69","#FCCDE5","#D9D9D9","#BC80BD","#CCEBC5","#FFED6F")
+unikn_pair <- c("#3E5496","#8290BB","#008ECE","#59C7EB","#077187","#6AAAB7","#0A9086","#54BFB7","#8E2043","#BC7A8F","#E0607E","#ECA0B2","#FEA090","#FECFC7","#B8BCC1","#E1E2E5")
 colores64 <- c('#000000','#00FF00','#0000FF','#FF0000','#01FFFE','#FFA6FE','#FFDB66','#006401','#010067','#95003A',
                '#007DB5','#FF00F6','#FFEEE8','#774D00','#90FB92','#0076FF','#D5FF00','#FF937E','#6A826C','#FF029D',
                '#FE8900','#7A4782','#7E2DD2','#85A900','#FF0056','#A42400','#00AE7E','#683D3B','#BDC6FF','#263400',
@@ -71,8 +74,7 @@ colores269 <- c('#000000','#FFFF00','#1CE6FF','#FF34FF','#FF4A46',
                 '#00CCFF','#674E60','#FC009C','#92896B')
 
 source(paste0(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c("colorspace", "ggplot2", "Cairo", 'reshape'))
-
+instant_pkgs(c("colorspace", "ggplot2", "ragg", 'reshape'))
 
 crearXYLims <- function(xMin, xMax, yMin, yMax, expand=0) {
   res <- list(xLim=c(xMin, xMax), yLim=c(yMin, yMax), expand=expand)
@@ -80,14 +82,22 @@ crearXYLims <- function(xMin, xMax, yMin, yMax, expand=0) {
   return (res)
 }
 
+getColoresSetParaN <- function(n) {
+  if (n == 1) { return(set1[2])
+  } else if(n <= 9) { return(set1[1:n])
+  } else if(n <= 12) { return(paired[1:n])
+  #} else if(n <= 16) { return(unikn_pair[1:n])
+  } else if(n <= 64) { return(colores64[1:n])
+  } else { return(colores269[1:n]) }
+  #} else if(n <= 269) { return(colores269[1:n]) 
+  #} else { stop("graficas.getColoresSetParaN: Can't pick more than 269 colors") }
+}
+
 getColoresParaSeries <- function(y, seriesAdicionalesReservadas=0) {
   if (!is.matrix(y)) { n <- 1
   } else { n <- ncol(y) }
   
-  if (n == 1) { res <- set1[2]
-  } else if(n <= 9) { res <- set1[1:n]
-  } else if(n <= 64) { res <- colores64[1:n]
-  } else { res <- colores269[1:n] }
+  res <- getColoresSetParaN(n)
   
   return(c(res, rep('#000000', seriesAdicionalesReservadas)))
 }
@@ -136,7 +146,7 @@ aplicarOpcionesAGrafico <- function(
 guardarGrafico <- function(p, nomArchSalida, DPI=120, widthPx=800, heightPx=800) {
   path <- dirname(nomArchSalida)
   if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
-  ggsave(p, file=nomArchSalida, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in', type='cairo')
+  ggsave(p, file=nomArchSalida, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in')
 }
 
 linePlot <- function(
@@ -186,46 +196,67 @@ linePlot <- function(
   return (p)
 }
 
-scatterPlot <- function(x, y, 
-                        lineaRegresion=F, intervalosConfianza=lineaRegresion, metodoRegresion=lm, formulaRegresion=y~x,
-                        colorLineaRegresion='red', lineaXIgualY=F, colorLineaXIgualY='black',
-                        titulo='', tituloEjeX='', tituloEjeY='', dibujarEscala=T, dibujarEjes=T, 
-                        xyLims=NULL, dibujar=interactive(), nomArchSalida=NULL, DPI=120, widthPx=800, heightPx=800, 
-                        figurasPuntos=1, coloresPuntos='red', tamaniosPuntos=3, tamanioFuenteTextos=15, escalaGraficos=1, 
-                        sinFondo=TRUE) {
+scatterPlot <- function(
+  x, y, lineaRegresion=F, intervalosConfianza=lineaRegresion, metodoRegresion=lm, 
+  formulaRegresion=y~x, colorLineaRegresion='red', lineaXIgualY=F, 
+  colorLineaXIgualY='black', titulo='', tituloEjeX='', tituloEjeY='', dibujarEscala=T,
+  dibujarEjes=T, xyLims=NULL, dibujar=interactive(), nomArchSalida=NULL, DPI=120, 
+  widthPx=800, heightPx=800, figurasPuntos=1,
+  coloresPuntos=rep('red', length(as.vector(x))), colorMap=NULL,
+  tamaniosPuntos=3, tamanioFuenteTextos=15, escalaGraficos=1, sinFondo=TRUE
+) {
   if (is.matrix(x) && is.matrix(y) && ncol(x) > 1 && ncol(y) > 1) {
-    df <- data.frame(variable=c(sapply(colnames(x), function(x, n) rep(x, n), n=nrow(x))),
-                     x=as.vector(x), y=as.vector(y))
+    df <- data.frame(
+      variable=c(sapply(colnames(x), function(x, n) rep(x, n), n=nrow(x))), 
+      x=as.vector(x), y=as.vector(y), colores=coloresPuntos
+    )
     i <- complete.cases(df)
     df <- df[i,]
     multiScatterPlot <- TRUE
   } else {
-    df <- data.frame(variable=1, x=as.vector(x), y=as.vector(y))
-    i <- !is.na(x) & !is.na(y)
-    df <- data.frame(x=x[i], y=y[i])
+    auxX <- as.vector(x)
+    auxY <- as.vector(y)
+    
+    i <- !is.na(auxX) & !is.na(auxY)
+    df <- data.frame(
+      variable=1, x=auxX[i], y=auxY[i], color=coloresPuntos[i]
+    )
+    
     multiScatterPlot <- FALSE
   }
 
   if (length(figurasPuntos) > 1) figurasPuntos <- figurasPuntos[i]
-  if (length(coloresPuntos) > 1) coloresPuntos <- coloresPuntos[i]
   if (length(tamaniosPuntos) > 1) tamaniosPuntos <- tamaniosPuntos[i]
   
   if (multiScatterPlot) {
     colores <- getColoresParaSeries(x)
     
     if (lineaXIgualY) {
-      p <- ggplot(df, aes(x=x, y=y, colour=variable)) + geom_abline(slope=1, intercept=0, colour=colorLineaXIgualY, size=escalaGraficos * 0.75) + 
-        geom_point(shape=figurasPuntos, size=tamaniosPuntos) + scale_colour_manual(values=colores)
+      p <- ggplot(df, aes(x=x, y=y, colour=variable)) + 
+        geom_abline(slope=1, intercept=0, colour=colorLineaXIgualY, size=escalaGraficos * 0.75) + 
+        geom_point(shape=figurasPuntos, size=tamaniosPuntos) + 
+        scale_colour_manual(values=colores)
     } else {
-      p <- ggplot(df, aes(x=x, y=y, colour=variable)) + geom_point(shape=figurasPuntos, size=tamaniosPuntos) + 
+      p <- ggplot(df, aes(x=x, y=y, colour=variable)) + 
+        geom_point(shape=figurasPuntos, size=tamaniosPuntos) + 
         scale_colour_manual(values=colores)
     }
   } else {
+    p <- ggplot(df, aes(x=x, y=y))
+    
     if (lineaXIgualY) {
-      p <- ggplot(df, aes(x=x, y=y)) + geom_abline(slope=1, intercept=0, colour=colorLineaXIgualY, size=escalaGraficos * 0.75) + 
-        geom_point(shape=figurasPuntos, colour=coloresPuntos, size=tamaniosPuntos)
+       p <- p + geom_abline(slope=1, intercept=0, colour=colorLineaXIgualY, size=escalaGraficos * 0.75)
+    }
+      
+    if (!is.null(colorMap)) {
+      idx <- colorMap$label %in% df$color
+      
+      values <- setNames(colorMap$color[idx], colorMap$label[idx])
+      p <- p + 
+        geom_point(aes(colour=color), shape=figurasPuntos, size=tamaniosPuntos) + 
+        scale_colour_manual(values=values)
     } else {
-      p <- ggplot(df, aes(x=x, y=y)) + geom_point(shape=figurasPuntos, colour=coloresPuntos, size=tamaniosPuntos)
+      p <- p + geom_point(shape=figurasPuntos, colour=df$color, size=tamaniosPuntos)
     }
   }
 
@@ -268,8 +299,10 @@ boxplot_GGPlot <- function(
   return (p)
 }
 
-graficoCorrVsDistancia <- function(dist, corr, clasesEstaciones=rep(1, nrow(corr)), 
-                                   nomArchSalida=NULL) {
+graficoCorrVsDistancia <- function(
+  dist, corr, clasesEstaciones=rep(1, nrow(corr)), defaultClass=NULL, nomArchSalida=NULL,
+  tamaniosPuntos=2, figurasPuntos=20, widthPx=1600, heightPx=900, DPI=120
+) {
   upperTri <- upper.tri(dist, diag=T)
   
   df <- data.frame(x=dist[upperTri], y=corr[upperTri])
@@ -282,48 +315,58 @@ graficoCorrVsDistancia <- function(dist, corr, clasesEstaciones=rep(1, nrow(corr
   
   clasesUnique <- unique(clasesEstaciones)
   if (length(clasesUnique) > 1) {
-    colores <- colores64
-    colorMap <- expand.grid(clasesUnique, clasesUnique)
-    colorMap$color <- NA
-    colorMap$label <- NA
-    
-    nCruces <- 0
-    nClases <- length(clasesUnique)
-    
-    iClase <- 3
-    jClase <- iClase + 1
-    for (iClase in seq_along(clasesUnique)) {
-      claseI <- clasesUnique[iClase]
-      idx <- colorMap$Var1 == claseI & colorMap$Var2 == claseI
-      colorMap[idx, 'color'] <- colores[iClase]
-      colorMap[idx, 'label'] <- claseI
-      
-      for (jClase in seq.int(from = iClase+1, by=1, length.out = nClases - (iClase))) {
-        claseJ <- clasesUnique[jClase]
+    n <- (length(clasesUnique) * (length(clasesUnique) + 1)) / 2
+    colorMap <- data.frame(label=rep(NA_character_, n), color=rep(NA_character_, n))
+    coloresPuntos <- matrix(NA_character_, nrow=nrow(corr), ncol=ncol(corr))
+    n <- 1
+    for (i in seq_along(clasesUnique)) {
+      for (j in seq.int(i, length(clasesUnique))) {
+        idxClase1 <- clasesEstaciones == clasesUnique[i]
+        idxClase2 <- clasesEstaciones == clasesUnique[j]
         
-        idx <- (colorMap$Var1 == claseI & colorMap$Var2 == claseJ) | 
-          (colorMap$Var1 == claseJ & colorMap$Var2 == claseI)
-        colorMap[idx, 'color'] <- colores[nClases + nCruces]
-        colorMap[idx, 'label'] <- paste0(claseI, ',', claseJ)
-        nCruces <- nCruces + 1
+        if (!is.null(defaultClass) && 
+            (clasesUnique[i] == clasesUnique[j] & sum(idxClase1) == 1)
+        ) {
+          coloresPuntos[idxClase1, idxClase2] <- defaultClass
+          coloresPuntos[idxClase2, idxClase1] <- defaultClass
+        } else {
+          if (i == j) {
+            colorMap[n, 'label'] <- clasesUnique[i]
+          } else {
+            colorMap[n, 'label'] <- paste0(clasesUnique[i], ',', clasesUnique[j])  
+          }
+                    
+          coloresPuntos[idxClase1, idxClase2] <- colorMap[n, 'label']
+          coloresPuntos[idxClase2, idxClase1] <- colorMap[n, 'label']
+    }
+        n <- n + 1
       }
     }
-    coloresPuntos <- matrix('red', nrow=nrow(corr), ncol=ncol(corr))
-    for (i in seq_len(nrow(colorMap))) {
-      coloresPuntos[clasesEstaciones == colorMap[i, 1], clasesEstaciones == colorMap[i, 2]] <- colorMap[i, 3]
-    }
-    coloresPuntos <- coloresPuntos[upperTri]    
+    colorMap <- colorMap[!is.na(colorMap$label), ]
+    colorMap$color <- getColoresSetParaN(n=nrow(colorMap))
+    rownames(colorMap) <- 1:nrow(colorMap)
+    
+    # which(clasesEstaciones!='Ok')
+    # clasesEstaciones[clasesEstaciones!='Ok']
+    # unique(coloresPuntos[upperTri]) %in% colorMap$label
   } else {
-    coloresPuntos <- 'red'
+    coloresPuntos <- rep('red', prod(dim(dist)))
+    colorMap <- NULL
   }
   
-  xyLimsScatterPlot <- crearXYLims(yMin=achicarToNDigitos(min(corr[upperTri], na.rm=T), 2), yMax=1,
-                                   xMin=0, xMax=agrandarToNDigitos(max(dist[upperTri]), 1))
+  xyLimsScatterPlot <- crearXYLims(
+    yMin=achicarToNDigitos(min(corr[upperTri], na.rm=T), 2), yMax=1,
+    xMin=0, xMax=agrandarToNDigitos(max(dist[upperTri]), 1)
+  )
   
   # TODO: agregar labels de los puntos. Idea interesante acá:
   # https://stackoverflow.com/questions/52009545/r-ggplot-for-hover-text
-  return(scatterPlot(x=dist[upperTri], y=corr[upperTri], lineaRegresion=T, intervalosConfianza=F, 
+  return(scatterPlot(
+    x=dist[upperTri], y=corr[upperTri], lineaRegresion=T, intervalosConfianza=F, 
                      formulaRegresion=formulaModeloAjustada, xyLims=xyLimsScatterPlot,
-                     coloresPuntos = coloresPuntos, tituloEjeX='Distancia[km]',
-                     tituloEjeY='Correlación',dibujar = F, nomArchSalida = nomArchSalida))
+    coloresPuntos=coloresPuntos[upperTri], colorMap=colorMap, 
+    tituloEjeX='Distancia[km]', tituloEjeY='Correlación',
+    dibujar=F, nomArchSalida=nomArchSalida, tamaniosPuntos=tamaniosPuntos,
+    figurasPuntos=figurasPuntos, widthPx=widthPx, heightPx=heightPx, DPI=DPI
+  ))
 }

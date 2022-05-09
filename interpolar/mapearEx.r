@@ -38,7 +38,7 @@ source(paste0(script.dir.mapearEx, '../pathUtils/pathUtils.r'), encoding = 'WIND
 source(paste0(script.dir.mapearEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 instant_pkgs(
   c("sp", "RColorBrewer", "colorspace", "ggplot2", "rgeos", "maptools", "directlabels", "ggrepel", 
-    "Cairo", "mapproj"))
+    "ragg", "mapproj"))
 
 paletasInvertidas <- c('Spectral', 'RdBu', 'RdYlBu', 'RdYlGn')
 
@@ -410,9 +410,12 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
     yLim <- rangoExtendidoANDigitos(yLim, nDigitos = 1)
   }
   
-  if (is.null(resYImagenes) || resYImagenes <= 0) { resYImagenes <- round(resXImagenes * (yLim[2] - yLim[1]) / (xLim[2] - xLim[1]))
-  } else { if (is.null(resXImagenes) || resXImagenes <= 0) { resXImagenes <- round(resYImagenes * (xLim[2] - xLim[1]) / (yLim[2] - yLim[1])) } }  
-
+  if (is.null(resYImagenes) || resYImagenes <= 0) {
+    resYImagenes <- round(resXImagenes * (yLim[2] - yLim[1]) / (xLim[2] - xLim[1]))
+  } else if (is.null(resXImagenes) || resXImagenes <= 0) {
+      resXImagenes <- round(resYImagenes * (xLim[2] - xLim[1]) / (yLim[2] - yLim[1])) 
+  }  
+  
   if (ejesXYLatLong) {
     # Hago el "cuadrado" en lat/long
     p4strLatLong <- '+proj=longlat +datum=WGS84'
@@ -603,7 +606,7 @@ mapearPuntos <- function(observaciones, layoutSHP=NULL, escala, nomArchResultado
                    cuts=escala$escala, scales=list(draw=dibujarEjes), sp.layout=layoutSHP, 
                    xlim=xyLims$xLim, ylim=xyLims$yLim, colorkey=TRUE, par.settings=parSettings)
   }
-  png(nomArchResultados, height=xyLims$resYImagenes, width=xyLims$resXImagenes, type='cairo')
+  png(nomArchResultados, height=xyLims$resYImagenes, width=xyLims$resXImagenes)
   tryCatch(expr = print(plot), finally = dev.off())
   if (interactive()) { print(plot) }
 
@@ -623,7 +626,7 @@ mapearGrilla <- function(grilla, layoutSHP=NULL, escala, nomArchResultados, xyLi
                      at=escala$escala, pretty=F, scales=list(draw=dibujarEjes), sp.layout=layoutSHP, 
                      xlim=xyLims$xLim, ylim=xyLims$yLim, colorkey=dibujarEscala, par.settings=parSettings,
                      contour=contour, labels=labels)
-  png(nomArchResultados, height=xyLims$resYImagenes, width=xyLims$resXImagenes, type='cairo')
+  png(nomArchResultados, height=xyLims$resYImagenes, width=xyLims$resXImagenes)
   tryCatch(expr = print(plotPred), finally = dev.off())
   if (interactive()) { print(plotPred) }
   
@@ -707,7 +710,7 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
   if (!is.null(nomArchResultados)) {
     path <- dirname(nomArchResultados)
     if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
-    ggsave(p, file=nomArchResultados, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in', type='cairo')
+    ggsave(p, file=nomArchResultados, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in')
   }
   options(scipen=oldSciPen)
   
@@ -718,11 +721,13 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
 }
 
 mapearPuntosGGPlot <- function(
-    puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEjes=T, zcol=1, DPI=90, 
-    widthPx=630, heightPx=630, tamaniosPuntos=5, dibujarTexto=F, tamanioFuentePuntos=3, 
-    tamanioFuenteEjes=15, tamanioFuenteTitulo=14, nDigitos=1, escala=NULL, dibujar=interactive(), 
-    titulo='', subtitulo='', colorFillSHPBase=NA, contornearPuntos=FALSE, continuo, 
-    alturaEscalaContinua=unit(0.1, 'npc'), escalaGraficos = 1, puntosAResaltar=NULL) {
+  puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEjes=T, zcol=1, DPI=90, 
+  widthPx=630, heightPx=630, tamaniosPuntos=5, dibujarTexto=F, tamanioFuentePuntos=3, 
+  tamanioFuenteEjes=15, tamanioFuenteTitulo=14, nDigitos=1, escala=NULL, dibujar=interactive(), 
+  titulo='', subtitulo='', colorFillSHPBase=NA, contornearPuntos=FALSE, continuo, 
+  alturaEscalaContinua=unit(0.1, 'npc'), escalaGraficos=1, puntosAResaltar=NULL, 
+  tamanioResalto=0.8
+) {
   oldSciPen <- getOption("scipen")
   options(scipen=15)
   if (is.null(xyLims)) {
@@ -816,14 +821,17 @@ mapearPuntosGGPlot <- function(
     p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=T, dibujarEjes=dibujarEjes, 
     tamanioFuenteEjes=tamanioFuenteEjes * escalaGraficos, 
     tamanioFuenteTitulo=tamanioFuenteTitulo * escalaGraficos, titulo=titulo, subtitulo=subtitulo,
-    colorFillSHPBase=colorFillSHPBase, puntosAResaltar = puntosAResaltar, widthPx = widthPx)
+    colorFillSHPBase=colorFillSHPBase, puntosAResaltar=puntosAResaltar, 
+    tamanioResalto=tamanioResalto, widthPx = widthPx
+  )
 
   if (dibujar) print(p)
   if (!is.null(nomArchResultados)) {
-    path <- dirname(nomArchResultados)
-    if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
-    ggsave(p, file=nomArchResultados, dpi=DPI * escalaGraficos, width = (widthPx / DPI) * escalaGraficos, 
-           height = (heightPx / DPI) * escalaGraficos, units = 'in', type='cairo')
+    dir.create(dirname(nomArchResultados), showWarnings=F, recursive=T)
+    ggsave(
+      p, file=nomArchResultados, dpi=DPI * escalaGraficos, width=(widthPx / DPI) * escalaGraficos, 
+      height=(heightPx / DPI) * escalaGraficos, units='in'
+    )
   }
   options(scipen=oldSciPen)
   
@@ -839,11 +847,13 @@ map_aspect = function(x, y) {
 }
 
 mapearGrillaGGPlot <- function(
-    grilla, shpBase=NULL, escala=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEscala=TRUE, 
-    dibujarEjes=TRUE, zcol=1, isolineas=FALSE, DPI=90, widthPx=630, heightPx=630, 
-    dibujar=interactive(), titulo='', subtitulo = '', continuo, 
-    alturaEscalaContinua=unit(0.1, 'npc'), dibujarPuntosObservaciones=FALSE, 
-    coordsObservaciones=NULL, tamaniosPuntos = 0.8, tamanioFuentePuntos = 3, puntosAResaltar=NULL) {
+  grilla, shpBase=NULL, escala=NULL, nomArchResultados=NULL, xyLims=NULL, 
+  dibujarEscala=TRUE, dibujarEjes=TRUE, zcol=1, isolineas=FALSE, DPI=90, widthPx=630, 
+  heightPx=630, dibujar=interactive(), titulo='', subtitulo='', continuo, 
+  alturaEscalaContinua=unit(0.15, 'npc'), dibujarPuntosObservaciones=FALSE, 
+  coordsObservaciones=NULL, tamaniosPuntos=0.8, tamanioFuentePuntos=3, 
+  puntosAResaltar=NULL, tamanioResalto=0.8
+) {
   #grilla <- coarsenGrid(grilla, coarse = 6)
   if (!is.null(shpBase) & !identicalCRS(grilla, shpBase)) { 
     shpBase <- spTransform(shpBase, grilla@proj4string)
@@ -878,8 +888,6 @@ mapearGrillaGGPlot <- function(
       valMax <- Inf 
       ultimoI <- nEscala
     }
-  
-    if (!continuo) { v <- cut(v, breaks=c(escala$escala[1:ultimoI], valMax), right=FALSE, include.lowest=!is.infinite(valMax), dig.lab=15, ordered_result=T) }
   }
   
   coords <- sp::coordinates(grilla)[iNoNa, , drop=F]
@@ -907,39 +915,82 @@ mapearGrillaGGPlot <- function(
   
   if (!todosNA){
     # Isolineas
-    if (continuo && isolineas && nrow(df) > 0 && var(grilla@data[iNoNa,zcol]) > 1E-6) {
-      print(2)
+    if (isolineas && nrow(df) > 0 && var(grilla@data[iNoNa,zcol]) > 1E-6) {
       if (length(escala$iniciosIntervalosIsoLineas) > 0) { cortesIsolineas <- escala$iniciosIntervalosIsoLineas
       } else  { 
         nPuntos <- 7
         cortesIsolineas <- unique(round(quantile(df$value, seq(from = 1/nPuntos, to = 1 -1/nPuntos, length.out = nPuntos - 2)), 1))
       }
         
-      p <- p + geom_contour(aes(colour = ..level..), breaks=cortesIsolineas, color='gray30', na.rm=T, show.legend=T)# + scale_colour_gradient(guide = 'none')
+      colorIsolineas <- 'black'
+      p <- p + geom_contour(
+        aes(colour = ..level..), breaks=cortesIsolineas, color=colorIsolineas, na.rm=T, show.legend=T)
+      # + scale_colour_gradient(guide = 'none')
       instant_pkgs("directlabels")
       #p <- direct.label(p, list("far.from.others.borders", "calc.boxes", "enlarge.box", 
       #                  hjust = 1, vjust = 1, box.color = NA, fill = "transparent", "draw.rects"))
-      p <- direct.label(p, list("bottom.pieces", colour='gray30', size=3))
+      #p <- direct.label(p, list("top.pieces", colour='gray50', size=3))
+      #p <- direct.label(p, list("bottom.pieces", colour='gray50', size=3))
+      #p <- direct.label(p, list("visualcenter", colour='gray50', size=3))
+      #p <- direct.label(p, list("far.from.others.borders", colour='gray50', size=3))
+      p <- direct.label(p, list("smart.grid", colour=colorIsolineas, size=2))
     }
   }
   
   if (continuo) {
     vals <- ggplot2:::rescale01(escala$escala)
-    p <- p + scale_fill_gradientn(colours=escala$colores, values=vals, limits=c(escala$escala[1], valMax),
-                                  breaks=escala$escala, na.value="gray95") + theme(legend.key.height=alturaEscalaContinua)
+    p <- p + scale_fill_gradientn(
+      colours=escala$colores, values=vals, limits=c(escala$escala[1], valMax),
+      breaks=escala$escala, na.value="gray95"
+    ) + theme(legend.key.height=alturaEscalaContinua)
   } else {
-    breaks <- levels(v)
-    #if (length(breaks) > 18) { labels <- rev(escala$escala[1:ultimoI])
-    #} else { 
-      labels <- breaks 
-    #}
-    labels <- gsub(pattern = ',', replacement = ', ', x = labels, fixed = T)
-    #breaks <- paste('[', escala$escala[1:ultimoI], ',', c(escala$escala[2:ultimoI], as.character(valMax)), ')', sep='')
-    p <- p + scale_fill_manual(breaks=breaks, drop=F, labels=labels, values=escala$colores[1:ultimoI], na.value="gray95")
-  }    
+    if (is.infinite(escala$escala[1])) {
+      if (is.infinite(valMax)) {
+        vals <- escala$escala[2:nEscala]
+        maxDiff <- max(diff(vals))
+        vals <- c(vals[1] - maxDiff, vals, vals[length(vals)] + maxDiff)
+      } else {
+        vals <- escala$escala[2:nEscala]
+        maxDiff <- max(diff(vals))
+        vals <- c(vals[1] - maxDiff, vals)
+      }
+    } else if (is.infinite(valMax)) {
+      vals <- escala$escala[1:nEscala]
+      maxDiff <- max(diff(vals))
+      vals <- c(vals, vals[length(vals)] + maxDiff)
+    } else {
+      vals <- escala$escala
+    }
+    
+    limits <- c(vals[1], vals[length(vals)])
+    if (limits[1] == limits[2]) {
+      breaks <- levels(v)
+      labels <- gsub(pattern=',', replacement=', ', x=breaks, fixed=T)
+      p <- p + scale_fill_manual(
+        breaks=breaks, drop=F, labels=labels, values=escala$colores[1:ultimoI], 
+        na.value="gray95"
+      )
+    } else {
+      colores <- escala$colores[1:ultimoI]
+      showLimits <- !(is.infinite(escala$escala[1]) | is.infinite(valMax))
+      p <- p + 
+        binned_scale(aesthetics = "fill",
+                     scale_name = "value",
+                     palette = ggplot2:::binned_pal(scales::manual_pal(colores)),
+                     guide="coloursteps",
+                     breaks=vals,
+                     limits=limits,
+                     show.limits=showLimits,
+                     na.value="gray95") +
+        theme(legend.key.height=alturaEscalaContinua)
+    }
+  }
   
-  p <- aplicarOpcionesAMapa(p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=dibujarEscala, dibujarEjes=dibujarEjes, 
-                            titulo=titulo, subtitulo=subtitulo, puntosAResaltar = puntosAResaltar, widthPx = widthPx)
+  p <- aplicarOpcionesAMapa(
+    p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=dibujarEscala, 
+    dibujarEjes=dibujarEjes, titulo=titulo, subtitulo=subtitulo, 
+    puntosAResaltar=puntosAResaltar, tamanioResalto=tamanioResalto, widthPx = widthPx
+  )
   
   if (dibujarPuntosObservaciones & !is.null(coordsObservaciones)) {
     zColObs <- max(which(colnames(coordsObservaciones@data) == 'value'), 1)
@@ -970,23 +1021,27 @@ mapearGrillaGGPlot <- function(
     path <- dirname(nomArchResultados)
     if (!file.exists(path)) dir.create(path, showWarnings=F, recursive=T)
     
-    ggsave(p, file=nomArchResultados, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in', type='cairo')
+    ggsave(p, file=nomArchResultados, dpi=DPI, width = widthPx / DPI, height = heightPx / DPI, units = 'in')
   }
   options(scipen=oldSciPen)
   
   return(p)
 }
 
-mapearEx <- function(observaciones, grilla, shpMask=NULL, escalaObservaciones, escalaSD, continuo,
-                     nomArchResultados, resXImagenes=640, resYImagenes=NULL, 
-                     graficarObservaciones=T, graficarPrediccion=T, graficarVarianza=F, graficarSD=F, 
-                     dibujarEscala=T, dibujarEjes=T) {
+mapearEx <- function(
+  observaciones, grilla, shpMask=NULL, escalaObservaciones, escalaSD, continuo,
+  nomArchResultados, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong=TRUE,
+  graficarObservaciones=T, graficarPrediccion=T, graficarVarianza=F, graficarSD=F, 
+  dibujarEscala=T, dibujarEjes=T
+) {
   spObjs <- list()
   if (!is.null(shpMask)) spObjs[[length(spObjs) + 1]] <- shpMask$shp
   if (graficarObservaciones) spObjs[[length(spObjs) + 1]] <- observaciones
   if (graficarPrediccion || graficarVarianza || graficarSD) spObjs[[length(spObjs) + 1]] <- grilla
   
-  xyLims <- getXYLims(spObjs=spObjs, resXImagenes, resYImagenes, ejesXYLatLong=T, factorMargen = 0)
+  xyLims <- getXYLims(
+    spObjs=spObjs, resXImagenes, resYImagenes, ejesXYLatLong=ejesXYLatLong, factorMargen = 0
+  )
   if (!is.null(shpMask)) { layoutSHP <- getLayoutSHP(shpMask$shp)
   } else { layoutSHP <- NULL }
   

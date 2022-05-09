@@ -289,14 +289,16 @@ netCDFToSP <- function(
 extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1, silent=T, ...) {
   # i <- 1
   if (!silent) print(i)
-
+  
   if (!is.na(pathsRegresor[i]) && file.exists(pathsRegresor[i]) && length(objSP) > 0) {
     ext <- getFileExt(pathsRegresor[i])
     if (ext == 'tif') { evaluarConReintentos(regresor <- readGDAL(pathsRegresor[i], silent = silent))
     } else if (ext == 'nc') {
       # TO-DO: receive varName as parameter
-      evaluarConReintentos(regresor <- netCDFToSP(fname = pathsRegresor[i]))
-    } else { stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresor[i], '"')) }
+      evaluarConReintentos(regresor <- netCDFToSP(fname=pathsRegresor[i]))
+    } else { 
+      stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresor[i], '"')) 
+    }
 
     # Obtengo los valores del regresor en las coordenadas de las observaciones
     if (!identicalCRS(x = objSP, y = regresor)) {
@@ -414,8 +416,9 @@ extraerValoresRegresorSingleNetCDFSobreSP <- function(
 }
 
 extraerValoresRegresoresSobreSP <- function(
-    objSP, pathsRegresores, iInicial = 1, iFinal = nrow(pathsRegresores), fn=NULL, zcol=1, silent=T, 
-    nCoresAUsar=0, setNames=T, ...) {
+  objSP, pathsRegresores, iInicial = 1, iFinal = nrow(pathsRegresores), fn=NULL, zcol=1, 
+  silent=T, nCoresAUsar=0, setNames=T, ...
+) {
   # TO-DO: paralelizar esta función. Hoy se está haciendo paralelo en el tiempo pero si solo se 
   # quiere cargar una fecha para más de un regresor se está serializando innecesariamente. Hay que 
   # hacer que decida si paralelizar por filas o columnas para aprovechar mejor los recursos
@@ -424,7 +427,7 @@ extraerValoresRegresoresSobreSP <- function(
   # i <- 1
   for (i in 1:ncol(pathsRegresores)) {
     res[[i]] <- extraerValoresRegresorSobreSP(
-      objSP=objSP, pathsRegresor=pathsRegresores[, i,drop=F], iInicial=iInicial, iFinal=iFinal, 
+      objSP=objSP, pathsRegresor=pathsRegresores[, i, drop=F], iInicial=iInicial, iFinal=iFinal, 
       fn=fn, zcol = zcol, silent=silent, nCoresAUsar=nCoresAUsar, setNames = setNames, ...=...)
   }
   
@@ -717,10 +720,10 @@ interpolarEx <- function(
     } else { outputWhat <- list(mean=T) }
     
     interpolacion <- createIntamapObject(
-      observations=observaciones, formulaString=value ~ 1, 
+      observations=observaciones, formulaString=value ~ 1,
       predictionLocations=coordsAInterpolar[shpMask$mask, ],
-      class=params$interpolationMethod, 
-      params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax, 
+      class=params$interpolationMethod,
+      params=list(nclus=nCoresAUsar, nmin=params$nmin, nmax=params$nmax,
                   maxdist=params$maxdist, beta=beta, debug.level = 0),
       outputWhat=outputWhat)
     # mapearPuntosGGPlot(observaciones, shpMask$shp, dibujarTexto = length(observaciones) <= 50)
@@ -729,7 +732,7 @@ interpolarEx <- function(
     
     if (params$interpolationMethod == 'automap') {
       interpolacion$campoMedia <- 'var1.pred'
-      interpolacion$campoVarianza <- 'var1.var'    
+      interpolacion$campoVarianza <- 'var1.var'
       
       if (is.null(objParameters)) {
         # Variograma
@@ -737,13 +740,15 @@ interpolarEx <- function(
         require('gstat')
         
         if (params$imitarSurfer) {
-          maxDist <- max(spDists(coordsObservaciones, longlat = FALSE))
+          maxDist <- max(spDists(observaciones, longlat = FALSE))
           cutoff <- maxDist / 2.5
           limites <- seq(from = 0, to = cutoff, length.out = 25)
-          variogramas <- afvmod(formula=interpolacion$formulaString, input_data=interpolacion$observations, 
-                                model=c('Lin'), boundaries=limites, miscFitOptions=list(orig.behavior=F), 
-                                fix.values=c(0, cutoff, NA), verbose=params$verbose, nPuntosIniciales=params$nPuntosIniciales,
-                                tryFixNugget=params$tryFixNugget, fit.method = 7)
+          variogramas <- afvmod(
+            formula=interpolacion$formulaString, input_data=interpolacion$observations, 
+            model=c('Lin'), boundaries=limites, miscFitOptions=list(orig.behavior=F), 
+            fix.values=c(0, cutoff, NA), verbose=params$verbose, 
+            nPuntosIniciales=params$nPuntosIniciales, tryFixNugget=params$tryFixNugget, 
+            fit.method = 7)
           variogramas$var_model$range <- maxDist
         } else {
           usarAFVGLS <- (params$usarFitVariogramGLS == 'auto' && length(interpolacion$observations) <= 50) || (is.logical(params$usarFitVariogramGLS) && as.logical(params$usarFitVariogramGLS))
@@ -752,7 +757,7 @@ interpolarEx <- function(
           if (usarAFVGLS) {
             variogramas <- afvGLS(
               formula=interpolacion$formulaString, input_data=interpolacion$observations, 
-              cutoff = params$cutoff, model=params$modelosVariograma, verbose=params$verbose, 
+              cutoff=params$cutoff, model=params$modelosVariograma, verbose=params$verbose, 
               useNugget=params$usarNugget)
           }
           
@@ -770,10 +775,12 @@ interpolarEx <- function(
             #                        tryFixNugget=params$tryFixNugget, fit.method = 7)  
             #}
             
-            variogramas <- afvmod(formula=interpolacion$formulaString, input_data=interpolacion$observations, 
-                                  model=params$modelosVariograma, boundaries=limites, miscFitOptions=list(orig.behavior=F), 
-                                  fix.values=c(fixNugget, NA, NA), verbose=params$verbose, nPuntosIniciales=params$nPuntosIniciales,
-                                  tryFixNugget=params$tryFixNugget, fit.method = 7)
+            variogramas <- afvmod(
+              formula=interpolacion$formulaString, input_data=interpolacion$observations, 
+              model=params$modelosVariograma, boundaries=limites, miscFitOptions=list(orig.behavior=F), 
+              fix.values=c(fixNugget, NA, NA), verbose=params$verbose, 
+              nPuntosIniciales=params$nPuntosIniciales, tryFixNugget=params$tryFixNugget, 
+              fit.method = 7)
           }          
         }
         
@@ -952,23 +959,29 @@ interpolarEx <- function(
       # Mapa de campo base
       if (gridded(coordsAInterpolar)) {
         spAux <- SpatialPixelsDataFrame(points = coordsAInterpolar, data = data.frame(value=valoresCampoBase))
-        mapearGrillaGGPlot(grilla = spAux, shpBase = shpMask$shp, zcol=1, continuo = params$especEscalaDiagnostico$continuo, titulo = paste0('Ajuste Regresores - ', params$strFecha),  
-                           subtitulo = params$formulaRegresionCC, nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
-                           dibujar = F)
+        mapearGrillaGGPlot(
+          grilla=spAux, shpBase=shpMask$shp, zcol=1, continuo=params$especEscalaDiagnostico$continuo, 
+          titulo=paste0('Ajuste Regresores - ', params$strFecha), subtitulo=params$formulaRegresionCC, 
+          nomArchResultados=paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
+          dibujar=F
+        )
       } else {
         spAux <- SpatialPointsDataFrame(coords = coordsAInterpolar, data = data.frame(value=valoresCampoBase))
-        mapearPuntosGGPlot(puntos = spAux, shpBase = shpMask$shp, zcol=1, continuo = params$especEscalaDiagnostico$continuo, titulo = paste0('Ajuste Regresores - ', params$strFecha), 
-                           subtitulo = params$formulaRegresionCC, nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
-                           dibujar = F, dibujarTexto = T)
+        mapearPuntosGGPlot(
+          puntos=spAux, shpBase=shpMask$shp, zcol=1, continuo=params$especEscalaDiagnostico$continuo, 
+          titulo=paste0('Ajuste Regresores - ', params$strFecha), subtitulo=params$formulaRegresionCC, 
+          nomArchResultados=paste0(params$carpetaParaModoDiagnostico, '04-AjusteRegresores.png'), 
+          dibujar=F, dibujarTexto=T
+        )
       }
     }
     
     if (gridded(coordsAInterpolar)) {
       mapearGrillaGGPlot(
-        grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-        continuo = params$especEscalaDiagnostico$continuo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
-        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '06-InterpolacionMasCampoBase.png'), 
-        dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
+        grilla=interpolacion$predictions, shpBase=shpMask$shp, zcol=interpolacion$campoMedia, 
+        continuo=params$especEscalaDiagnostico$continuo, titulo=paste0(params$nombreModelo, ' - ', params$strFecha), 
+        nomArchResultados=paste0(params$carpetaParaModoDiagnostico, '06-InterpolacionMasCampoBase.png'), 
+        dibujar=F, dibujarPuntosObservaciones=T, coordsObservaciones=observaciones)
     } else {
       mapearPuntosGGPlot(
         puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
@@ -1088,19 +1101,6 @@ interpolarEx <- function(
   
   return (interpolacion)
 }
-
-interpolarEx2 <- function(
-    x, y, value, xs, ys, params, interpolateGrid=T, 
-    proj4stringObservaciones='+proj=longlat +datum=WGS84', SRS_stringObservaciones="EPSG:4326",
-    proj4stringCoordsAInterpolar='+proj=longlat +datum=WGS84', SRS_stringCoordsAInterpolar, 
-    shpMask=NULL, longitudesEnColumnas=T) {
-  observaciones <- crearSpatialPointsDataFrame(
-    x, y, value, proj4stringObservaciones, SRS_stringObservaciones)
-  coordsAInterpolar <- crearCoordsAInterpolar(
-    xs, ys, interpolateGrid, proj4stringCoordsAInterpolar, SRS_stringCoordsAInterpolar)
-  return (interpolarEx(observaciones, coordsAInterpolar, params, shpMask))
-}
-
 
 stUniversalKriging <- function(
     ti=1, spObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar,
@@ -2067,14 +2067,15 @@ incorporarRegresoresEstaticos <- function(
 }
 
 ajusteRegresores <- function(
-    ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
-    valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL,
-    incorporarCoordenadas=FALSE, formulaCoordenadas='x + y', #formulaCoordenadas='I(x^2) + I(y^2) + I(x*y) + x + y',
-    incorporarTiempo=FALSE, formulaTiempo='t',
-    incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
-    incorporarAltitud=FALSE, formulaAltitud='alt',
-    descartarCoordenadasNoSignificativas=FALSE,
-    invertir=FALSE, shpMask=NULL) {
+  ti, coordsObservaciones, fechasObservaciones, valoresObservaciones, coordsAInterpolar, params, 
+  valoresRegresoresSobreObservaciones=NULL, valoresRegresoresSobreCoordsAInterpolar_ti=NULL,
+  incorporarCoordenadas=FALSE, formulaCoordenadas='x + y', #formulaCoordenadas='I(x^2) + I(y^2) + I(x*y) + x + y',
+  incorporarTiempo=FALSE, formulaTiempo='t',
+  incorporarDistanciaAlAgua=FALSE, formulaDistanciaAlAgua='I(dist^0.125)',
+  incorporarAltitud=FALSE, formulaAltitud='alt',
+  descartarCoordenadasNoSignificativas=FALSE,
+  invertir=FALSE, shpMask=NULL
+) {
   if (invertir && length(valoresRegresoresSobreObservaciones) == 1) {
     aux <- valoresRegresoresSobreObservaciones[[1]]
     valoresRegresoresSobreObservaciones[[1]] <- valoresObservaciones
@@ -2251,7 +2252,7 @@ ajusteRegresores <- function(
                 # regressors range, we'll add artificial samples with 0 error, taken straight from
                 # the regressors unsampled values
                 rSobreObs <- range(df[, 2])
-                rSobreCoordsAInterpolar <- range(range(valoresRegresoresSobreCoordsAInterpolar_ti[, 1]))
+                rSobreCoordsAInterpolar <- range(valoresRegresoresSobreCoordsAInterpolar_ti[, 1], na.rm=TRUE)
                 
                 # Compare how much of the range of the regressor we have covered with the samples
                 # at the observation locations. If we haven't covered at least
@@ -2637,23 +2638,23 @@ universalGriddingEx <- function(
     # con la proyeccion y las coordenadas de los puntos a interpolar
     # params debe ser un objeto creado con createParamsUniversalGridding
     # params$descartarCoordenadasNoSignificativas <- FALSE
-
     regs <- ajusteRegresores(
-      ti = ti, coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-      valoresObservaciones = valoresObservaciones, coordsAInterpolar=coordsAInterpolar, 
+      ti=ti, coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      valoresObservaciones=valoresObservaciones, coordsAInterpolar=coordsAInterpolar, 
       params=params, valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
       valoresRegresoresSobreCoordsAInterpolar_ti=valoresRegresoresSobreCoordsAInterpolar_ti,
-      incorporarCoordenadas = params$incorporarCoordenadas, 
-      formulaCoordenadas = params$formulaCoordenadas,
-      incorporarTiempo = params$incorporarTiempo,
-      formulaTiempo = params$formulaTiempo,
+      incorporarCoordenadas=params$incorporarCoordenadas,
+      formulaCoordenadas=params$formulaCoordenadas,
+      incorporarTiempo=params$incorporarTiempo,
+      formulaTiempo=params$formulaTiempo,
       incorporarDistanciaAlAgua = params$incorporarDistanciaAlAgua,
-      formulaDistanciaAlAgua = params$formulaDistanciaAlAgua, 
+      formulaDistanciaAlAgua = params$formulaDistanciaAlAgua,
       incorporarAltitud = params$incorporarAltitud,
       formulaAltitud = params$formulaAltitud, 
       descartarCoordenadasNoSignificativas = params$descartarCoordenadasNoSignificativas,
       invertir = FALSE,
-      shpMask = shpMask)
+      shpMask = shpMask
+    )
     # mean(valoresObservaciones, na.rm = T) + c(-3, 3) * sd(valoresObservaciones, na.rm = T)
     # range(valoresObservaciones, na.rm = T)
     
@@ -2672,9 +2673,10 @@ universalGriddingEx <- function(
     # valoresCampoBaseSobreObservaciones <- regs$valoresCampoBaseSobreObservaciones
     # valoresCampoBase <- regs$valoresCampoBase
     interpolacion <- interpolarEx(
-      observaciones = coordsObservaciones, coordsAInterpolar = coordsAInterpolar, params = params, 
-      shpMask = shpMask, valoresCampoBaseSobreObservaciones=regs$valoresCampoBaseSobreObservaciones, 
-      valoresCampoBase=regs$valoresCampoBase, longitudesEnColumnas=longitudesEnColumnas)
+      observaciones=coordsObservaciones, coordsAInterpolar=coordsAInterpolar, params=params, 
+      shpMask=shpMask, valoresCampoBaseSobreObservaciones=regs$valoresCampoBaseSobreObservaciones, 
+      valoresCampoBase=regs$valoresCampoBase, longitudesEnColumnas=longitudesEnColumnas
+    )
     interpolacion$formulaRegresionCC <- regs$formulaRegresionCC
     
     # mapearPuntosGGPlot(puntos = observaciones, shpBase = shpMask$shp, continuo=T, zcol='value')
@@ -3477,8 +3479,8 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
 getIEsACombinarReduccionSeries <- function(
     coordsObservaciones, radioReduccionSeriesKm=1) {
   radioReduccionSeries <- distKmToP4Str(
-    p4str=coordsObservaciones@proj4string, distKm=radioReduccionSeriesKm)
-  
+    p4str=coordsObservaciones@proj4string, distKm=radioReduccionSeriesKm
+  )
   iesACombinar <- list()
   
   if (radioReduccionSeries > 0) {
@@ -3642,35 +3644,13 @@ calcOutlyingnessMedianaMAD <- function(x, xEstimarMedianaYMAD=x, porFilas=T, ove
   }
 }
 
-deteccionOutliersMediaSD <- function(
-    x, factorSDHaciaAbajo=3.5, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA) {
-  estimados <- as.numeric(rowMeans(x, na.rm = T))
-  stdDifs <- as.numeric(t(apply(x, MARGIN = 1, FUN = outlyingnessMediaSD, sdMin=sdMin)))
-  
-  return(createDFTestsConEstimadosYStdDifs(
-    x, estimados=estimados, stdDifs=stdDifs, factorHaciaAbajo=factorSDHaciaAbajo, 
-    factorHaciaArriba=factorSDHaciaArriba))
-}
-
-deteccionOutliersMedianaMAD <- function(
-    x, factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, 
-    desvMedAbsMin=NA) {
-  
-  estimados <- as.numeric(rowMedians(x, na.rm = T, keep.names = F))
-  stdDifs <- as.numeric(t(apply(
-    x, MARGIN = 1, FUN = outlyingnessMedianaMAD, desvMedAbsMin=desvMedAbsMin)))
-  
-  return(createDFTestsConEstimadosYStdDifs(
-    x, estimados=estimados, stdDifs=stdDifs, factorHaciaAbajo=factorMADHaciaAbajo, 
-    factorHaciaArriba=factorMADHaciaArriba))
-}
-
 deteccionOutliersRLM <- function(
-    coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
-    listaMapas, 
-    factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, desvMedAbsMin=NA,
-    factorSDHaciaAbajo=NA, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA, 
-    returnTestDF=FALSE) {
+  coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
+  listaMapas, 
+  factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, desvMedAbsMin=NA,
+  factorSDHaciaAbajo=NA, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA, 
+  returnTestDF=FALSE
+) {
   if (!is.na(factorMADHaciaAbajo) && !is.na(factorSDHaciaAbajo)) {
     stop('interpolarEx.deteccionOutliersRLM: only one of factorMADHaciaAbajo and factorSDHaciaAbajo can be specified')
   }
@@ -3702,12 +3682,12 @@ deteccionOutliersRLM <- function(
   listaMapasAux$incluirSubtitulo <- F
   listaMapasAux$recalcularSiYaExiste <- F
   
-  if (length(coordsObservaciones) <= 100) {
+  if (length(coordsObservaciones) <= 200) {
     # Si tengo pocas observaciones hago CV, sino hago una única regresión
     # params = paramsAux
     pred <- universalGriddingCV(
-      coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-      valoresObservaciones = valoresObservaciones, params = paramsAux, 
+      coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      valoresObservaciones=valoresObservaciones, params=paramsAux, 
       pathsRegresores=pathsRegresores)
   } else {
     #coordsAInterpolar = coordsObservaciones
@@ -3718,16 +3698,17 @@ deteccionOutliersRLM <- function(
     #pathsRegresoresParaRellenoRegresores = NULL
     #espEscalaFija = NULL
     #espEscalaAdaptada = NULL
-    #returnInterpolacion = T
+    #returnInterpolacion = 2L
     #mapearGrillaGGPlot(SpatialPixelsDataFrame(points = coordsObservaciones, data = data.frame(value=valoresObservaciones[1,])), shpBase = shpMask$shp, continuo = T, dibujar = F)
-    interp <- interpolarYMapear(coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones,
-                                valoresObservaciones =  valoresObservaciones, pathsRegresores = pathsRegresores, 
-                                coordsAInterpolar = coordsObservaciones, xyLims = xyLims, paramsIyM = paramsAux, 
-                                shpMask = NULL, listaMapas = listaMapasAux, paramsParaRellenoRegresores = NULL, 
-                                pathsRegresoresParaRellenoRegresores = NULL, espEscalaFija = NULL, espEscalaAdaptada = NULL,
-                                returnInterpolacion = T)
+    interp <- interpolarYMapear(
+      coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones,
+      valoresObservaciones=valoresObservaciones, pathsRegresores=pathsRegresores, 
+      coordsAInterpolar=coordsObservaciones, xyLims=xyLims, paramsIyM=paramsAux, 
+      shpMask=NULL, listaMapas=listaMapasAux, paramsParaRellenoRegresores=NULL, 
+      pathsRegresoresParaRellenoRegresores=NULL, espEscalaFija=NULL, 
+      espEscalaAdaptada=NULL, returnInterpolacion=2L)
     #mapearGrillaGGPlot(grilla = SpatialPixelsDataFrame(points = coordsObservaciones, data = interp[[1]]$predictions@data), shpBase = shpMask$shp, continuo = T, dibujar = F)
-    pred <- do.call(rbind, lapply(interp, FUN = function(x) { x$predictions@data[,x$campoMedia] }))
+    pred <- do.call(rbind, lapply(interp, FUN = function(x) { x$predictions@data[, x$campoMedia] }))
     rm(interp)
   }
   residuos <- valoresObservaciones - pred
@@ -3826,8 +3807,9 @@ deteccionOutliersRLM <- function(
 }
 
 deteccionOutliersUniversalGriddingCV <- function(
-    coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
-    maxOutlyingness=3.5, maxNIters=5) {
+  coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
+  maxOutlyingness=3.5, maxNIters=5
+) {
   paramsAux <- params
   paramsAux$difMaxFiltradoDeOutliersRLM <- 0
   paramsAux$difMaxFiltradoDeOutliersCV <- 0

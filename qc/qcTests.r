@@ -37,7 +37,8 @@ if (is.null(script.dir.qcTests)) { script.dir.qcTests <- ''
 source(paste0(script.dir.qcTests, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.qcTests, '../interpolar/interpolarEx.r'), encoding = 'WINDOWS-1252')
 source(paste0(script.dir.qcTests, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
-instant_pkgs(c('sp', 'robustbase'))
+instant_pkgs(c('sp', 'robustbase', 'ragg'))
+
 
 # Códigos para los distintos tipos de outliers detectables por los métodos
 TTO_SinProblemasDetectados = 0L
@@ -45,6 +46,7 @@ TTO_OutlierPorLoBajo = 1L
 TTO_OutlierPorLoAlto = 2L
 TTO_PrecipitacionAislada=3L
 TTO_SequedadAislada=4L
+TTO_CeroPocoProbable=5L
 TTO_ValorNulo = -1L
 TTO_SinDatosSuficientesEnLaEstacion = -2L
 TTO_SinDatosSuficientesEnVecinos = -3L
@@ -58,7 +60,9 @@ TTipoOutlierToString <- function(tipoOutlier) {
   return(stringsTTO[tipoOutlier - TTO_ValorConfirmado + 1])
 }
 
-tiposOutliersValoresSospechosos <- c(TTO_OutlierPorLoBajo, TTO_OutlierPorLoAlto, TTO_PrecipitacionAislada, TTO_SequedadAislada)
+tiposOutliersValoresSospechosos <- c(
+  TTO_OutlierPorLoBajo, TTO_OutlierPorLoAlto, TTO_PrecipitacionAislada, TTO_SequedadAislada, TTO_CeroPocoProbable
+)
 
 importanciaOutlier <- function(tipoOutlier) {
   if (tipoOutlier == TTO_SinProblemasDetectados) {
@@ -86,7 +90,8 @@ createDFTests <- function(
 }
 
 createDFTestsConEstimadosYStdDifs <- function(
-    x, estimados, stdDifs, factorHaciaAbajo, factorHaciaArriba) {
+  x, estimados, stdDifs, factorHaciaAbajo, factorHaciaArriba
+) {
   estaciones <- as.character(sapply(colnames(x), FUN = function(name) { rep(name, nrow(x)) }))
   fechas <- rep(rownames(x), ncol(x))
   
@@ -95,8 +100,30 @@ createDFTestsConEstimadosYStdDifs <- function(
   tiposOutliers[stdDifs > factorHaciaArriba] <- TTO_OutlierPorLoAlto
   
   return(createDFTests(
-    estacion = estaciones, fecha = fechas, valor = as.numeric(x), estimado = estimados, 
-    tipoOutlier = tiposOutliers, stdDif = stdDifs, reemplazar = FALSE))
+    estacion=estaciones, fecha=fechas, valor=as.numeric(x), estimado=as.numeric(estimados), 
+    tipoOutlier=tiposOutliers, stdDif=as.numeric(stdDifs), reemplazar=FALSE))
+}
+
+createDFTestsConEstimadosYStdDifsUmbralValor <- function(
+    x, estimados, stdDifs, factorHaciaAbajo, factorHaciaArriba, umbralValor, 
+    factorHaciaAbajoSiMayorAUmbralValor, factorHaciaArribaSiMayorAUmbralValor
+) {
+  estaciones <- as.character(sapply(colnames(x), FUN = function(name) { rep(name, nrow(x)) }))
+  fechas <- rep(rownames(x), ncol(x))
+  
+  tiposOutliers <- rep(TTO_SinProblemasDetectados, length(x))
+
+  idxUmbralValor <- as.logical(!is.na(x) & x < umbralValor)
+  tiposOutliers[idxUmbralValor & stdDifs < -factorHaciaAbajo] <- TTO_OutlierPorLoBajo
+  tiposOutliers[idxUmbralValor & stdDifs > factorHaciaArriba] <- TTO_OutlierPorLoAlto
+  
+  idxNotUmbralValor <- as.logical(!is.na(x) & x >= umbralValor)
+  tiposOutliers[idxNotUmbralValor & stdDifs < -factorHaciaAbajoSiMayorAUmbralValor] <- TTO_OutlierPorLoBajo
+  tiposOutliers[idxNotUmbralValor & stdDifs > factorHaciaArribaSiMayorAUmbralValor] <- TTO_OutlierPorLoAlto
+  
+  return(createDFTests(
+    estacion=estaciones, fecha=fechas, valor=as.numeric(x), estimado=as.numeric(estimados), 
+    tipoOutlier=tiposOutliers, stdDif=as.numeric(stdDifs), reemplazar=FALSE))
 }
 
 
@@ -110,8 +137,9 @@ simpleInvDistanceWeightingI <- function(dataI, pesosI, RnRMaskThreshold=0.3) {
   return(as.numeric(as.numeric(dataI) %*% pesos * rnr))
 }
 
-simpleInvDistanceWeighting <- function(data, dists, idpRange=seq(1, 15, by = 0.5), 
-                                       RnRMaskThreshold=0.3, iNoNA=NULL) {
+simpleInvDistanceWeighting <- function(
+  data, dists, idpRange=seq(1, 15, by = 0.25), RnRMaskThreshold=0.1, iNoNA=NULL
+) {
   #data=valoresVecinos
   #dists=distsVecinos
   # iFecha <- 24
@@ -137,7 +165,7 @@ simpleInvDistanceWeighting <- function(data, dists, idpRange=seq(1, 15, by = 0.5
         for (i in seq_along(dataI)) {
           #print(paste(iFecha, idp, i))
           estimsCV[i] <- simpleInvDistanceWeightingI(
-            dataI = dataI[-i], pesosI = pesos[-i], RnRMaskThreshold = RnRMaskThreshold)
+            dataI=dataI[-i], pesosI=pesos[-i], RnRMaskThreshold=RnRMaskThreshold)
         }
         rmses[idp] <- mean((estimsCV - dataI)^2)
         if (idp > 1 && rmses[idp - 1] < rmses[idp]) {
@@ -149,7 +177,8 @@ simpleInvDistanceWeighting <- function(data, dists, idpRange=seq(1, 15, by = 0.5
     distPower <- idpRange[which.min(rmses)]
     pesos <- 1 / (distsI ^ distPower)
     res[iFecha] <- simpleInvDistanceWeightingI(
-      dataI = dataI, pesosI = pesos, RnRMaskThreshold = RnRMaskThreshold)
+      dataI = dataI, pesosI = pesos, RnRMaskThreshold = RnRMaskThreshold
+    )
   }
   
   return(res)
@@ -300,16 +329,16 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
         geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), data = df, arrow = arrow(length=unit(0.30,"cm")), size=1) +
         geom_abline(slope = mPerpendicular, intercept = -mPerpendicular * medioCoords[1] + medioCoords[2])
       p
-      ggsave(p, file='D:/testsMCH/SRT/2-Gradiente2.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p, file='D:/testsMCH/SRT/2-Gradiente2.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
-      ggsave(p, file='D:/testsMCH/SRT/3-DireccionGradiente.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p, file='D:/testsMCH/SRT/3-DireccionGradiente.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # Dirección perpendicular del gradiente, sin ubicación
       p <- mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpBase, xyLims = xyLims, zcol = 'value',
                               continuo = T, dibujarTexto = T, dibujar = F) + 
         geom_abline(slope = m, intercept = -m * medioCoords[1] + medioCoords[2])
       p
-      ggsave(p, file='D:/testsMCH/SRT/4-PosicionGradiente1.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')    
+      ggsave(p, file='D:/testsMCH/SRT/4-PosicionGradiente1.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # x = (x1/m + y1 - c) / (m + 1/m)
       # Ubicaciones potenciales, proyección sobre perpendicular
@@ -321,7 +350,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       
       p2 <- p + geom_segment(aes(x = x1, y = y1, xend = x2, yend = y2), data = df2, arrow = arrow(length=unit(0.30,"cm")), size=0.5)
       p2
-      ggsave(p2, file='D:/testsMCH/SRT/4-PosicionGradiente2.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p2, file='D:/testsMCH/SRT/4-PosicionGradiente2.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # Ubicaciones potenciales, puntos
       xsAux <- as.numeric(sort((coordsOrig[, 1] * invM + coordsOrig[, 2] - intercept) / (m + invM)))
@@ -333,7 +362,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       df3 <- data.frame(x=nuevosXs, y=nuevosYs, value=NA)
       p3 <- p + geom_point(data = df3)
       p3
-      ggsave(p3, file='D:/testsMCH/SRT/4-PosicionGradiente3.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p3, file='D:/testsMCH/SRT/4-PosicionGradiente3.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # Gradiente final, ubicación y dirección
       i2 <- -mPerpendicular * (x0y0[1] * maxD + rX[1]) + (x0y0[2] * maxD + rY[1])
@@ -341,7 +370,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       p4 <- mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpBase, xyLims=xyLims, zcol = 'value', continuo = T, dibujarTexto = T,
                                dibujar = F) + geom_abline(slope = mPerpendicular, intercept = i2)
       p4
-      ggsave(p4, file='D:/testsMCH/SRT/4-PosicionGradiente4.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in', type='cairo')
+      ggsave(p4, file='D:/testsMCH/SRT/4-PosicionGradiente4.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
     }  
     # row.names(coordsObservaciones)[iPuntoATestear]
     
@@ -523,11 +552,13 @@ mapearResultadosDeteccionOutliers <- function(test, carpetaSalida=NULL, coordsOb
 }
 
 mapearResultadosDeteccionOutliersV2 <- function(
-    test, carpetaSalida=NULL, coordsObservaciones, valoresObservaciones, shpBase, tamaniosPuntos=5, 
-    tiposOutliersDeInteres=tiposOutliersValoresSospechosos, nCoresAUsar=0, replot=TRUE) {
+  test, carpetaSalida=NULL, coordsObservaciones, valoresObservaciones, shpBase, 
+  tamaniosPuntos=5, tamanioResalto=0.8, 
+  tiposOutliersDeInteres=tiposOutliersValoresSospechosos, nCoresAUsar=0, replot=TRUE
+) {
   mapearResultadosDeteccionOutliersV2I <- function(
     i, fechas, test, carpetaSalida, coordsObservaciones, valoresObservaciones, shpBase, xyLims, 
-    tamaniosPuntos, tiposOutliersDeInteres, replot) {
+    tamaniosPuntos, tamanioResalto, tiposOutliersDeInteres, replot) {
     # i <- 1
     # i <- which(fechas=='2018-10-21')
     # i <- which(fechas=='2018-10-21 00:00')
@@ -566,11 +597,16 @@ mapearResultadosDeteccionOutliersV2 <- function(
           postFijoTitulo <- ''
         }
         
-        titulo <- paste(fecha, '\n', 
-                        paste(test$estacion[iOutliersTitulo], ': Valor = ', round(test$valor[iOutliersTitulo], digits = 1), 
-                              '. Estimado = ', round(test$estimado[iOutliersTitulo], digits = 1),
-                              '. StdDif = ', round(test$stdDif[iOutliersTitulo], digits = 1), 
-                              '. ', TTipoOutlierToString(test$tipoOutlier[iOutliersTitulo]), sep='', collapse = '\n'))
+        titulo <- paste(
+          fecha, '\n', 
+          paste(
+            test$estacion[iOutliersTitulo], 
+            ': Valor = ', round(test$valor[iOutliersTitulo], digits = 1), 
+            '. Estimado = ', round(test$estimado[iOutliersTitulo], digits = 1),
+            '. StdDif = ', round(test$stdDif[iOutliersTitulo], digits = 1), '. ', 
+            TTipoOutlierToString(test$tipoOutlier[iOutliersTitulo]), sep='', collapse = '\n'
+          )
+        )
         titulo <- gsub(pattern = 'Estimado = NA. ', replacement = '', titulo, fixed = T)
         titulo <- gsub(pattern = 'StdDif = NA. ', replacement = '', titulo, fixed = T)
         if (postFijoTitulo != '') titulo <- paste(titulo, postFijoTitulo, sep = '\n') 
@@ -582,23 +618,22 @@ mapearResultadosDeteccionOutliersV2 <- function(
         puntosAResaltar <- NULL
       }
       
-      # nomArchResultados <- 'C:/testsMCH/EjemploSRT/1-Vecindad.png'
-      # titulo <- paste(fecha, '\n', paste(test$estacion[iOutliers], ': Valor = ', test$valor[iOutliers], '.', sep=''))
-      
-      
       if (is(object = geometry(coordsObservaciones), class2 = 'SpatialPixels') | 
           is(object = geometry(coordsObservaciones), class2 = 'SpatialGrid')) {
         mapearGrillaGGPlot(
-          grilla = coordsObservaciones, shpBase = shpBase, nomArchResultados = archivoSalida, 
-          xyLims = xyLims, zcol = 'value', titulo = titulo, dibujar = is.null(archivoSalida),
-          puntosAResaltar = puntosAResaltar, widthPx = 1024, heightPx = 1024, continuo = T)  
+          grilla=coordsObservaciones, shpBase=shpBase, nomArchResultados=archivoSalida, 
+          xyLims=xyLims, zcol='value', titulo=titulo, dibujar=is.null(archivoSalida),
+          puntosAResaltar=puntosAResaltar, tamanioResalto=tamanioResalto, 
+          widthPx=1024, heightPx=1024, continuo=T)  
       } else {
         mapearPuntosGGPlot(
-          puntos = coordsObservaciones, shpBase = shpBase, nomArchResultados = archivoSalida, 
-          dibujarTexto = TRUE, zcol='value', titulo = titulo, xyLims = xyLims, 
-          dibujar = is.null(archivoSalida), tamaniosPuntos=tamaniosPuntos, 
-          contornearPuntos = nrow(valoresObservaciones) <= 50, puntosAResaltar=puntosAResaltar,
-          widthPx = 1024, heightPx = 1024, continuo=T)      
+          puntos=coordsObservaciones, shpBase=shpBase, nomArchResultados=archivoSalida, 
+          dibujarTexto=TRUE, zcol='value', titulo=titulo, xyLims=xyLims, 
+          dibujar=is.null(archivoSalida), tamaniosPuntos=tamaniosPuntos, 
+          contornearPuntos=nrow(valoresObservaciones) <= 50, 
+          puntosAResaltar=puntosAResaltar,
+          tamanioResalto=tamanioResalto, 
+          widthPx=1024, heightPx=1024, continuo=T)      
       }
     }
 
@@ -630,14 +665,23 @@ mapearResultadosDeteccionOutliersV2 <- function(
         source(paste0(script.dir.qcTests, 'qcTests.r'), encoding = 'WINDOWS-1252') 
         source(paste0(script.dir.qcTests, '../interpolar/mapearEx.r'), encoding = 'WINDOWS-1252') 
       })
-      parLapplyLB(cl = cl, seq_along(fechas), fun = mapearResultadosDeteccionOutliersV2I, fechas=fechas, test=test, carpetaSalida=carpetaSalida, 
-                  coordsObservaciones=coordsObservaciones, valoresObservaciones=valoresObservaciones, shpBase=shpBase, xyLims=xyLims, 
-                  tamaniosPuntos=tamaniosPuntos, tiposOutliersDeInteres=tiposOutliersDeInteres, replot=replot)
+      parLapplyLB(
+        cl = cl, seq_along(fechas), fun = mapearResultadosDeteccionOutliersV2I, 
+        fechas=fechas, test=test, carpetaSalida=carpetaSalida,  
+        coordsObservaciones=coordsObservaciones, 
+        valoresObservaciones=valoresObservaciones, shpBase=shpBase, xyLims=xyLims, 
+        tamaniosPuntos=tamaniosPuntos, tamanioResalto=tamanioResalto, 
+        tiposOutliersDeInteres=tiposOutliersDeInteres, replot=replot
+      )
       stopCluster(cl)
     } else {
-      lapply(seq_along(fechas), FUN = mapearResultadosDeteccionOutliersV2I, fechas=fechas, test=test, carpetaSalida=carpetaSalida, 
-             coordsObservaciones=coordsObservaciones, valoresObservaciones=valoresObservaciones, shpBase=shpBase, xyLims=xyLims, 
-             tamaniosPuntos=tamaniosPuntos, tiposOutliersDeInteres=tiposOutliersDeInteres, replot=replot)
+      lapply(
+        seq_along(fechas), FUN=mapearResultadosDeteccionOutliersV2I, fechas=fechas, 
+        test=test, carpetaSalida=carpetaSalida, coordsObservaciones=coordsObservaciones, 
+        valoresObservaciones=valoresObservaciones, shpBase=shpBase, xyLims=xyLims, 
+        tamaniosPuntos=tamaniosPuntos, tamanioResalto=tamanioResalto, 
+        tiposOutliersDeInteres=tiposOutliersDeInteres, replot=replot
+      )
     }
   }
 }
@@ -1153,32 +1197,54 @@ testEspacialPrecipitacionIV2 <- function(
     ispMax, ispObs, isdMin, isdObs, isdEstMin, fInf, fSup, amplitudMin, amplitudMinRatio, maxDist,
     minNCuadrantes, minNVecinosPorCuadrante, datosProtegidos, verbose) {
   # verbose <- TRUE
-  # i <- 4
+  # i <- 108
   # iFecha <- 22
-  # i <- which(colnames(valoresObservaciones) == 'PASO.LAS.TOSCAS.RHT')
-  # iFecha <- which(row.names(valoresObservaciones) == '2019-12-04')
-  # mapearPuntosGGPlot(SpatialPointsDataFrame(geometry(coordsObservaciones), data = data.frame(value=as.numeric(valoresObservaciones[iFecha,]))), shpBase = shpBase, continuo = T, dibujar = F, dibujarTexto = T, tamaniosPuntos = 2)  
+  # i <- which(colnames(valoresObservaciones) == 'MARIN')
+  # iFecha <- which(row.names(valoresObservaciones) == '2017-07-11')
+  # i <- which.min(abs(valoresObservaciones[iFecha, ] - 45))
+  # sort(abs(valoresObservaciones[iFecha, ] - 2))[1:5]
+  # mapearPuntosGGPlot(SpatialPointsDataFrame(geometry(coordsObservaciones), data = data.frame(value=as.numeric(valoresObservaciones[iFecha,]))), shpBase = shpBase, continuo = T, dibujar = F, dibujarTexto = T, tamaniosPuntos = 2)
+  # mapearPuntosGGPlot(SpatialPointsDataFrame(geometry(coordsObservaciones[iesVecinosI, ]), data = data.frame(value=as.numeric(valoresObservaciones[iFecha, iesVecinosI]))), shpBase = shpBase, continuo = T, dibujar = F, dibujarTexto = T, tamaniosPuntos = 2)
   # print(i)
-  iesVecinosI <- getIVecinosAMenosDeMaxDist_i(
-    i=i, coordsObservaciones=coordsObservaciones, maxDist=maxDist, filtrarDistanciaCero=TRUE)
+  
+  cart2pol <- function(cartesianCoords) {
+    r <- sqrt(cartesianCoords[, 1]^2 + cartesianCoords[, 2]^2)
+    t <- base::atan2(cartesianCoords[, 2], cartesianCoords[, 1]) * 180 / pi + 180
+    
+    return(matrix(data=c(r,t), ncol=2, dimnames=list(rownames(cartesianCoords), c('r', 't'))))
+  }
+  
+  coordsPolares <- sp::coordinates(coordsObservaciones)
+  coordsPolares <- sweep(coordsPolares, 2, coordsPolares[i, , drop=F])
+  coordsPolares <- cart2pol(cartesianCoords=coordsPolares)
+  
+  iesVecinosI <- which(coordsPolares[, 1] > 0 & coordsPolares[, 1] <= maxDist)
   if (length(iesVecinosI) >= minNCuadrantes) {
     valoresVecinos <- valoresObservaciones[, iesVecinosI, drop=F]
     iNoNAsVecinos <- iNoNAs[, iesVecinosI, drop=F]
     
-    cuadrantesVecinos <- getICuadrantes(iPunto = i, iesVecinosI=iesVecinosI, coords = sp::coordinates(coordsObservaciones))
+    coordsPolares <- coordsPolares[iesVecinosI, , drop=F]
+    coordsPolares <- coordsPolares[order(coordsPolares[, 2]), , drop=F]
+    diferenciasAngulares <- (coordsPolares[c(seq.int(2, nrow(coordsPolares)), 1), 2] - coordsPolares[, 2]) %% 360
+    # Centro los ejes de los cuadrantes de manera que dividan al medio el ángulo donde
+    # se da la máxima diferencia angular entre vecinos
+    # En vez de rotar los ejes, roto las observaciones que es equivalente y más fácil
+    coordsPolares[, 2] <- (coordsPolares[, 2] - max(diferenciasAngulares) / 2) %% 360
+    cuadrantesVecinos <- coordsPolares[, 2] %/% 90 + 1
+    
     nVecinosPorCuadrante <- matrix(data = 0L, nrow = nrow(valoresObservaciones), ncol = 4)
     for (iFechaAux in 1:nrow(valoresObservaciones)) {
       cuadrantesVecinosI <- cuadrantesVecinos[iNoNAsVecinos[iFechaAux,]]
       for (iCuadrante in seq_along(cuadrantesVecinosI))
         nVecinosPorCuadrante[iFechaAux, cuadrantesVecinosI[iCuadrante]] <- nVecinosPorCuadrante[iFechaAux, cuadrantesVecinosI[iCuadrante]] + 1L
     }
+    # nVecinosPorCuadrante[iFecha, ]
     iFechasConVecinosSuficientes <- rowSums(nVecinosPorCuadrante >= minNVecinosPorCuadrante) >= minNCuadrantes
-    #iFechasConVecinosSuficientes <- rowMins(nVecinosPorCuadrante) >= minNVecinosPorCuadrante
     
     coords <- sp::coordinates(coordsObservaciones)[c(i, iesVecinosI),]
     distsVecinos <- spDistsN1(pts = coords[2:nrow(coords), ,drop=F], pt = coords[1, ,drop=F])
     
-    estimado <- simpleInvDistanceWeighting(data=valoresVecinos, dists=distsVecinos, iNoNA = iNoNAsVecinos)
+    estimado <- simpleInvDistanceWeighting(data=valoresVecinos, dists=distsVecinos, iNoNA=iNoNAsVecinos)
     #estimado <- sapply(X = 1:nrow(valoresObservaciones), FUN = simpleInvDistanceWeighting, data = valoresVecinos, dists=distsVecinos)
     #estimadoMedian <- apply(X = valoresVecinos, MARGIN = 1, FUN = median, na.rm=T)
     estimado[!iFechasConVecinosSuficientes] <- NA
@@ -1192,7 +1258,7 @@ testEspacialPrecipitacionIV2 <- function(
     for (iFecha in itsATestear) {
       Pobs <- valoresObservaciones[iFecha, i]
       # verbose <- TRUE
-      if (verbose) print(paste(i, '.', colnames(valoresObservaciones)[i], ', ', iFecha, '. ', row.names(valoresObservaciones)[iFecha], ', ', Pobs, sep=''))
+      if (verbose) print(paste0(i, '.', colnames(valoresObservaciones)[i], ', ', iFecha, '. ', row.names(valoresObservaciones)[iFecha], ', ', Pobs))
       
       if (!datosProtegidos[iFecha, i]) {
         if (!is.na(Pobs)) {
@@ -1206,11 +1272,12 @@ testEspacialPrecipitacionIV2 <- function(
               tiposOutliers[iFecha] <- TTO_SequedadAislada
               stdDifs[iFecha] <- NA_real_
             } else {
+              # maxDeFecha <- max(valoresObservaciones[iFecha, ], na.rm=T)
               amplitud <- diff(range(valoresVecinosI))
               #amplitud <- iqr(valoresVecinosI)
               #amplitud <- diff(quantile(valoresVecinosI, probs=c(0.15, 0.85)))
               
-              checkAmplitud <- (amplitud > amplitudMin) && 
+              checkAmplitud <- (amplitud >= amplitudMin) && 
                                (is.na(amplitudMinRatio) || 
                                   amplitud/(estimado[iFecha]+1e-3) > amplitudMinRatio)
               
@@ -1309,27 +1376,16 @@ testEspacialPrecipitacionIV2 <- function(
 #' neighbourhood based estimate, test result (tipoOutlier), standardized difference (difference 
 #' between observation and estimate divided by amplitude).
 testEspacialPrecipitacion <- function(
-    coordsObservaciones, fechasObservaciones, valoresObservaciones, 
-    iColumnasATestear=seq.int(from = 1, to = ncol(valoresObservaciones), by = 1),
-    itsATestear=1:nrow(valoresObservaciones), ispMax=0.3, ispObs=8, isdMin=1, isdObs=0.3, isdEstMin=3,
-    fInf=1, fSup=3, amplitudMin=1, amplitudMinRatio=NA, minValAbs=0, maxValAbs=450, 
-    maxDistKm=50, minNCuadrantes=4L, minNVecinosPorCuadrante=1L,
-    datosProtegidos=matrix(data=FALSE, nrow=nrow(valoresObservaciones), ncol=ncol(valoresObservaciones)),
-    archivoSalida=NULL, nCoresAUsar=0, verbose=FALSE) {
-
+  coordsObservaciones, fechasObservaciones, valoresObservaciones, 
+  iColumnasATestear=seq.int(from = 1, to = ncol(valoresObservaciones), by = 1),
+  itsATestear=1:nrow(valoresObservaciones), ispMax=0.3, ispObs=8, isdMin=1, isdObs=0.3, isdEstMin=3,
+  fInf=1, fSup=3, amplitudMin=1, amplitudMinRatio=NA, minValAbs=0, maxValAbs=450, 
+  maxDistKm=50, minNCuadrantes=4L, minNVecinosPorCuadrante=1L,
+  datosProtegidos=matrix(data=FALSE, nrow=nrow(valoresObservaciones), ncol=ncol(valoresObservaciones)),
+  archivoSalida=NULL, nCoresAUsar=0, verbose=FALSE
+) {
   # verbose<-TRUE
   maxDist <- distKmToP4Str(p4str=coordsObservaciones@proj4string, distKm=maxDistKm)
-  # cuadrantesIes <- lapply(seq_along(iesVecinos), FUN = iCuadrantes, iesVecinos=ies, coords=coords)
-  if (F) {
-    # TO-DO: Para permitir rotar los angulos de los cuadrantes
-    diffs <- coords[ies[[i]], ] - coords[i, ]
-    anguloCuadrantes = 4 * pi / minNCuadrantes
-    
-    anguloCuadrantes * 90 / pi
-    angulos * 90 / pi
-    
-    # angulosConVecinos <- atan2(diffs[,1], diffs[,2])
-  }
 
   iNoNAs <- !is.na(valoresObservaciones)
   if (!is.na(minValAbs)) {
@@ -1455,4 +1511,27 @@ testMaxToMeanRatios <- function(valoresObservaciones, minMaxVal=20, maxRatio=30,
   row.names(test) <- paste(make.names(test$estacion), test$fecha, sep='_')
   
   return(test)
+}
+
+deteccionOutliersMediaSD <- function(
+    x, factorSDHaciaAbajo=3.5, factorSDHaciaArriba=factorSDHaciaAbajo, sdMin=NA) {
+  estimados <- as.numeric(rowMeans(x, na.rm=T))
+  stdDifs <- as.numeric(t(apply(x, MARGIN=1, FUN=outlyingnessMediaSD, sdMin=sdMin)))
+  
+  return(createDFTestsConEstimadosYStdDifs(
+    x, estimados=estimados, stdDifs=stdDifs, factorHaciaAbajo=factorSDHaciaAbajo, 
+    factorHaciaArriba=factorSDHaciaArriba))
+}
+
+deteccionOutliersMedianaMAD <- function(
+    x, factorMADHaciaAbajo=3.5, factorMADHaciaArriba=factorMADHaciaAbajo, 
+    desvMedAbsMin=NA) {
+  
+  estimados <- as.numeric(rowMedians(x, na.rm = T, keep.names = F))
+  stdDifs <- as.numeric(t(apply(
+    x, MARGIN = 1, FUN = outlyingnessMedianaMAD, desvMedAbsMin=desvMedAbsMin)))
+  
+  return(createDFTestsConEstimadosYStdDifs(
+    x, estimados=estimados, stdDifs=stdDifs, factorHaciaAbajo=factorMADHaciaAbajo, 
+    factorHaciaArriba=factorMADHaciaArriba))
 }

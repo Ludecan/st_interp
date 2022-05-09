@@ -91,9 +91,13 @@ leerEscalaJSON <- function(nombreArchivo) {
 }
 
 redondearEscala <- function(escala, nDigitos=1) {
-  n <- length(escala)
-  return(c(achicarToNDigitos(escala[1], nDigitos = nDigitos), round(escala[2:(n-1)], nDigitos), 
-           agrandarToNDigitos(escala[n], nDigitos = nDigitos)))
+  if (nDigitos >= 0) {
+    n <- length(escala)
+    return(c(achicarToNDigitos(escala[1], nDigitos = nDigitos), round(escala[2:(n-1)], nDigitos), 
+             agrandarToNDigitos(escala[n], nDigitos = nDigitos)))
+  } else {
+    return(escala)
+  }
 }
 
 leerEscalas <- function(params, datosGrillaPredicciones, datosGrillaSD) {
@@ -241,7 +245,7 @@ crearEspecificacionEscalaRelativaAlMinimoYMaximo <- function(iniciosIntervalos=s
   return(list(Clase='TEspecificacionEscalaRelativaAlMinimoYMaximo', iniciosIntervalos=iniciosIntervalos, colores=colores, brewerPal=brewerPal, continuo=continuo, nDigitos=nDigitos))
 }
 
-crearEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0 <- function(iniciosIntervalos=seq(from=0, to=100, length.out = 11), colores=NULL, colorCero=rgb(245L, 245L, 249L, alpha = 0, maxColorValue = 255L), brewerPal='Spectral', continuo=F, nDigitos=1) {
+crearEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0 <- function(iniciosIntervalos=seq(from=0, to=100, length.out = 11), colores=NULL, colorCero=rgb(245L, 245L, 249L, maxColorValue = 255L), brewerPal='Spectral', continuo=F, nDigitos=1) {
   return(list(Clase='TEspecificacionEscalaRelativaAlMinimoYMaximoDistinguir0', iniciosIntervalos=iniciosIntervalos, colores=colores, colorCero=colorCero, brewerPal=brewerPal, continuo=continuo, nDigitos=nDigitos))
 }
 

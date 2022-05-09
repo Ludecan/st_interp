@@ -63,9 +63,6 @@ cargarPaquetes <- function(pkgs, silent=T, nRetries=25) {
   return(NULL)
 }
 
-i <- 1
-pkgs <- c('digest')
-
 checkInstallPackage <- function(i, pkgs, minVersions, paquetesInstalados) {
   return(
     !pkgs[i] %in% rownames(paquetesInstalados)
@@ -90,13 +87,28 @@ instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), sil
     paquetesAInstalar <- pkgs[bPaquetesAInstalar]
 
     if (length(paquetesAInstalar) > 0) {
-      if (.Platform$OS.type == "windows") {
-        utils::install.packages(
-          paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, type='binary')
-      } else {
-        utils::install.packages(
-          paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE)
-      }
+      Ncpus <- parallel::detectCores(T, T)
+      
+      tryCatch(
+        expr = {
+          if (.Platform$OS.type == "windows") {
+            utils::install.packages(
+              paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, type='binary', Ncpus=Ncpus)
+          } else {
+            utils::install.packages(
+              paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, Ncpus=Ncpus)
+          }
+        },
+        except={
+          if (.Platform$OS.type == "windows") {
+            utils::install.packages(
+              paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE, type='binary')
+          } else {
+            utils::install.packages(
+              paquetesAInstalar, repos='https://cran.rstudio.com/', dependencies=TRUE)
+          }
+        }
+      )
     }
     if (doCargarPaquetes) cargarPaquetes(pkgs, silent = silent)
   }
@@ -133,8 +145,8 @@ detachAllPackages <- function() {
 
 checkInstalledPackages <- function(minPkgVersionsPath) {
   minPkgVersions <- read.table(
-    minPkgVersionsPath, header=TRUE, sep='\t', encoding = 'UTF-8', 
-    stringsAsFactors = FALSE)
+    minPkgVersionsPath, header=TRUE, sep='\t', encoding='UTF-8', stringsAsFactors=FALSE
+  )
   installedPackages <- installed.packages()
   
   toUpdatePkgs <- list()
@@ -186,3 +198,9 @@ if (!exists('installedPackagesChecked') && file.exists(minPkgVersionsPath)) {
   checkInstalledPackages(minPkgVersionsPath)
 }
 installedPackagesChecked <- TRUE
+
+createMinPackageVersions <- function() {
+  packages <-installed.packages()
+  write.table(x = packages, file = minPkgVersionsPath, sep='\t', row.names = T, col.names = T, 
+              fileEncoding = 'UTF-8')
+}
