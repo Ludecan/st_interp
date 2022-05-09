@@ -1,3 +1,6 @@
-
 *.bak
-*.bak
+*.rej
+*.RData
+*.Rhistory
+.Rproj.user
+.env
