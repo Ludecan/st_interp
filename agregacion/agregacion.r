@@ -401,20 +401,33 @@ agregacionTemporalGrillada <- function(
   
   if (!is.null(shpBase)) {
     # iAux <- 2
-    iAux <- which.min(!is.na(pathsRegresor))
-    if (!is.null(paramsCTL)) {
-      regresorAux <- try(
-        readXYGridSP(
-          ctl=paramsCTL$ctl, dsetOverride=pathsRegresor[iAux], grillaXY=paramsCTL$grilla
+    iNoNa <- !is.na(pathsRegresor)
+    iNoNa[!file.exists(pathsRegresor[iNoNa])] <- FALSE
+    iAux <- which(iNoNa)[1]
+    if (!is.na(iAux)) {
+      if (!is.null(paramsCTL)) {
+        regresorAux <- try(
+          readXYGridSP(
+            ctl=paramsCTL$ctl, dsetOverride=pathsRegresor[iAux], grillaXY=paramsCTL$grilla
+          )
         )
-      )
+      } else {
+        regresorAux <- try(readGDAL(pathsRegresor[iAux], silent=T))
+      }
+      
+      if (class(regresorAux) != "try-error") {
+        shpBaseAux <- spTransform(shpBase, regresorAux@proj4string)
+        bbaux <- getPoligonoBoundingBox(objSP = shpBaseAux, factorExtensionX = 1.1)
+        iOver <- which(!is.na(over(regresorAux, bbaux)))
+        rm(shpBaseAux, bbaux)      
+      } else {
+        iOver <- NULL
+      }
+      rm(regresorAux)
     } else {
-      regresorAux <- try(readGDAL(pathsRegresor[iAux], silent=T))
+      iOver <- NULL
     }
-    shpBaseAux <- spTransform(shpBase, regresorAux@proj4string)
-    bbaux <- getPoligonoBoundingBox(objSP = shpBaseAux, factorExtensionX = 1.1)
-    iOver <- which(!is.na(over(regresorAux, bbaux)))
-    rm(iAux, regresorAux, shpBaseAux, bbaux)
+    rm(iAux, iNoNa)
   }
 
   if (nCoresAUsar > 1) {

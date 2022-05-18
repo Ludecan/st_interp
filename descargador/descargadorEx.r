@@ -342,8 +342,7 @@ descargarArchivo <- function(
     useCurl=FALSE) {
   # i <- 1
   # print(i)
-  nRetries <- 0
-
+  
   # Check if unzipped file exists
   if (do_unzip[i]) {
     unzippedFilename <- nombreArchSinExtension(nombresArchivosDestino[i])
@@ -365,6 +364,8 @@ descargarArchivo <- function(
   
   do_download <- forzarReDescarga || (!downloadExists && !unzipExists)
   if (do_download) {
+    nRetries <- 0
+    
     is_ftp = startsWith(urls[i], 'ftp://') || startsWith(urls[i], 'ftps://')
     is_http = !is_ftp && (startsWith(urls[i], 'http://') || startsWith(urls[i], 'https://'))
     results <- 1
