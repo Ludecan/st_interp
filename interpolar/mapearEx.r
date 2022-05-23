@@ -514,11 +514,12 @@ getLayoutSHP <- function(shp) {
   return(list("sp.polygons", shp, zcol=1, fill=NA, col=rgb(96, 96, 96, maxColorValue=255), first=F))
 }
 
-aplicarOpcionesAMapa <- function(p, xyLims, shpBase, dibujarEscala=T, dibujarEjes=T, tamanioFuenteEjes=15, 
-                                 tamanioFuenteTitulo=14, tamanioFuenteSubtitulo=12,
-                                 titulo='', subtitulo='', colorFillSHPBase=NA, escalaGraficos=1, 
-                                 puntosAResaltar=NULL, colorResalto=rgb(255, 0, 0, maxColorValue=255),
-                                 tamanioResalto=0.8, widthPx) {
+aplicarOpcionesAMapa <- function(
+    p, xyLims, shpBase, dibujarEscala=T, dibujarEjes=T, tamanioFuenteEjes=15, 
+    tamanioFuenteTitulo=14, tamanioFuenteSubtitulo=12, titulo='', subtitulo='', 
+    colorFillSHPBase=NA, escalaGraficos=1, puntosAResaltar=NULL, 
+    colorResalto=rgb(255, 0, 0, maxColorValue=255), tamanioResalto=0.8, widthPx
+) {
   if (!is.null(shpBase)) {
     if (!rgeos::gIsValid(shpBase)) shpBase <- gBuffer(shpBase, byid=TRUE, width=0)
     if ('SpatialPolygonsDataFrame' %in% class(shpBase)) {
@@ -633,11 +634,12 @@ mapearGrilla <- function(grilla, layoutSHP=NULL, escala, nomArchResultados, xyLi
   options(scipen=oldSciPen)
 }
 
-mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, 
-                                           dibujarEjes=T, zcol=1, DPI=90, widthPx=630, heightPx=630,
-                                           tamanioFuentePuntos=3, nDigitos=2, dibujarPuntos=T, 
-                                           coloresPuntos="black", coloresTexto="black", tamaniosPuntos=3, 
-                                           escala=NULL, dibujar=interactive(), titulo='', subtitulo='') {
+mapearPuntosConEtiquetasGGPlot <- function(
+    puntos, shpBase=NULL, nomArchResultados=NULL, xyLims=NULL, dibujarEjes=T, zcol=1, 
+    DPI=90, widthPx=630, heightPx=630, tamanioFuentePuntos=3, nDigitos=2, 
+    dibujarPuntos=T, coloresPuntos="black", coloresTexto="black", tamaniosPuntos=3, 
+    escala=NULL, dibujar=interactive(), titulo='', subtitulo=''
+) {
   if (exists(".Random.seed", .GlobalEnv)) { set.seed(31) }
   oldseed <- .GlobalEnv$.Random.seed
   set.seed(31)
@@ -692,8 +694,10 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
        theme(panel.background=element_blank())
 
   # Dibujar escala no se usa, se pasa con true para que no haga nada
-  p <- aplicarOpcionesAMapa(p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=T, dibujarEjes=dibujarEjes, 
-                            titulo=titulo, subtitulo=subtitulo, widthPx = widthPx)  
+  p <- aplicarOpcionesAMapa(
+    p=p, xyLims=xyLims, shpBase=shpBase, dibujarEscala=T, dibujarEjes=dibujarEjes, 
+    titulo=titulo, subtitulo=subtitulo, widthPx = widthPx
+  )  
   
   if (dibujarPuntos) p <- p + geom_point(data=df, aes(x=x, y=y), colour=coloresPuntos, size=tamaniosPuntos)
   #p <- p + geom_text(data=df, aes(label=value), vjust=justV, size=tamanioFuentePuntos, colour=coloresTexto)

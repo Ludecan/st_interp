@@ -204,4 +204,5 @@ createMinPackageVersions <- function() {
   write.table(x = packages, file = minPkgVersionsPath, sep='\t', row.names = T, col.names = T, 
               fileEncoding = 'UTF-8')
 }
-#renv::snapshot()
+
+# renv::snapshot(type="all")
