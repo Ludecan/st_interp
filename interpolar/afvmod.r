@@ -310,7 +310,7 @@ isInvalidVariogram <- function(v, minPsill = 1E-3, minRange = 0.05) {
    length(v) == 0 |
    any(!v$model %in% c('Nug', "Pow")  & ((v$psill < minPsill) | (v$range <= minRange))) |
    any(v$model == 'Nug' & v$psill < 0) |
-   any(v$model == 'Pow' & ((v$psill < 1e-3) | v$range >= 2 | v$range <= 0))))
+   any(v$model == 'Pow' & ((v$psill < 1e-6) | v$range >= 2 | v$range <= 0))))
 }
 
 getModelVariogram <- function(experimental_variogram, formula, input_data = NULL, model = c("Sph", "Exp", "Gau", "Ste"),
@@ -584,7 +584,7 @@ getExperimentalRange <- function(variogramModel, maxDist, n=100) {
   sill <- getExperimentalSill(variogramModel, maxDist, n)
   vgmLine <- variogramLine(variogramModel, maxdist = maxDist, n=n)
   diffs <- abs(vgmLine$gamma - sill * 0.95)
-  # me fijo cuales son menores o iguales que el mínimo más 1% para dejar un márgen para variogramas casi chatos
+  # me fijo cuales son menores o iguales que el mÃ­nimo mÃ¡s 1% para dejar un mÃ¡rgen para variogramas casi chatos
   iMins <- which(diffs <= min(diffs) * 1.01)
   iDist <- iMins[length(iMins)]
   # iDist <- which.min(abs(vgmLine$gamma - sill * 0.95))
@@ -1121,7 +1121,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   } else { fixNugget <- 0 }
 
   for (i in 1:length(model)) {
-    # i <- 3
+    # i <- 2
     if (verbose) print(paste0(i, ': ', model[[i]]))
     vgIni <- afvmod(
       formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, 
@@ -1130,10 +1130,11 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
     
     if (!is.null(vgIni)) {
       try({
-        res <- withWarnings(expr = { 
+        res <- withWarnings(expr={
           vg <- fit.variogram.gls_mod(
-            formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = F, 
-            maxiter = 100) })
+            formula=formula, data=input_data, trace=verbose, model=vgIni, 
+            ignoreInitial=F, maxiter=100) 
+        })
         
         # res <- withWarnings(expr = { vg <- fit.variogram.gls(formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = T, maxiter = 100) })
         #if (length(res$warnings) == 0) {
@@ -1145,7 +1146,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
           print(fitModels[[i]])
           print(mses[i])
         }
-      })      
+      }, silent=TRUE)      
     }
   }
   
@@ -1159,7 +1160,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
     mses <- mses[iesAConsiderar]
     bestMSE <- min(mses, na.rm = T)
         
-    # Considero todos los que tengan un MSE de como máximo 110% del mínimo
+    # Considero todos los que tengan un MSE de como mÃ¡ximo 110% del mÃ­nimo
     iesAConsiderar <- !is.na(mses) & mses / bestMSE < 1.1
     fitModels <- fitModels[iesAConsiderar]
     mses <- mses[iesAConsiderar]
@@ -1172,7 +1173,7 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
     #getExperimentalRange(variogramModel = fitModels[[3]], maxDist = max(vc$dist), n=100)
     rangos <- sapply(fitModels, FUN = getExperimentalRange, maxDist = max(vc$dist))
     # sills <- sapply(fitModels, FUN = getExperimentalSill, maxDist = max(vc$dist))
-    # Elijo el que tenga el mínimo nugget, si hay empate, elijo el de máximo rango
+    # Elijo el que tenga el mÃ­nimo nugget, si hay empate, elijo el de mÃ¡ximo rango
     iMejor <- order(nuggets, rangos, decreasing = c(F, T))[1]
     
     result = list(exp_var = vc, var_model = fitModels[[iMejor]], sserr = mses[iMejor])
@@ -1230,7 +1231,7 @@ afvGLSV2 <- function(formula, input_data, model, cutoff=NA, verbose=FALSE, useNu
     minPsill <- maxGamma * 0.001
     minRange <- 0.05
     
-    # Considero todos los que tengan un MSE de como máximo 110% del mínimo
+    # Considero todos los que tengan un MSE de como mÃ¡ximo 110% del mÃ­nimo
     iesAConsiderar <- !is.na(mses) & mses / bestMSE < 1.1 &
       !sapply(X = fitModels, FUN = isInvalidVariogram, minPsill=minPsill, minRange=minRange)
     fitModels <- fitModels[iesAConsiderar]
@@ -1244,7 +1245,7 @@ afvGLSV2 <- function(formula, input_data, model, cutoff=NA, verbose=FALSE, useNu
     #getExperimentalRange(variogramModel = fitModels[[3]], maxDist = max(vc$dist), n=100)
     rangos <- sapply(fitModels, FUN = getExperimentalRange, maxDist = max(vc$dist))
     # sills <- sapply(fitModels, FUN = getExperimentalSill, maxDist = max(vc$dist))
-    # Elijo el que tenga el mínimo nugget, si hay empate, elijo el de máximo rango
+    # Elijo el que tenga el mÃ­nimo nugget, si hay empate, elijo el de mÃ¡ximo rango
     iMejor <- order(nuggets, rangos, decreasing = c(F, T))[1]
     
     result = list(exp_var = vc, var_model = fitModels[[iMejor]], sserr = mses[iMejor])

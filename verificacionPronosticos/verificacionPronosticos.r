@@ -34,7 +34,7 @@ while ((is.null(script.dir.verificacionPronosticos) || is.na(regexpr('verificaci
 if (is.null(script.dir.verificacionPronosticos)) { script.dir.verificacionPronosticos <- ''
 } else { script.dir.verificacionPronosticos <- paste0(dirname(script.dir.verificacionPronosticos), '/') }
 
-source(paste0(script.dir.verificacionPronosticos, '../Graficas/graficas.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.verificacionPronosticos, '../Graficas/graficas.r'))
 
 # "Constantes"
 StatNames <- c(
@@ -76,7 +76,7 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
     dif <- p - o
     absDif <- abs(dif)
     
-    # Calculo los estadísticos
+    # Calculo los estadÃ­sticos
     ME <- mean(dif)
     MAE <- mean(absDif)
     MAD <- mad(dif)
@@ -108,7 +108,7 @@ calcValidationStatisticsEx <- function(pronostico, observacion, climatologia) {
     }
     
     if (!is.null(climatologia)) {
-      # Anomalías
+      # AnomalÃ­as
       clim <- climatologia[i]
       a_p <- p - clim
       a_o <- o - clim

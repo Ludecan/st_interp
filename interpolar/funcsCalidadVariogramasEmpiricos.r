@@ -65,15 +65,15 @@ varianzaEstimadaAcumulada <- function(variograma) {
 
 varianzaAlrededorDePendienteGeneral <- function(variograma) {
   # fuerza a pasar por el 0 y toma la recta que mejor ajuste a los puntos
-  # la varianza es el error cuadrático medio del ajuste, minimizarla implica tomar el variograma empírico 
-  # que mejor se ajuste a la función usada como formula en lm. 
+  # la varianza es el error cuadrÃ¡tico medio del ajuste, minimizarla implica tomar el variograma empÃ­rico 
+  # que mejor se ajuste a la funciÃ³n usada como formula en lm. 
   modelo <- lm(gamma~dist-1,data=variograma,weights=variograma$np/variograma$dist^2)
   tendencia <- predict.lm(modelo,newdata=data.frame(dist=variograma$dist))
   return(var(variograma$gamma-tendencia))
 }
 
 varianzaAlrededorDeModeloExponencial <- function(variograma) {
-  # Por mas que fuerze a un modelo exponencial, tiene más la forma que queremos, es más parecido que una recta
+  # Por mas que fuerze a un modelo exponencial, tiene mÃ¡s la forma que queremos, es mÃ¡s parecido que una recta
   # tiene problemas pq no siempre converge. Hay que revisar eso
   psillEstimado = (median(variograma$gamma) + max(variograma$gamma)) * 0.5
   i <- max(which(variograma$gamma>=psillEstimado)[1]-1,1)

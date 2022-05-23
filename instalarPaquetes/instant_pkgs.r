@@ -121,7 +121,7 @@ instant_pkgs_github <- function(reposgithub, pkgs=basename(reposgithub), minVers
     paquetesAInstalar <- pkgs[bPaquetesAInstalar]
     reposgithub <- reposgithub[bPaquetesAInstalar]
     if (length(reposgithub) > 0) {
-      # devtools tiene algún problema con la carga en los threads. Trato de limitar su carga lo más posible
+      # devtools tiene algÃºn problema con la carga en los threads. Trato de limitar su carga lo mÃ¡s posible
       instant_pkgs('devtools')
       install_github(repo = reposgithub, quiet = FALSE)
     }
@@ -204,3 +204,4 @@ createMinPackageVersions <- function() {
   write.table(x = packages, file = minPkgVersionsPath, sep='\t', row.names = T, col.names = T, 
               fileEncoding = 'UTF-8')
 }
+#renv::snapshot()

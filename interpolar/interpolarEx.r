@@ -34,16 +34,16 @@ while ((is.null(script.dir.interpolarEx) || is.na(regexpr('interpolarEx.r', scri
 if (is.null(script.dir.interpolarEx)) { script.dir.interpolarEx <- ''
 } else { script.dir.interpolarEx <- paste0(dirname(script.dir.interpolarEx), '/') }
 
-source(paste0(script.dir.interpolarEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, '../IO/uIOMatrices.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, './mapearEx.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, '../agregacion/agregacion.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarEx, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarEx, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.interpolarEx, '../pathUtils/pathUtils.r'))
+source(paste0(script.dir.interpolarEx, '../IO/uIOMatrices.r'))
+source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'))
+source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
+source(paste0(script.dir.interpolarEx, './mapearEx.r'))
+source(paste0(script.dir.interpolarEx, 'funcionesAuxiliares.r'))
+source(paste0(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r'))
+source(paste0(script.dir.interpolarEx, '../agregacion/agregacion.r'))
+source(paste0(script.dir.interpolarEx, '../sysutils/sysutils.r'))
 
 instant_pkgs(pkgs = c('unmarked', 'VGAM', 'cli', 'devtools'), silent = TRUE, doCargarPaquetes=FALSE)
 instant_pkgs(
@@ -52,9 +52,6 @@ instant_pkgs(
            'rms', 'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
            'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC', 'ncdf4'), 
   silent = TRUE)
-
-# instant_pkgs_github(reposgithub = 'Ludecan/intamap', minVersions = '1.4-4', silent = TRUE)
-# instant_pkgs_github(reposgithub = 'jskoien/intamap', minVersions = '1.4-6', silent = TRUE)
 
 formulaStr <- function(coeficientes, nDecimales=1, quitarCeros=TRUE) {
   if (quitarCeros) coeficientes <- coeficientes[coeficientes != 0 | names(coeficientes) == '(Intercept)']
@@ -235,9 +232,9 @@ crearGrillaRectilineaParaArea <- function(
     
   if (proj4stringCoordenadasArea != proj4stringGrillaSalida || 
       SRS_stringCoordenadasArea != SRS_stringGrillaSalida) {
-    # Creamos la caja en la proyección de entrada, proyectamos a la proyección de salida
-    # y obtenemos el área en la proyección de salida que engloba las 4 esquinas de la caja en
-    # la proyección de entrada
+    # Creamos la caja en la proyecciÃ³n de entrada, proyectamos a la proyecciÃ³n de salida
+    # y obtenemos el Ã¡rea en la proyecciÃ³n de salida que engloba las 4 esquinas de la caja en
+    # la proyecciÃ³n de entrada
     boundingBox <- matrix(c(xMin, yMin, xMax, yMin, xMin, yMax, xMax, yMax), ncol = 2, byrow = T)
     boundingBox <- SpatialPoints(
       coords=boundingBox, 
@@ -297,7 +294,7 @@ extraerValorRegresorSobreSP <- function(i, objSP, pathsRegresor, fn=NULL, zcol=1
       # TO-DO: receive varName as parameter
       evaluarConReintentos(regresor <- netCDFToSP(fname=pathsRegresor[i]))
     } else { 
-      stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresor[i], '"')) 
+      stop(paste0('extraerValorRegresorSobreSP: extensiÃ³n no soportada "', pathsRegresor[i], '"')) 
     }
 
     # Obtengo los valores del regresor en las coordenadas de las observaciones
@@ -327,8 +324,8 @@ extraerValoresRegresorSobreSP <- function(
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.interpolarEx'))
     clusterEvalQ(cl = cl, {
-      source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
-      source(paste0(script.dir.interpolarEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.interpolarEx, '../TryUtils/tryUtils.r'))
+      source(paste0(script.dir.interpolarEx, '../pathUtils/pathUtils.r'))
       require(rgdal)
       require(sp)
     })
@@ -419,8 +416,8 @@ extraerValoresRegresoresSobreSP <- function(
   objSP, pathsRegresores, iInicial = 1, iFinal = nrow(pathsRegresores), fn=NULL, zcol=1, 
   silent=T, nCoresAUsar=0, setNames=T, ...
 ) {
-  # TO-DO: paralelizar esta función. Hoy se está haciendo paralelo en el tiempo pero si solo se 
-  # quiere cargar una fecha para más de un regresor se está serializando innecesariamente. Hay que 
+  # TO-DO: paralelizar esta funciÃ³n. Hoy se estÃ¡ haciendo paralelo en el tiempo pero si solo se 
+  # quiere cargar una fecha para mÃ¡s de un regresor se estÃ¡ serializando innecesariamente. Hay que 
   # hacer que decida si paralelizar por filas o columnas para aprovechar mejor los recursos
   res <- vector(mode = "list", ncol(pathsRegresores))
 
@@ -431,7 +428,7 @@ extraerValoresRegresoresSobreSP <- function(
       fn=fn, zcol = zcol, silent=silent, nCoresAUsar=nCoresAUsar, setNames = setNames, ...=...)
   }
   
-  # Código para verificación
+  # CÃ³digo para verificaciÃ³n
   # i <- 5
   # for (i in 1:nrow(pathsRegresores)) {
   #   pathsRegresores[i,]
@@ -496,7 +493,7 @@ cargarSHPYObtenerMascaraParaGrilla <- function(
       shp <- cargarSHP(pathSHP, proj4strSHP, overrideP4str = overrideP4str, encoding = encoding)
       if (!identicalCRS(grilla, shp)) { shp <- spTransform(shp, grilla@proj4string) }
       
-      # Recorte al contorno del país
+      # Recorte al contorno del paÃ­s
       if (!is.null(grilla)) {
         mask <- !is.na(over(grilla, geometry(shp)))
         if (!is.null(spSinMascara)) { mask[over(spSinMascara, grilla)] <- TRUE }
@@ -560,7 +557,7 @@ setMinMaxVal <- function(observacionesValue, params) {
     params$minVal <- max(params$minimoLVI, mediana - params$factorDesvEstLVI * desvMedAbs, na.rm=T)
     params$maxVal <- min(params$maximoLVI, mediana + params$factorDesvEstLVI * desvMedAbs, na.rm=T)
   } else {
-    stop(paste0('interpolarEx.setMinMaxVal: método para limitar valores interpolados desconocido ',  params$mLimitarValoresInterpolados))
+    stop(paste0('interpolarEx.setMinMaxVal: mÃ©todo para limitar valores interpolados desconocido ',  params$mLimitarValoresInterpolados))
   }
   
   if (!is.na(params$minVal)) { params$minVal <- min(params$minVal, observacionesValue, na.rm=T)}
@@ -654,7 +651,7 @@ interpolarEx <- function(
     }
   }
   
-  # Shapefile con el contorno del país / Shapefile for the country boundaries
+  # Shapefile con el contorno del paÃ­s / Shapefile for the country boundaries
   if (is.null(shpMask)) {
     shpMask <- cargarSHPYObtenerMascaraParaGrilla(
       pathSHP=params$pathSHPMapaBase, grilla=coordsAInterpolar)
@@ -665,8 +662,8 @@ interpolarEx <- function(
     observaciones$value <- observaciones$value - valoresCampoBaseSobreObservaciones
     
     if (params$metodoIgualacionDistribuciones == 'regresionLinealRobusta') {
-      # Si se hizo una regresión lineal robusta tengo que sacar los residuos extremos que deja detrás porque afectan
-      # fuertemente a la interpolación
+      # Si se hizo una regresiÃ³n lineal robusta tengo que sacar los residuos extremos que deja detrÃ¡s porque afectan
+      # fuertemente a la interpolaciÃ³n
       i <- filtroMedianaMAD(observaciones$value)
       observaciones <- observaciones[i, ]
       valoresCampoBaseSobreObservaciones <- valoresCampoBaseSobreObservaciones[i]
@@ -687,8 +684,8 @@ interpolarEx <- function(
     beta <- params$betaSimpleKriging
   }
   
-  # Si la varianza es muy chica (todos los valores son iguales) el método de interpolación da un error.
-  # Manejamos el caso aparte, según los datos observados el campo es constante
+  # Si la varianza es muy chica (todos los valores son iguales) el mÃ©todo de interpolaciÃ³n da un error.
+  # Manejamos el caso aparte, segÃºn los datos observados el campo es constante
   # For small variances (all observations the same) the library gives an error, we handle the case separately
   varianzaObservaciones <- var(observaciones$value)
   if (varianzaObservaciones > 1E-6 && params$interpolationMethod !='none' && length(observaciones) >= 4) {
@@ -700,7 +697,7 @@ interpolarEx <- function(
       params$interpolationMethod <- seleccionarMetodoInterpolacion(observaciones$value) 
     }
     
-    # exijo una cantidad mínima de puntos pq sino no vale la pena ni preparar los threads
+    # exijo una cantidad mÃ­nima de puntos pq sino no vale la pena ni preparar los threads
     # Minimum amount of work for multicoreing
     if (params$nCoresAUsar <= 0) { if (length(coordsAInterpolar) > 100) { nCoresAUsar <- detectCores(T, T) } else { nCoresAUsar <- 1 }
     } else { nCoresAUsar <- params$nCoresAUsar }
@@ -736,7 +733,7 @@ interpolarEx <- function(
       
       if (is.null(objParameters)) {
         # Variograma
-        source(paste0(script.dir.interpolarEx, 'afvmod.r'), encoding = 'WINDOWS-1252')
+        source(paste0(script.dir.interpolarEx, 'afvmod.r'))
         require('gstat')
         
         if (params$imitarSurfer) {
@@ -752,7 +749,7 @@ interpolarEx <- function(
           variogramas$var_model$range <- maxDist
         } else {
           usarAFVGLS <- (params$usarFitVariogramGLS == 'auto' && length(interpolacion$observations) <= 50) || (is.logical(params$usarFitVariogramGLS) && as.logical(params$usarFitVariogramGLS))
-          source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'), encoding = 'WINDOWS-1252')
+          source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'))
           
           if (usarAFVGLS) {
             variogramas <- afvGLS(
@@ -785,11 +782,11 @@ interpolarEx <- function(
         }
         
         #png('Resultados/Ejemplos/Variogramas/VariogramaModelo.png', width = 800, height = 600)
-        #print(annotatedplot(variogramas, xlab = "Distancia", ylab = "Semivarianza", main = "Variograma Empírico y Variograma Modelo Ajustado"))
+        #print(annotatedplot(variogramas, xlab = "Distancia", ylab = "Semivarianza", main = "Variograma EmpÃ­rico y Variograma Modelo Ajustado"))
         #dev.off()
         #variogramas$var_model <- NULL
         #png('Resultados/Ejemplos/Variogramas/VariogramaEmpirico.png', width = 800, height = 600)
-        #print(annotatedplot(variogramas, xlab = "Distancia", ylab = "Semivarianza", main = "Variograma Empírico"))
+        #print(annotatedplot(variogramas, xlab = "Distancia", ylab = "Semivarianza", main = "Variograma EmpÃ­rico"))
         #dev.off()
         #variogramas$exp_var <- variogram(interpolacion$formulaString, data=interpolacion$observations, cloud=T, cutoff=params$cutoff)
         #png('Resultados/Ejemplos/Variogramas/NubeVariograma.png', width = 800, height = 600)
@@ -822,7 +819,7 @@ interpolarEx <- function(
         interpolacion$variogramModel <- variogramas$var_model
         interpolacion$sserr <- variogramas$sserr
         
-        if (is.null(interpolacion$variogramModel)) stop('interpolarEx: no se pudo ajustar ningún variograma a los datos')
+        if (is.null(interpolacion$variogramModel)) stop('interpolarEx: no se pudo ajustar ningÃºn variograma a los datos')
         interpolacion <- estimateAnisotropy(interpolacion)
         
         # annotatedplot(variogramas)
@@ -923,7 +920,7 @@ interpolarEx <- function(
     escalaResiduos <- crearEscalaEquiespaciada(
       datos = c(observaciones$value, interpolacion$predictions@data[, interpolacion$campoMedia]), 
       nDigitos = 2, continuo = T)
-    # En modo diagnóstico si es RK guardo el mapa con los residuos y su interpolación 
+    # En modo diagnÃ³stico si es RK guardo el mapa con los residuos y su interpolaciÃ³n 
     mapearPuntosGGPlot(puntos = observaciones, shpBase = shpMask$shp, continuo = T, dibujarTexto = T, escala = escalaResiduos,
                        nDigitos = 2, titulo = paste0('Residuos - ', params$strFecha), zcol='value', 
                        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '05.1-Residuos.png'), 
@@ -932,12 +929,12 @@ interpolarEx <- function(
     if (params$interpolationMethod != 'none') {
       if (gridded(coordsAInterpolar)) {
         mapearGrillaGGPlot(grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=1, escala = escalaResiduos,
-                           titulo = paste0('Interpolación - ', params$strFecha), 
+                           titulo = paste0('InterpolaciÃ³n - ', params$strFecha), 
                            nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '05.3-Interpolacion.png'), 
                            dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
       } else {
         mapearPuntosGGPlot(puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=1, escala = escalaResiduos,
-                           titulo = paste0('Interpolación - ', params$strFecha), 
+                           titulo = paste0('InterpolaciÃ³n - ', params$strFecha), 
                            nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '05.3-Interpolacion.png'), 
                            dibujar = F, dibujarTexto = T)
       }
@@ -1017,9 +1014,9 @@ interpolarEx <- function(
     }
 
     # el segundo chequeo, equivalente a min(observaciones) = 0 para doubles, verifica que al menos 
-    # el minimo dato sea efectivamente 0, sino no tiene sentido aplicar la máscara y si es < 0 
-    # además aplicarla puede hacer daño. agrego el control como robustez para evitar errores de 
-    # parámetros
+    # el minimo dato sea efectivamente 0, sino no tiene sentido aplicar la mÃ¡scara y si es < 0 
+    # ademÃ¡s aplicarla puede hacer daÃ±o. agrego el control como robustez para evitar errores de 
+    # parÃ¡metros
     if (params$umbralMascaraCeros > 0 & abs(min(observaciones$value)) < 1E-3) {
       interpolacion <- aplicarMascaraRnR(
         observaciones=observaciones, interpolacion=interpolacion, params=params, shpMask=shpMask)
@@ -1041,7 +1038,7 @@ interpolarEx <- function(
       }
     }
     
-    # interpolacion$predictions@data[,interpolacion$campoMedia] es para seleccionar los datos independiente del método, interpolacion$campoMedia es mean para copula y var1.pred para automap
+    # interpolacion$predictions@data[,interpolacion$campoMedia] es para seleccionar los datos independiente del mÃ©todo, interpolacion$campoMedia es mean para copula y var1.pred para automap
     # force predictions to be in given range
     if (!is.na(params$minVal)) interpolacion$predictions@data[,interpolacion$campoMedia][interpolacion$predictions@data[,interpolacion$campoMedia] < params$minVal] <- params$minVal
     if (!is.na(params$maxVal)) interpolacion$predictions@data[,interpolacion$campoMedia][interpolacion$predictions@data[,interpolacion$campoMedia] > params$maxVal] <- params$maxVal
@@ -1051,7 +1048,7 @@ interpolarEx <- function(
         especificacion = params$especEscalaDiagnostico,
         valores=c(observaciones$value, interpolacion$predictions@data[,interpolacion$campoMedia]))
       
-      # En modo diagnóstico guardo el mapa con las observaciones y uno para cada regresor
+      # En modo diagnÃ³stico guardo el mapa con las observaciones y uno para cada regresor
       mapearPuntosGGPlot(
         # Mapa de observaciones
         puntos = observaciones, shpBase = shpMask$shp, dibujarTexto = T, 
@@ -1437,8 +1434,8 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
     sptData <- STFDF(sp = geometry(spObservaciones), time = fechasVentana, endTime = fechasVentana + deltaT, data = df)
     # acf(na.omit(as(sptData, 'xts')))
 
-    source(paste0(script.dir.interpolarEx, 'afvmod.r'), encoding = 'WINDOWS-1252')
-    source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'), encoding = 'WINDOWS-1252')    
+    source(paste0(script.dir.interpolarEx, 'afvmod.r'))
+    source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'))    
     # Space-Time empirical variogram
     boundaries <- getBoundariesPVariogramaEmpiricoV4_MultiTime(formula=fml, input_data = spObservaciones, input_data_t = c(list(value=valoresVentana), regs), cutoff=cutoff)
     empVgm <- variogramST(formula = fml, locations = sptData, tlags = tlags, boundaries = boundaries, progress=verbose)
@@ -1515,7 +1512,7 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
       clusterExport(cl, varlist = c('script.dir.interpolarEx'))
       clusterEvalQ(cl = cl, {
         require('gstat')
-        source(paste0(script.dir.interpolarEx, 'afvmod.r'), encoding = 'WINDOWS-1252')
+        source(paste0(script.dir.interpolarEx, 'afvmod.r'))
       })
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       modelos  <- parSapplyLB(cl = cl, X = 1:length(modelosVariogramaST), FUN = fitSTVariogramModelI, modelosVariogramaST=modelosVariogramaST, 
@@ -1635,7 +1632,7 @@ stUniversalKrigingEx <- function(ti=1, spObservaciones, fechasObservaciones, val
     interpolacionST$nRowCoordsAInterpolar <- length(spObservaciones@coords[,1]) / interpolacionST$nColCoordsAInterpolar
   }
   interpolacionST$lengthCoordsAInterpolar <- length(spObservaciones)
-  # TO-DO: buscar la forma de ponerle los coeficientes a la fórmula
+  # TO-DO: buscar la forma de ponerle los coeficientes a la fÃ³rmula
   interpolacionST$formulaRegresionCC <- fml
   rm(valoresVentana)
   return(interpolacionST)
@@ -1649,12 +1646,12 @@ universalGridding <- function(
   # - pathsRegresores debe ser una matriz de nTxnU elementos, con una fila por fecha a interpolar y una columna por 
   # regresor. pathsRegresores[i, j] debe contener el path al archivo que contiene el raster con los datos del regresor j 
   # para la fecha i de las observaciones (pueden haber elementos repetidos en regresores[, j])
-  # para ver la descripción de los demás parámetros ver la función universalGriddingEx de esta misma unidad
+  # para ver la descripciÃ³n de los demÃ¡s parÃ¡metros ver la funciÃ³n universalGriddingEx de esta misma unidad
   # universalGriddingEx recibe los valores de los regresores sobre las coordenadas a interpolar para la fecha ti ya cargados
-  # esta función los carga para facilitar su uso
+  # esta funciÃ³n los carga para facilitar su uso
 
   # Cargo los valores de los regresores sobre toda la grilla a interpolar para la fecha ti en una matriz nCIxnU
-  # con las las filas variando según la coordenada a interpolar y las columnas variando según el regresor
+  # con las las filas variando segÃºn la coordenada a interpolar y las columnas variando segÃºn el regresor
   if (!is.null(pathsRegresores) && !is.null(valoresRegresoresSobreObservaciones) && ncol(pathsRegresores) > 0) {
     #valoresRegresoresSobreCoordsAInterpolar_ti <- extraerValoresRegresoresSobreSP(iInicial = ti, iFinal = ti, objSP = coordsObservaciones, pathsRegresores = pathsRegresores)
     valoresRegresoresSobreCoordsAInterpolar_ti <- matrix(NA, nrow=length(coordsAInterpolar), ncol=ncol(pathsRegresores))
@@ -1667,7 +1664,7 @@ universalGridding <- function(
         } else if (ext == 'nc') {
           # TO-DO: receive varName as parameter
           evaluarConReintentos(regresor <- netCDFToSP(fname = pathsRegresores[ti, j]))
-        } else { stop(paste0('extraerValorRegresorSobreSP: extensión no soportada "', pathsRegresores[ti, j], '"')) }
+        } else { stop(paste0('extraerValorRegresorSobreSP: extensiÃ³n no soportada "', pathsRegresores[ti, j], '"')) }
         
         if (!identicalCRS(coordsAInterpolar, regresor)) {
           aux <- spTransform(coordsAInterpolar, regresor@proj4string)
@@ -1744,7 +1741,7 @@ universalGridding <- function(
         #valoresRegresoresSobreCoordsAInterpolar_ti[iObservaciones, 1] <- regsInvertidos[ventana$iTiEnTsVentana,]
         
         #sp3 <- SpatialPixelsDataFrame(points = coordsAInterpolar, data = data.frame(valoresRegresoresSobreCoordsAInterpolar_ti))
-        #mapearGrillaGGPlot(grilla = sp3, shpBase = shpMask$shp, zcol=1, continuo=T, titulo = paste0(fechasObservaciones[ti], ': LST con regresión inversa'),
+        #mapearGrillaGGPlot(grilla = sp3, shpBase = shpMask$shp, zcol=1, continuo=T, titulo = paste0(fechasObservaciones[ti], ': LST con regresiÃ³n inversa'),
         #                   nomArchResultados = 'Resultados/Ejemplos/RellenoRegresores/LST_Con_Huecos_RegresionInversa.png')
       }
       
@@ -1864,8 +1861,8 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     } else { return(gDistance(spgeom1, spgeom2, byid, haussdorf, densifyFrac)) }
   }
   
-  # Regresores estáticos sobre coordenadas a interpolar
-  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
+  # Regresores estÃ¡ticos sobre coordenadas a interpolar
+  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
   pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros=list(coordsAInterpolar, version=2))
   if (!file.exists(pathCacheDatosCoordsAInterpolar) | (file.info(pathCacheDatosCoordsAInterpolar)$size <= 0)) {
     dfDatosCoordsAInterpolar <- list()
@@ -1898,7 +1895,7 @@ cachearRegresoresEstaticos <- function(coordsObservaciones, coordsAInterpolar, n
     guardarCache(pathCache=pathCacheDatosCoordsAInterpolar, obj=dfDatosCoordsAInterpolar)
   }
   
-  # Regresores estáticos sobre coordenadas de observaciones
+  # Regresores estÃ¡ticos sobre coordenadas de observaciones
   dfDatosCoordsObservaciones <- list()
   pathCacheDatosCoordsObservaciones <- getPathCache(objParametros = list(coordsObservaciones, version=2))
   if (!file.exists(pathCacheDatosCoordsObservaciones) | (file.info(pathCacheDatosCoordsObservaciones)$size <= 0)) {
@@ -1949,8 +1946,8 @@ incorporarRegresoresEstaticos <- function(
     incorporarAltitud=FALSE, formulaAltitud='alt') {
   #ventana <- getVentana(ti=ti, nT=nrow(valoresObservaciones), tamanioSemiVentana = params$ventanaIgualacionDistribuciones, tlagsAR = params$tlagsAR)
 
-  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
-  # El valor de version es para poder cambiar el código y forzar un recálculo de los caches
+  source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
+  # El valor de version es para poder cambiar el cÃ³digo y forzar un recÃ¡lculo de los caches
   
   geomCoordsInterp <- geometry(coordsAInterpolar)
   geomCoordsObs <- geometry(coordsObservaciones)
@@ -1964,7 +1961,7 @@ incorporarRegresoresEstaticos <- function(
   dfDatosCoordsAInterpolar <- cargarCache(pathCacheDatosCoordsAInterpolar)
   dfDatosCoordsObservaciones <- cargarCache(pathCacheDatosCoordsObservaciones)
   
-  # Escalado y centrado de x e y para evitar problemas de precisión numérica
+  # Escalado y centrado de x e y para evitar problemas de precisiÃ³n numÃ©rica
   if (incorporarCoordenadas && nrow(dfDatosCoordsAInterpolar) > 1) {
     minX <- min(dfDatosCoordsAInterpolar$x)
     rangeX <- diff(range(dfDatosCoordsAInterpolar$x))
@@ -2024,7 +2021,7 @@ incorporarRegresoresEstaticos <- function(
   # Separo el dataframe en una lista con arrays 1xnO
   regresoresEstaticosCO <- split(regresoresEstaticosCO, rep(1:ncol(regresoresEstaticosCO), each = nrow(regresoresEstaticosCO)))
   
-  # Agrego los regresores estáticos a valoresRegresoresSobreObservaciones  
+  # Agrego los regresores estÃ¡ticos a valoresRegresoresSobreObservaciones  
   if (is.null(valoresRegresoresSobreObservaciones)) { valoresRegresoresSobreObservaciones <- list() }
   oldNu <- length(valoresRegresoresSobreObservaciones)
   length(valoresRegresoresSobreObservaciones) <- oldNu + length(regresoresEstaticosCO)
@@ -2082,7 +2079,7 @@ ajusteRegresores <- function(
     valoresObservaciones <- aux
   }
   
-  # Paso el método a integer para que la comparación sea más rápida abajo
+  # Paso el mÃ©todo a integer para que la comparaciÃ³n sea mÃ¡s rÃ¡pida abajo
   metodoIgualacionDistribuciones <- which(
     c('ninguna', 'regresionLineal', 'regresionLinealRobusta', 
       'regresionLinealConEliminacionDeOutliers', 'CDFMatching', 'Lasso', 'GLS'
@@ -2189,7 +2186,7 @@ ajusteRegresores <- function(
     }
     
     if (ncol(valsRegresoresObservaciones) > 0) {
-      # Si no es la regresión inversa, los indices de la observacion ti en la ventana
+      # Si no es la regresiÃ³n inversa, los indices de la observacion ti en la ventana
       # Si si es inversa toda la ventana porque se va a precisar
       if (!invertir) { iesVals <- iTiEnTsVentana + seq.int(from=0, to=nO-1, by=1) * tamanioVentana
       } else { iesVals <- 1:length(valoresObservaciones[tsVentana, ]) }
@@ -2224,7 +2221,7 @@ ajusteRegresores <- function(
           iFilasCompletas <- !is.na(valoresObservacionesTsVentana) & 
             !apply(valsRegresoresObservaciones, MARGIN = 1, FUN = function(x) { any(is.na(x)) })
 
-          # Chequeo que tenga suficientes observaciones no nulas para hacer la regresión
+          # Chequeo que tenga suficientes observaciones no nulas para hacer la regresiÃ³n
           if (sum(iFilasCompletas) > nU + 1 && 
               nrow(unique(valsRegresoresObservaciones[iFilasCompletas, forceIn >= 0, drop=F])) >= nU + 1) {
             pesos <- getPesosVentana(tamanioVentana = tamanioVentana, iTiEnTsVentana = iTiEnTsVentana, tsVentana = tsVentana, 
@@ -2397,7 +2394,7 @@ ajusteRegresores <- function(
               formulas <- formulas[modelosValidos]
               
               if (!is.null(params$signosValidosRegresores)) {
-                # Filtro los modelos que hayan resultado con signos inválidos en alguno de sus regresores
+                # Filtro los modelos que hayan resultado con signos invÃ¡lidos en alguno de sus regresores
                 
                 coeficientesValidosModelo <- function(modelo, signosValidosRegresores) {
                   coeficientes <- coefficients(modelo)
@@ -2456,7 +2453,7 @@ ajusteRegresores <- function(
                 names(coeficientes) <- 'Intercept'
                   
                 if (params$interpolationMethod == 'automap') {
-                  # Si la interpolación se hace con Kriging uso Kriging Ordinario, sin regresores
+                  # Si la interpolaciÃ³n se hace con Kriging uso Kriging Ordinario, sin regresores
                   valoresCampoBaseSobreObservaciones <- NULL
                   if (!invertir) valoresCampoBase <- NULL
                 } else {
@@ -2511,7 +2508,7 @@ ajusteRegresores <- function(
             }
             
             if (tamanioVentana > 1) {
-              # Corrección (cruda) de sesgo introducido por la ventana
+              # CorrecciÃ³n (cruda) de sesgo introducido por la ventana
               dif <- na.omit(valoresObservaciones[ti, ] - valoresCampoBaseSobreObservaciones)
               if (length(dif) >= 8) {
                 # Si tengo al menos 8 observaciones con sus predicciones en base a los regresores en la fecha ti, 
@@ -2563,7 +2560,7 @@ ajusteRegresores <- function(
         }
         rm(valoresObservacionesTsVentana)
       } else {
-        # Si no hay igualacion de distribuciones uso el valor del primer predictor que tenga algún valor no NA como campo base
+        # Si no hay igualacion de distribuciones uso el valor del primer predictor que tenga algÃºn valor no NA como campo base
         iPrimerRegresor <- iRegresoresNoNA_ti[1]
         valoresCampoBaseSobreObservaciones <- valsRegresoresObservaciones[iesVals, iPrimerRegresor]
         class(valoresCampoBaseSobreObservaciones) <- 'numeric'
@@ -2603,26 +2600,26 @@ universalGriddingEx <- function(
     # grillados como predictores de su media
     
     # El grillado se aplica en 3 pasos:
-    # - Igualación de Distribuciones: puede ser ninguna, regresionLineal o CDFMatching
-    # - Interpolación de Residuos: Puede ser ninguna o alguno de los métodos de interpolación (IDW, Kriging, etc)
-    # - Postprocesamiento: Por ahora puede ser ninguna o la aplicación de la máscara de lluvia/no lluvia
+    # - IgualaciÃ³n de Distribuciones: puede ser ninguna, regresionLineal o CDFMatching
+    # - InterpolaciÃ³n de Residuos: Puede ser ninguna o alguno de los mÃ©todos de interpolaciÃ³n (IDW, Kriging, etc)
+    # - Postprocesamiento: Por ahora puede ser ninguna o la aplicaciÃ³n de la mÃ¡scara de lluvia/no lluvia
     # Si todos los pasos son nada se retorna la grilla del primer regresor disponible si hay o un campo de NAs en su defecto.
-    # Si no hay regresores el método se reduce a la interpolación habitual
+    # Si no hay regresores el mÃ©todo se reduce a la interpolaciÃ³n habitual
     
     # Se quiere obtener Z(x, y, ti) = F(Z(xi, yi, ti), U1(x, y, tu1i), U2(x, y, tu2i), ..., Un(x, y, tuni))
     # Donde Z es el campo a interpolar, ti son los tiempos conocidos de Z, (xi, yi) son las posiciones conocidas de Z,
-    # tji es el tiempo disponible del regresor j correspondiente a ti, (x, y) pertenciente a (X,Y) es una posición arbitraria, 
-    # Uj son una serie de rasters auxiliares sobre todo el dominio de (X,Y) y F es la composición de los 3 pasos anteriores
+    # tji es el tiempo disponible del regresor j correspondiente a ti, (x, y) pertenciente a (X,Y) es una posiciÃ³n arbitraria, 
+    # Uj son una serie de rasters auxiliares sobre todo el dominio de (X,Y) y F es la composiciÃ³n de los 3 pasos anteriores
     
-    # Si la igualación de distribuciones es igualación de CDF, n tiene que ser 1 (solo un raster auxiliar)
-    # La máscara de lluvia/no lluvia solo aplica a precipitación en principio pero
-    # podría servir para detección de eventos extremos de otras variables
+    # Si la igualaciÃ³n de distribuciones es igualaciÃ³n de CDF, n tiene que ser 1 (solo un raster auxiliar)
+    # La mÃ¡scara de lluvia/no lluvia solo aplica a precipitaciÃ³n en principio pero
+    # podrÃ­a servir para detecciÃ³n de eventos extremos de otras variables
     
     # Sea:
-    # - nO el número de puntos de observacion (xi, yi)
+    # - nO el nÃºmero de puntos de observacion (xi, yi)
     # - nT el numero de puntos de tiempo ti
-    # - nU el número de regresores disponibles
-    # - nC el número de coordenadas a interpolar
+    # - nU el nÃºmero de regresores disponibles
+    # - nC el nÃºmero de coordenadas a interpolar
     # Entonces:
     # - coordsObservaciones debe ser un objeto spatialPoints* con nO puntos, conteniendo la proyeccion y las coordenadas de los puntos de observacion
     # - valoresObservaciones debe ser una matriz nTxnO, con una fila por fecha a interpolar y una columna por punto de observacion
@@ -2634,7 +2631,7 @@ universalGriddingEx <- function(
     # - pathsRegresores debe ser una matriz de nTxnU elementos, con una fila por fecha a interpolar y una columna por 
     # regresor. pathsRegresores[i, j] debe contener el path al archivo que contiene el raster con los datos del regresor j 
     # para la fecha i de las observaciones (pueden haber elementos repetidos en regresores[, j])
-    # - coordsAInterpolar debe ser un objeto spatialPoints* o spatialPixels*, según si se quiere interpolar puntos o grillas,
+    # - coordsAInterpolar debe ser un objeto spatialPoints* o spatialPixels*, segÃºn si se quiere interpolar puntos o grillas,
     # con la proyeccion y las coordenadas de los puntos a interpolar
     # params debe ser un objeto creado con createParamsUniversalGridding
     # params$descartarCoordenadasNoSignificativas <- FALSE
@@ -2703,7 +2700,7 @@ universalGriddingEx <- function(
     interpolacion$predictions <- rellenarSP(sp = interpolacion$predictions, metodo = 'multiTps')
   }
   
-  # interpolacion$predictions@data[,interpolacion$campoMedia] es para seleccionar los datos independiente del método, interpolacion$campoMedia es mean para copula y var1.pred para automap
+  # interpolacion$predictions@data[,interpolacion$campoMedia] es para seleccionar los datos independiente del mÃ©todo, interpolacion$campoMedia es mean para copula y var1.pred para automap
   # force predictions to be in given range
   campoMedia <- interpolacion$campoMedia
   if (!is.na(params$minVal)) interpolacion$predictions@data[,campoMedia][interpolacion$predictions@data[,campoMedia] < params$minVal] <- params$minVal
@@ -2738,7 +2735,7 @@ universalGriddingCV_i <- function(iObservacion=1, tIni=1, tFin=nrow(valoresObser
   } else { valoresRegresoresSobreCoordsAInterpolar_ti <- NULL }
   
   # valoresRegresoresSobreObservaciones[[1]][1,, drop=F]
-  # Creo una máscara dummy para que no la cree (vacía) todos los pasos de tiempo
+  # Creo una mÃ¡scara dummy para que no la cree (vacÃ­a) todos los pasos de tiempo
   shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP='', proj4strSHP='', grilla=coordsAInterpolar_i)
   
   
@@ -2787,7 +2784,7 @@ universalGriddingCV <- function(
   # estimarNAs=FALSE
   
   coordsObservaciones <- geometry(coordsObservaciones)
-  # Hago un override de los parámetros que son para interpolación de píxeles para que queden para interpolación de puntos. 
+  # Hago un override de los parÃ¡metros que son para interpolaciÃ³n de pÃ­xeles para que queden para interpolaciÃ³n de puntos. 
   params$block <- NA
   params$coordsAInterpolarSonGrilla <- FALSE
   params$proj4StringAInterpolar <- proj4string(coordsObservaciones)
@@ -2803,10 +2800,10 @@ universalGriddingCV <- function(
   if (length(params$tlagsAR) <= 0) {
     if (nCoresAUsar > 1) {
       if (F) {
-        # Código para testear el bug de library usando procesos en R 3.4.0
+        # CÃ³digo para testear el bug de library usando procesos en R 3.4.0
         # Si se usa R 3.4.0, las llamadas a library en instant_pkgs a veces fallan y hacen que no ejecute
         # bien el source de interpolarEx.r en algunos de los procesos, lo que hace que esos procesos
-        # no tengan la definición de todas las funciones necesarias y falla el universalGriddingCV_i
+        # no tengan la definiciÃ³n de todas las funciones necesarias y falla el universalGriddingCV_i
         setwd('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts')
         system('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/deployScriptsSoloLocal.bat')
         setwd('C:/mch/scripts/R/interpolar')
@@ -2817,7 +2814,7 @@ universalGriddingCV <- function(
           cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
           clusterExport(cl, varlist = c('script.dir.interpolarEx'))
           clusterEvalQ(cl = cl, expr = { 
-            source(paste0(script.dir.interpolarEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252') 
+            source(paste0(script.dir.interpolarEx, 'interpolarEx.r')) 
             if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
           })
           #clusterExport(cl, varlist = c('coordsObservaciones'))
@@ -2829,7 +2826,7 @@ universalGriddingCV <- function(
       cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
       clusterExport(cl, varlist = c('script.dir.interpolarEx'))
       clusterEvalQ(cl = cl, expr = { 
-        source(paste0(script.dir.interpolarEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252') 
+        source(paste0(script.dir.interpolarEx, 'interpolarEx.r')) 
         if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
       })
       res <- valoresObservaciones
@@ -2928,7 +2925,7 @@ universalGriddingCV <- function(
       length(valoresRegresoresSobreObservaciones) <- length(valoresRegresoresSobreObservaciones) + length(params$tlagsAR)
       i <- 1
       for (i in 1:length(params$tlagsAR)) {
-        # Cargo los valores de los pasos de inicialización en la matriz de cada lag temporal
+        # Cargo los valores de los pasos de inicializaciÃ³n en la matriz de cada lag temporal
         valoresRegresoresSobreObservaciones[[nOrig + i]] <- matrix(data=NA, nrow=nrow(valoresObservaciones), ncol=ncol(valoresObservaciones))
         names(valoresRegresoresSobreObservaciones)[nOrig + i] <- paste0('T_', params$tlagsAR[i])
         for (ti in 1:tUltimoValorSinAR + 1) {
@@ -3030,13 +3027,13 @@ aplicarMascaraRnR <- function(observaciones, interpolacion, params, shpMask) {
       if (gridded(interpolacion$predictionLocations)) {
         mapearGrillaGGPlot(
           grilla = interpBinaria$predictions, shpBase=shpMask$shp, zcol=1, 
-          titulo = paste0('Máscara de Ceros. Interpolación Binaria - ', params$strFecha),  
+          titulo = paste0('MÃ¡scara de Ceros. InterpolaciÃ³n Binaria - ', params$strFecha),  
           nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '08.1-MascaraCerosInterpBinaria.png'), 
           dibujar=F, dibujarPuntosObservaciones=T, coordsObservaciones=obsBinarias)
       } else {
         mapearPuntosGGPlot(
           puntos=interpBinaria$predictions, shpBase=shpMask$shp, zcol=1,
-          titulo = paste0('Máscara de Ceros. Interpolación Binaria - ', params$strFecha),  
+          titulo = paste0('MÃ¡scara de Ceros. InterpolaciÃ³n Binaria - ', params$strFecha),  
           nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '08.1-MascaraCerosInterpBinaria.png'), 
           dibujar = F, dibujarTexto = T)
       }
@@ -3070,11 +3067,11 @@ simpleBiasAdjustmentEx <- function(
     } else { gridIndexes <- gridIndexes[iValidObs] }
     
     # Creo el objeto espacial con los valores de los residuos en los puntos de las estaciones
-    # iOverObs dice cuales de las observaciones están dentro del área interpolada
+    # iOverObs dice cuales de las observaciones estÃ¡n dentro del Ã¡rea interpolada
     iOverObs <- !is.na(gridIndexes)
   
-    # Si el error relativo de alguno de los valores mayores o iguales a 75% del máximo valor observado es 
-    # mayor a errorRelativoParaCorregir se aplica la corrección
+    # Si el error relativo de alguno de los valores mayores o iguales a 75% del mÃ¡ximo valor observado es 
+    # mayor a errorRelativoParaCorregir se aplica la correcciÃ³n
     maxVal <- max(observaciones$value[iOverObs])
     if (maxVal > 0) {
       spResiduals <- observaciones[iOverObs,]
@@ -3091,13 +3088,13 @@ simpleBiasAdjustmentEx <- function(
         interpolationParams$interpolationMethod <- 'idw'
         interpolationParams$inverseDistancePower <- inverseDistancePower
       } else {
-        stop(paste0('simpleBiasAdjustmentEx: Método de Remoción de Sesgo Desconocido "', interpolationParams$interpolationMethod, '"'))
+        stop(paste0('simpleBiasAdjustmentEx: MÃ©todo de RemociÃ³n de Sesgo Desconocido "', interpolationParams$interpolationMethod, '"'))
       }
       #mapearPuntosGGPlot(puntos = spResiduals, shpBase = shpMask$shp, zcol='value', continuo = T)
       
       iAComparar <- which(observaciones$value[iOverObs] >= maxVal * 0.8)
       errorRelativo <- spResiduals$value[iAComparar] / observaciones$value[iOverObs][iAComparar]
-      # Solo corrijo si el máximo error relativo es mayor a errorRelativoParaCorregir
+      # Solo corrijo si el mÃ¡ximo error relativo es mayor a errorRelativoParaCorregir
       if (max(errorRelativo[!is.infinite(errorRelativo) & !is.nan(errorRelativo)], na.rm=T) >= errorRelativoParaCorregir) {
         interpolationParams$minVal <- min(spResiduals$value, na.rm=T)
         interpolationParams$maxVal <- max(spResiduals$value, na.rm=T)
@@ -3112,13 +3109,13 @@ simpleBiasAdjustmentEx <- function(
           if (gridded(interpolacion$predictionLocations)) {
             mapearGrillaGGPlot(
               grilla = residualInterpolation$predictions, shpBase=shpMask$shp, zcol=1, 
-              titulo = paste0('Remoción de Sesgo - ', interpolationParams$strFecha),  
+              titulo = paste0('RemociÃ³n de Sesgo - ', interpolationParams$strFecha),  
               nomArchResultados = paste0(interpolationParams$carpetaParaModoDiagnostico, '07.1-RemocionSesgo.png'), 
               dibujar=F, dibujarPuntosObservaciones=T, coordsObservaciones=spResiduals)
           } else {
             mapearPuntosGGPlot(
               puntos=residualInterpolation$predictions, shpBase=shpMask$shp, zcol=1,
-              titulo = paste0('Remoción de Sesgo - ', interpolationParams$strFecha),  
+              titulo = paste0('RemociÃ³n de Sesgo - ', interpolationParams$strFecha),  
               nomArchResultados = paste0(interpolationParams$carpetaParaModoDiagnostico, '07.1-RemocionSesgo.png'), 
               dibujar = F, dibujarTexto = T)
           }
@@ -3165,7 +3162,7 @@ getVarianceMatrix <- function(interpolacion) {
 }
 
 seleccionarMetodoInterpolacion <- function(valoresObservados) {
-  # adaptado de la descripción de interpolate de la documentación de intamap
+  # adaptado de la descripciÃ³n de interpolate de la documentaciÃ³n de intamap
   dataObs <- valoresObservados
   minObs <- min(dataObs)
   if (minObs <= 0)
@@ -3209,13 +3206,13 @@ salvarInterpolacion <- function(
       }
     }
   } else if (formatoSalida == 'netCDF') {
-    source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
+    source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'))
     guardarSPobj_netCDF(
       archivoSalida=changeFileExt(baseNomArchResultados, '.nc'), objSP=interpolacion, 
       lonDimName='lon', latDimName='lat')
   } else if (formatoSalida == 'GeoTiff') {
     #if (i==9) { #para guardar el IBH en raster
-    source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
+    source(paste0(script.dir.interpolarEx, '../grillas/uIOGrillas.r'))
     if (salvarPrediccion) {
       guardarGrillaGDAL(changeFileExt(baseNomArchResultados, '.tif'), interpolacion$predictions)
     }    
@@ -3226,9 +3223,9 @@ expandirPathsRegresor <- function(
     fechasRegresor=funcFechasRegresor(pathsRegresor, tz(fechasRegresando[1])), pathsRegresor, 
     fechasRegresando, expandir=T, funcFechasRegresor=findDateInText) {
   # retorna los paths de un regresor, repitiendo sus valores si tiene mayor periodicidad que el regresando.
-  # Por ejemplo si el regresor es cada 8 días y el regresando cada 1, se repite el valor del mismo regresor
-  # para los 8 días que abarca su período
-  # TO-DO: actualmente retorna en cada ti el último valor previo a ti, hacer una opción para hacerlo centrado
+  # Por ejemplo si el regresor es cada 8 dÃ­as y el regresando cada 1, se repite el valor del mismo regresor
+  # para los 8 dÃ­as que abarca su perÃ­odo
+  # TO-DO: actualmente retorna en cada ti el Ãºltimo valor previo a ti, hacer una opciÃ³n para hacerlo centrado
   if (expandir) {
     nuevoPathsRegresor <- character(length(fechasRegresando))
     for (ti in 1:length(fechasRegresando)) {
@@ -3314,12 +3311,12 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
     }
     
     if (sum(nDatosDisponiblesPorCuadrante >= minNDatosDisponibles) >= minNCuadrantesDisponibles) {
-      # Si hay algún valor nulo en el área a interpolar
+      # Si hay algÃºn valor nulo en el Ã¡rea a interpolar
       iMuestras <- !is.na(sp@data[, zcol])
       #mapearGrillaGGPlot(as(sp, 'SpatialPixelsDataFrame'), shpBase = shpMask$shp, continuo = T, dibujar = F)
       nDatosDisponibles <- sum(nDatosDisponiblesPorCuadrante)  
             
-      # Si hay al menos minNDatosDisponibles valores no nulos en toda el área disponible
+      # Si hay al menos minNDatosDisponibles valores no nulos en toda el Ã¡rea disponible
       if (distanciaMaximaMuestras > 0) {
         aux1 <- sp::coordinates(sp)[iMuestras,]
         aux2 <- sp::coordinates(sp)[iAInterpolar,]
@@ -3368,7 +3365,7 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
         iEsMuestreados <- c(iEsMuestreados, ies)
         if (!is.null(iEsObligatoriosEnLaMuestra)) ies <- unique(c(ies, iEsObligatoriosEnLaMuestra))
         
-        # Ejecuto el método y acumulo el promedio en aux
+        # Ejecuto el mÃ©todo y acumulo el promedio en aux
         if (iMetodo == 1) {
           # Tps
           suppressWarnings(tps <- Tps(x = sp::coordinates(sp)[ies, ], Y = sp@data[ies, zcol], lon.lat = !is.projected(sp), miles=FALSE))
@@ -3385,8 +3382,8 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
           aux <- aux + predict(data.loess, newdata =data.fit) * invNRepeticiones
         } else if (iMetodo %in% c(4, 5)) {
           # idw, automap
-          # Preparo los objetos espaciales de esta forma así su geometría no cambia y no es necesario
-          # volver a cachear los regresores estáticos
+          # Preparo los objetos espaciales de esta forma asÃ­ su geometrÃ­a no cambia y no es necesario
+          # volver a cachear los regresores estÃ¡ticos
           sp2 <- sp
           sp2@data[-ies, zcol] <- NA
           
@@ -3427,7 +3424,7 @@ rellenarSP <- function(sp, mascara=rep(TRUE, length(sp)), metodo='automap', nMue
                                                  paramsParaRellenoRegresores = NULL, pathsRegresoresParaRellenoRegresores = NULL)
           
           if (F) {
-            # Método viejo, recacheaba los regresores estáticos todos los pasos pero un poquito más rápido si no hay regresores estáticos
+            # MÃ©todo viejo, recacheaba los regresores estÃ¡ticos todos los pasos pero un poquito mÃ¡s rÃ¡pido si no hay regresores estÃ¡ticos
             obs <- sp[ies,]
             names(obs)[zcol] <- 'value'
             interpLocations <- sp[iAInterpolar, ]
@@ -3683,7 +3680,7 @@ deteccionOutliersRLM <- function(
   listaMapasAux$recalcularSiYaExiste <- F
   
   if (length(coordsObservaciones) <= 200) {
-    # Si tengo pocas observaciones hago CV, sino hago una única regresión
+    # Si tengo pocas observaciones hago CV, sino hago una Ãºnica regresiÃ³n
     # params = paramsAux
     pred <- universalGriddingCV(
       coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
@@ -3813,23 +3810,23 @@ deteccionOutliersUniversalGriddingCV <- function(
   paramsAux <- params
   paramsAux$difMaxFiltradoDeOutliersRLM <- 0
   paramsAux$difMaxFiltradoDeOutliersCV <- 0
-  # Hago dos pasadas porque al hacer validación cruzada la presencia del outlier puede hacer que un dato
+  # Hago dos pasadas porque al hacer validaciÃ³n cruzada la presencia del outlier puede hacer que un dato
   # bueno se identifique incorrectamente como outlier
-  # En la primera pasada identifico todos los puntos que se apartan de su estimación por CV
-  # La intención de la iteración es determinar si una estación es outlier por culpa de otra detectada como outlier o no.
-  # Por ejemplo si hay dos estaciones muy cercanas en una región que ronde los 15 grados, una de ellas tiene 17 grados y la otra 5.
-  # En este caso la cercanía de la estación de 5 hará que la estimacionCV de la de 17 sea muy baja, detectándola como outlier.
-  # Análogamente la estación de 5 tendrá una estimación alta y también será detectada como outlier.
-  # Para definir el problema, elimino ambos datos y los estimo con las demás estaciones. Al no estár la medida 5 la estimación de la 
-  # de 17 será cercana a 15 con lo cual no saldrá detectada como outlier, sin embargo la estimación de la de 5 será también cercana a 15
-  # resultando en una detección de outlier.
-  # Si entre un paso y otro una estación sigue siendo outlier, quiere decir que no eran los demás posibles outliers que la condicionaban
-  # Para evitar problemas de convergencia, una vez que un outlier entra al conjunto y permanece un paso, no lo saco más
+  # En la primera pasada identifico todos los puntos que se apartan de su estimaciÃ³n por CV
+  # La intenciÃ³n de la iteraciÃ³n es determinar si una estaciÃ³n es outlier por culpa de otra detectada como outlier o no.
+  # Por ejemplo si hay dos estaciones muy cercanas en una regiÃ³n que ronde los 15 grados, una de ellas tiene 17 grados y la otra 5.
+  # En este caso la cercanÃ­a de la estaciÃ³n de 5 harÃ¡ que la estimacionCV de la de 17 sea muy baja, detectÃ¡ndola como outlier.
+  # AnÃ¡logamente la estaciÃ³n de 5 tendrÃ¡ una estimaciÃ³n alta y tambiÃ©n serÃ¡ detectada como outlier.
+  # Para definir el problema, elimino ambos datos y los estimo con las demÃ¡s estaciones. Al no estÃ¡r la medida 5 la estimaciÃ³n de la 
+  # de 17 serÃ¡ cercana a 15 con lo cual no saldrÃ¡ detectada como outlier, sin embargo la estimaciÃ³n de la de 5 serÃ¡ tambiÃ©n cercana a 15
+  # resultando en una detecciÃ³n de outlier.
+  # Si entre un paso y otro una estaciÃ³n sigue siendo outlier, quiere decir que no eran los demÃ¡s posibles outliers que la condicionaban
+  # Para evitar problemas de convergencia, una vez que un outlier entra al conjunto y permanece un paso, no lo saco mÃ¡s
   iPasada <- 1
   iOutliers <- integer(0)
   iOutliersPermanecidos <- integer(0)
   
-  # Busco el mínimo overlap que me permita tener al menos 25 observaciones en todas las fechas para 
+  # Busco el mÃ­nimo overlap que me permita tener al menos 25 observaciones en todas las fechas para 
   # calcular las medianas y desviaciones
   overlap <- 0
   numDatos <- numeric(nrow(valoresObservaciones))

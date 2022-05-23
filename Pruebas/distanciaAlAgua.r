@@ -22,9 +22,9 @@
 # with this program. If not, see http://www.gnu.org/licenses/.             #
 ############################################################################
 
-source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/instalarPaquetes/instant_pkgs.r", encoding = 'WINDOWS-1252')
-source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/interpolarEx.r", encoding = 'WINDOWS-1252')
-source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/mapearEx.r", encoding = 'WINDOWS-1252')
+source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/instalarPaquetes/instant_pkgs.r")
+source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/interpolarEx.r")
+source("D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/mapearEx.r")
 instant_pkgs(c('Rcpp', 'raster'))
 
 
@@ -35,14 +35,14 @@ lc <- raster(pathRasterLC)
 bbAreaAInterpolar <- bbox(coordsAInterpolar)
 bbObservaciones <- bbox(coordsObservaciones)
 
-# Obtengo los 4 vértices del área que engloba las coordenadas a interpolar y las observaciones
+# Obtengo los 4 vÃ©rtices del Ã¡rea que engloba las coordenadas a interpolar y las observaciones
 bbGeneral <- bbAreaAInterpolar
 bbGeneral[1, 1] <- min(bbGeneral[1, 1], bbObservaciones[1, 1])
 bbGeneral[2, 1] <- min(bbGeneral[2, 1], bbObservaciones[2, 1])
 bbGeneral[1, 2] <- max(bbGeneral[1, 2], bbObservaciones[1, 2])
 bbGeneral[2, 2] <- max(bbGeneral[2, 2], bbObservaciones[2, 2])
 
-# Extiendo esa área 20% de su largo y ancho hacia cada borde
+# Extiendo esa Ã¡rea 20% de su largo y ancho hacia cada borde
 bbGeneralExt <- bbGeneral
 pctExtender <- 0.2
 extX <- diff(bbGeneralExt[1,]) * pctExtender
@@ -85,7 +85,7 @@ if (!file.exists('C:/mch/ArchivosProcesosLocales/MascaraDeTierra/cuerposDeAguaUy
 }
 
 
-# Creo una grilla para el área extendida que contenga a coordsAInterpolar, con su misma resolución y que
+# Creo una grilla para el Ã¡rea extendida que contenga a coordsAInterpolar, con su misma resoluciÃ³n y que
 # los bordes de coordsAInterpolar caigan exactamente en un borde da la grilla extendida
 # Estos dos valores deben ser enteros
 #(bbAreaAInterpolar[1, 1] - xmin) / cellSize[1]

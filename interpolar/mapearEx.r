@@ -34,8 +34,8 @@ while ((is.null(script.dir.mapearEx) || is.na(regexpr('mapearEx.r', script.dir.m
 if (is.null(script.dir.mapearEx)) { script.dir.mapearEx <- ''
 } else { script.dir.mapearEx <- paste(dirname(script.dir.mapearEx), '/', sep='') }
 
-source(paste0(script.dir.mapearEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.mapearEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.mapearEx, '../pathUtils/pathUtils.r'))
+source(paste0(script.dir.mapearEx, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(
   c("sp", "RColorBrewer", "colorspace", "ggplot2", "rgeos", "maptools", "directlabels", "ggrepel", 
     "ragg", "mapproj"))
@@ -244,8 +244,8 @@ crearEscalaEquiespaciadaRecortada <- function(datos, nDigitos=1, nIntervalos=9, 
 crearEscalaEquiespaciadaDistinguirMenoresOIgualesAUmbral <- function(datos, umbral, nDigitos=1, nIntervalos=9, colores=NULL, brewerPal='Spectral', 
                                                                      invertirPaleta=brewerPal %in% paletasInvertidas, continuo=F) {
   # Crea una escala que tiene en el primer intervalo todos los valores menores o iguales a
-  # umbral, y en el resto de los intervalos es equiespaciada desde el mínimo valor en datos mayor a umbral 
-  # hasta el máximo valor
+  # umbral, y en el resto de los intervalos es equiespaciada desde el mÃ­nimo valor en datos mayor a umbral 
+  # hasta el mÃ¡ximo valor
   if (any(datos > umbral, na.rm = T)) { rango <- range(datos[datos > umbral], na.rm=T)
   } else { rango <- range(datos, na.rm = T) }
   escala <- unique(c(min(datos, na.rm=T), round(seq(from=achicarToNDigitos(rango[1], nDigitos = nDigitos), to=agrandarToNDigitos(rango[2], nDigitos = nDigitos), length.out=nIntervalos-1), nDigitos)))
@@ -303,7 +303,7 @@ crearEscalaEnQuantiles <- function(datos, nDigitos=1, nIntervalos=9, probs=seq(f
   #i <- 2
   #iUltimoNoDuplicado <- 1
   #while (any(dups) && i < length(dups)) {
-    # busco el último duplicado desde donde estoy
+    # busco el Ãºltimo duplicado desde donde estoy
   #  while (i < length(dups) & dups[i])
   #    i <- i + 1
     
@@ -333,8 +333,8 @@ crearEscalaEquiespaciadaEnQuantiles <- function(datos, nDigitos=1, nIntervalos=9
 
 crearEscalaEquiespaciadaEnQuintilesDistinguirMenoresOIgualesAUmbral <- function(datos, umbral, nDigitos=1, nIntervalos=9, colores=NULL, brewerPal='Spectral', invertirPaleta=brewerPal %in% paletasInvertidas, continuo=F) {
   # Crea una escala que tiene en el primer intervalo todos los valores menores o iguales a
-  # umbral, y en el resto de los intervalos es equiespaciada desde el mínimo valor en datos mayor a umbral 
-  # hasta el máximo valor
+  # umbral, y en el resto de los intervalos es equiespaciada desde el mÃ­nimo valor en datos mayor a umbral 
+  # hasta el mÃ¡ximo valor
   datosNoNA <- datos[!is.na(datos)]
   datosNoNAMayoresAUmbral <- datosNoNA[datosNoNA > umbral]
   
@@ -379,7 +379,7 @@ ajustarExtremosEscala <- function(escala, datos, nDigitos=1, redondear=TRUE) {
 }
 
 getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong=TRUE, factorMargen = 0.025) {
-  # obtengo el rectángulo que encierra a la grilla u observaciones y dejo un borde de 2.5% para cada lado
+  # obtengo el rectÃ¡ngulo que encierra a la grilla u observaciones y dejo un borde de 2.5% para cada lado
   crsOBJ <- spObjs[[1]]@proj4string
   xLim <- spObjs[[1]]@bbox[1,]
   yLim <- spObjs[[1]]@bbox[2,]
@@ -466,11 +466,11 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
       proj4string=CRS(projargs = p4strLatLong, SRS_string = SRS_stringLatLong))
     lineasLatLong <- spTransform(lineasLatLong, crsOBJ)
     # Intersecto las lineas horizontales y verticales con el cuadrado lat/long proyectado
-    # para quedarme solo con la parte dentro del área del gráfico
+    # para quedarme solo con la parte dentro del Ã¡rea del grÃ¡fico
     lineasLatLong <- gIntersection(lineasLatLong, sps, byid=T)
   
-    # Obtengo la intersección de cada recta con el marco del área de ploteo del mapa
-    # y el texto a mostrar en cada intersección, W o E para Lon y S o N para Lat y el grado entero
+    # Obtengo la intersecciÃ³n de cada recta con el marco del Ã¡rea de ploteo del mapa
+    # y el texto a mostrar en cada intersecciÃ³n, W o E para Lon y S o N para Lat y el grado entero
     # Borde inferior del marco de ploteo
     linea <- SpatialLines(list(Lines(list(Line(expand.grid(x=xLim, y=yLim[1]))), ID='aux')), proj4string=crsOBJ)
     cortesEjeX <- gIntersection(lineasLatLong, linea)
@@ -589,7 +589,7 @@ aplicarOpcionesAMapa <- function(p, xyLims, shpBase, dibujarEscala=T, dibujarEje
 
 mapearPuntos <- function(observaciones, layoutSHP=NULL, escala, nomArchResultados, xyLims=NULL,
                          dibujarEscala=T, dibujarEjes=T, zcol=1, titulo='') {
-  # TO-DO: agregar título al gráfico
+  # TO-DO: agregar tÃ­tulo al grÃ¡fico
   oldSciPen <- getOption("scipen")
   options(scipen=15)
   if (is.null(xyLims)) xyLims <- getXYLims(c(observaciones))
@@ -621,7 +621,7 @@ mapearGrilla <- function(grilla, layoutSHP=NULL, escala, nomArchResultados, xyLi
   if (dibujarEjes) { colEjes <- 'black' } else { colEjes <- 'transparent' }
   parSettings <- list(axis.line=list(col=colEjes))
   
-  # contour=T, labels=T, para dibujar las líneas de contorno y etiquetarlas con su valor  
+  # contour=T, labels=T, para dibujar las lÃ­neas de contorno y etiquetarlas con su valor  
   plotPred <- spplot(obj=grilla, zcol=zcol, col.regions=escala$colores[1:(length(escala$escala)-1)], 
                      at=escala$escala, pretty=F, scales=list(draw=dibujarEjes), sp.layout=layoutSHP, 
                      xlim=xyLims$xLim, ylim=xyLims$yLim, colorkey=dibujarEscala, par.settings=parSettings,
@@ -660,7 +660,7 @@ mapearPuntosConEtiquetasGGPlot <- function(puntos, shpBase=NULL, nomArchResultad
       ultimoI <- 1
       continuo <- FALSE
     } else {
-      # TO-DO: escalas de colores continuas todavía no están implenentadas
+      # TO-DO: escalas de colores continuas todavÃ­a no estÃ¡n implenentadas
       continuo <- F
       if (continuo || escala$colores[nEscala] == "") { 
         valMax <- escala$escala[nEscala]

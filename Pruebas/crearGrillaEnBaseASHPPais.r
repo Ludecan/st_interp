@@ -39,8 +39,8 @@ length(unique(sp::coordinates(grillaUy)[,1]))
 length(unique(sp::coordinates(grillaUy)[,2]))
 length(unique(sp::coordinates(grillaUy)[,1]))*length(unique(coordinates(grillaUy)[,2]))
 
-source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/interpolarEx.r', encoding = 'WINDOWS-1252')
-source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/mapearEx.r', encoding = 'WINDOWS-1252')
+source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/interpolarEx.r')
+source('D:/Workspace/MCH2/MCH/MCHLib/R/Scripts/interpolar/mapearEx.r')
 
 shp <- cargarSHP('C:/mch/ArchivosProcesosLocales/MapaUruguayVacio/uruguay_departamentos.shp', '+proj=longlat +datum=WGS84')
 
@@ -72,7 +72,7 @@ nDigitos <- 2
 c(achicarToNDigitos(xLim[1], nDigitos), agrandarToNDigitos(xLim[2], nDigitos))
 c(achicarToNDigitos(yLim[1], nDigitos), agrandarToNDigitos(yLim[2], nDigitos))
 
-# Coordenadas del país
+# Coordenadas del paÃ­s
 xLim <- c(-58.45, -53.15)
 yLim <- c(-35, -30)
 p4strLatLong <- '+proj=longlat +datum=WGS84 +no_defs'
@@ -80,16 +80,16 @@ SRS_stringLatLong <- "EPSG:4326"
 p4strPlana <- '+proj=utm +zone=21 +south +datum=WGS84 +units=m +no_defs'
 SRS_stringPlana <- "EPSG:32721"
 
-# Creo los 4 vertices que encierran al país
+# Creo los 4 vertices que encierran al paÃ­s
 coordsBB <- matrix(data=c(xLim[1], yLim[1], #abajo, izquierda
                           xLim[1], yLim[2], #arriba, izquierda
                           xLim[2], yLim[2], #arriba, derecha
                           xLim[2], yLim[1]), #abajo, derecha
                    ncol=2, byrow=T)
 sps <- SpatialPoints(coords = coordsBB, proj4string = CRS(projargs = p4strLatLong, SRS_string = SRS_stringLatLong))
-# Los proyecto para hallar el rango de coordenadas en la proyección plana
+# Los proyecto para hallar el rango de coordenadas en la proyecciÃ³n plana
 sps <- spTransform(sps, CRS(projargs = p4strPlana, SRS_string = SRS_stringPlana))
-# Hallo los rangos de coordenadas en la proyección plana
+# Hallo los rangos de coordenadas en la proyecciÃ³n plana
 xLim <- bbox(sps)[1,]
 yLim <- bbox(sps)[2,]
 

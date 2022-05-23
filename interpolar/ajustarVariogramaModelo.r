@@ -28,15 +28,15 @@ ajustarVariogramaModelo <- function(variogramaEmpirico) {
   if (length(direcciones) == 1) {
     # Busqueda del mejor variograma modelo
     # Estimaciones iniciales para el NL-OLS
-    # estimamos el psill inicial como el valor en el medio entre la media y el m·ximo de la serie
+    # estimamos el psill inicial como el valor en el medio entre la media y el m√°ximo de la serie
     psillIni = (median(variogramaEmpirico$gamma) + max(variogramaEmpirico$gamma)) * 0.5
     # estimamos el rango inicial como la primer distancia a la cual se supera el psill
     rIni = variogramaEmpirico$dist[which(variogramaEmpirico$gamma > psillIni)[1]]
     # estimamos p inicial (para el modelo potencia) como 0.2
     pIni = 0.2
     
-    # para el nugget hacemos la recta que pasa mejor (mÌnimos cuadrados) por los primeros 3 puntos, la estimaciÛn del
-    # nugget ser· donde la recta corte el eje y (x=0), pero solo se usar· el nugget si es mas del 50% del psill inicial
+    # para el nugget hacemos la recta que pasa mejor (m√≠nimos cuadrados) por los primeros 3 puntos, la estimaci√≥n del
+    # nugget ser√° donde la recta corte el eje y (x=0), pero solo se usar√° el nugget si es mas del 50% del psill inicial
     nuggetIni <- as.numeric(predict(lm(gamma ~ dist, data=variogramaEmpirico[1:3]), newdata=data.frame(dist=c(0))))
     usarNugget <- nuggetIni > psillIni * 0.5
     
@@ -60,12 +60,12 @@ ajustarVariogramaModelo <- function(variogramaEmpirico) {
       # vmLog <- fit.variogram(variogramaEmpirico, vgm(range=rIni, 'Log', psill=psillIni))
     }
     
-    # elecciÛn del mejor seg˙n mÌnimo error cuadr·tico medio
+    # elecci√≥n del mejor seg√∫n m√≠nimo error cuadr√°tico medio
     variogramasModelo <- list(vmExp, vmSph, vmGau, vmWhi, vmMat, vmPow, vmLin)
     SErrs <- sapply(variogramasModelo, attr, which='SSErr')
     mejorVariogramaModelo <- variogramasModelo[[which.min(SErrs)]]
     
-    # Grafico el variograma empÌrico y los distintos modelos ajustados
+    # Grafico el variograma emp√≠rico y los distintos modelos ajustados
     # maxDist <- max(variogramaEmpirico$dist)
     # plot(variogramaEmpirico$dist, variogramaEmpirico$gamma, ylim=c(0, max(variogramaEmpirico$gamma)), xlab='Distancia', ylab='Semivarianza')
     # leyenda <- character(length(variogramasModelo))

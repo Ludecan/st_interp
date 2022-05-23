@@ -34,8 +34,8 @@ while ((is.null(script.dir.descargadorEx) || is.na(regexpr('descargadorEx.r', sc
 if (is.null(script.dir.descargadorEx)) { script.dir.descargadorEx <- ''
 } else { script.dir.descargadorEx <- paste0(dirname(script.dir.descargadorEx), '/') }
 
-source(paste0(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'))
 instant_pkgs(c('RCurl', 'curl', 'parallel', 'digest', 'data.table', 'stringi', 'stringr', 'lubridate'))
 
 threadHandle <- getCurlHandle()
@@ -233,7 +233,7 @@ generarNombresArchivo_DatosMCH2_12Horarios <- function(fechaEjecucion=Sys.time()
 generarNombresArchivo_DatosMCH2_Diarios <- function(fechaEjecucion=Sys.time(), 
                                                     urlBaseDatosMCH2='https://www.inumet.gub.uy/reportes/estadoActual/',
                                                     carpetaSalida='D:/testsMCH/descargador/') {
-  # Por ahora solo se suben diarios los datos de R3, cuando se suban más datos ajustar las fechas de descarga
+  # Por ahora solo se suben diarios los datos de R3, cuando se suban mÃ¡s datos ajustar las fechas de descarga
   if (hour(fechaEjecucion) %in% c(13, 14) && minute(fechaEjecucion) > 30 && minute(fechaEjecucion) %% 5 == 0) {
     urls <- c(paste0(urlBaseDatosMCH2, 'estadoActualDatosDiariosUltimaSemanaR3.mch'))
     
@@ -496,7 +496,7 @@ descargarArchivos <- function(
   # Retorna:
   # 0 si no se pudo bajar el archivo
   # 1 si se bajo un archivo nuevo
-  # 2 si el archivo ya existía
+  # 2 si el archivo ya existÃ­a
   useCurl <- !is.null(curlOpts) && 'use_ssl' %in% names(curlOpts)
   
   if (length(urls) > 0) {
@@ -508,7 +508,7 @@ descargarArchivos <- function(
       clusterExport(
         cl, varlist = c('curlOpts', 'useCurl', 'script.dir.descargadorEx'), envir = environment())
       clusterEvalQ(cl, expr = {
-        source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+        source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'))
         if (useCurl) {
           require('curl')
         } else {

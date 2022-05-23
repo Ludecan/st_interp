@@ -34,7 +34,7 @@ while ((is.null(script.dir.parsearParamsInterpolar) || is.na(regexpr('parsearPar
 if (is.null(script.dir.parsearParamsInterpolar)) { script.dir.parsearParamsInterpolar <- ''
 } else { script.dir.parsearParamsInterpolar <- paste(dirname(script.dir.parsearParamsInterpolar), '/', sep='') }
 
-source(paste0(script.dir.parsearParamsInterpolar, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.parsearParamsInterpolar, '../parsearParams/parsearParamsUtils.r'))
 
 # ----------------------------------------- Interpolar ----------------------------------------------------------
 createParamsInterpolar <- function(
@@ -94,8 +94,8 @@ createParamsInterpolar <- function(
   modoDiagnostico=FALSE,
   imitarSurfer=FALSE
 ) {
-  # funcion auxiliar para saber todos los parámetros que se tienen que pasar en params y valores
-  # por defecto de algunos parámetros
+  # funcion auxiliar para saber todos los parÃ¡metros que se tienen que pasar en params y valores
+  # por defecto de algunos parÃ¡metros
   return(list(pathEjecucion=pathEjecucion,
               pathProceso=pathProceso,
               nomArchResultados=nomArchResultados, 
@@ -271,8 +271,8 @@ createParamsMapear <- function(
   dibujarEscala=TRUE,
   numDecimales=1
 ) {
-  # funcion auxiliar para saber todos los parámetros que se tienen que pasar en params y valores
-  # por defecto de algunos parámetros
+  # funcion auxiliar para saber todos los parÃ¡metros que se tienen que pasar en params y valores
+  # por defecto de algunos parÃ¡metros
   return(list(pathEjecucion=pathEjecucion,
               pathProceso=pathProceso,
               incluyeNombresPuntos=incluyeNombresPuntos,

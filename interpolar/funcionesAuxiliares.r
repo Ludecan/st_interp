@@ -34,10 +34,10 @@ while ((is.null(script.dir.funcionesAuxiliares) || is.na(regexpr('funcionesAuxil
 if (is.null(script.dir.funcionesAuxiliares)) { script.dir.funcionesAuxiliares <- ''
 } else { script.dir.funcionesAuxiliares <- paste(dirname(script.dir.funcionesAuxiliares), '/', sep='') }
 
-source(paste0(script.dir.funcionesAuxiliares, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.funcionesAuxiliares, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.funcionesAuxiliares, '../Graficas/graficas.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.funcionesAuxiliares, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.funcionesAuxiliares, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.funcionesAuxiliares, '../cacheFunciones/cacheFunciones.r'))
+source(paste0(script.dir.funcionesAuxiliares, '../Graficas/graficas.r'))
+source(paste0(script.dir.funcionesAuxiliares, '../sysutils/sysutils.r'))
 instant_pkgs(
   pkgs = c('matrixStats', 'stringi', 'stringr', 'lubridate', 'gridExtra', 'sp', 'rgdal', 'Rmisc', 
            'gstat', 'grid'))
@@ -341,7 +341,7 @@ conteoPixelesRegresor <- function(pathsRegresor, shpMask=NULL, zcol=1) {
   
   range(regresor@data[, zcol], na.rm = T)
   escala <- crearEscalaEquiespaciada(datos = regresor@data[,zcol], nDigitos = 0, nIntervalos = 11)
-  mapearGrillaGGPlot(grilla = regresor, shpBase = shpMask$shp, zcol = zcol, escala = escala, titulo = 'Porcentaje de Días con Datos', 
+  mapearGrillaGGPlot(grilla = regresor, shpBase = shpMask$shp, zcol = zcol, escala = escala, titulo = 'Porcentaje de DÃ­as con Datos', 
                      nomArchResultados = 'Resultados/PorcDiasConDatos.png')
   
   regresor@data[mask, zcol] <- maxCantDiasNulosConsecutivos
@@ -351,7 +351,7 @@ conteoPixelesRegresor <- function(pathsRegresor, shpMask=NULL, zcol=1) {
   
   range(regresor@data[, zcol], na.rm = T)
   escala <- crearEscalaEquiespaciada(datos = regresor@data[,zcol], nDigitos = 0, nIntervalos = 11)
-  mapearGrillaGGPlot(grilla = regresor, shpBase = shpMask$shp, zcol = zcol, escala = escala, titulo = 'Máxima Cantidad de Días Nulos Consecutivos', 
+  mapearGrillaGGPlot(grilla = regresor, shpBase = shpMask$shp, zcol = zcol, escala = escala, titulo = 'MÃ¡xima Cantidad de DÃ­as Nulos Consecutivos', 
                      nomArchResultados = 'Resultados/MaxNDiasNulosConsecutivos.png')
   
   regresor@data[mask, zcol] <- maxCantDiasNulosConsecutivos
@@ -363,7 +363,7 @@ conteoPixelesRegresor <- function(pathsRegresor, shpMask=NULL, zcol=1) {
   nIntervalos <- max(regresor@data[, zcol], na.rm = T) - min(regresor@data[, zcol], na.rm = T) + 1
   
   escala <- crearEscalaEquiespaciada(datos = c(5, 9.1), nDigitos = 0, nIntervalos = nIntervalos)
-  mapearGrillaGGPlot(grilla = regresor, shpBase = shpMask$shp, zcol = zcol, escala = escala, titulo = 'Máxima Cantidad de Días Nulos Consecutivos (< 10 Días)',
+  mapearGrillaGGPlot(grilla = regresor, shpBase = shpMask$shp, zcol = zcol, escala = escala, titulo = 'MÃ¡xima Cantidad de DÃ­as Nulos Consecutivos (< 10 DÃ­as)',
                      nomArchResultados = 'Resultados/MaxNDiasNulosConsecutivosMenorA10.png')
 }
 
@@ -597,11 +597,11 @@ plotRasters <- function(pathsRaster, shpBase=NULL, carpetaSalida=paste(dirname(p
   # titulos <- paste(rownames(pathsRaster), '-', colnames(pathsRaster)[1])
   
   # pathsRaster <- dir(paste(pathDatos, 'LST_Night_Combinada_Clim_mean', sep=''), pattern = '*.tif$', full.names = T)
-  # titulos <- paste('Climatología Media de LST - Día ', 1:length(pathsRaster), ' del año', sep='')
+  # titulos <- paste('ClimatologÃ­a Media de LST - DÃ­a ', 1:length(pathsRaster), ' del aÃ±o', sep='')
   # pathsRaster <- dir(paste(pathDatos, 'LST_Night_Combinada_Clim_median', sep=''), pattern = '*.tif$', full.names = T)
-  # titulos <- paste('Climatología Mediana de LST - Día ', 1:length(pathsRaster), ' del año', sep='')
+  # titulos <- paste('ClimatologÃ­a Mediana de LST - DÃ­a ', 1:length(pathsRaster), ' del aÃ±o', sep='')
   # pathsRaster <- dir(paste(pathDatos, 'LST_Night_Combinada_Clim_sd', sep=''), pattern = '*.tif$', full.names = T)
-  # titulos <- paste('Climatología Desviación Estándar de LST - Día ', 1:length(pathsRaster), ' del año', sep='')
+  # titulos <- paste('ClimatologÃ­a DesviaciÃ³n EstÃ¡ndar de LST - DÃ­a ', 1:length(pathsRaster), ' del aÃ±o', sep='')
 
   # carpetaSalida <- paste(dirname(pathsRaster[1]), '/plots/', sep='')
   # shpBase = shpMask$shp
@@ -621,8 +621,8 @@ plotRasters <- function(pathsRaster, shpBase=NULL, carpetaSalida=paste(dirname(p
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
     clusterEvalQ(cl = cl, expr = {
       require(rgdal)
-      source(paste0(script.dir.funcionesAuxiliares, '/mapearEx.r'), encoding = 'WINDOWS-1252')
-      source(paste0(script.dir.funcionesAuxiliares, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, '/mapearEx.r'))
+      source(paste0(script.dir.funcionesAuxiliares, '../pathUtils/pathUtils.r'))
     })
     parSapplyLB(cl=cl, X=1:length(pathsRaster), FUN=plotRasterI, pathsRaster=pathsRaster, shpBase=shpBase, escala=escala, 
                 carpetaSalida=carpetaSalida, titulos=titulos, replot=replot, widthPx=widthPx, heightPx=heightPx, 
@@ -636,7 +636,7 @@ plotRasters <- function(pathsRaster, shpBase=NULL, carpetaSalida=paste(dirname(p
 }
 
 plotMultiRasters <- function(pathsRasters, carpetaSalida='/plots/', shpBase=NULL, escalas=NULL, replot=F) {
-  # Hace gráficos independientes para cada columna en pathsRasters por paso temporal 
+  # Hace grÃ¡ficos independientes para cada columna en pathsRasters por paso temporal 
   
   # pathsRasters <- pathsRegresores
   # pathsRasters <- unique(pathsRegresores[, 'LST_Night_Combinada_Clim', drop=F])
@@ -736,7 +736,7 @@ reordenarColumnasParaGraficarPorFilas <- function(paths, nColsPlot=2) {
 plotMultiRastersEnPaneles <- function(pathsRasters, fechasRasters, carpetaSalida='plots/', postFijoNomArchSalida='', shpBase=NULL, 
                                       escalas=vector("list", ncol(pathsRasters)), nCols=2, replot=T, byRow=T, nCoresAUsar=0, widthPx=1920, 
                                       heightPx=1080 * widthPx / 1920, alturaEscalaContinua=unit(x=2 * heightPx / 1080, units = 'in')) {
-  # Hace un gráfico por paso temporal con un panel para cada columna en pathsRasters
+  # Hace un grÃ¡fico por paso temporal con un panel para cada columna en pathsRasters
   
   #pathsRasters <- matrix(c('Resultados/2-GrilladoYCV/K/2014_01_12_K.tif', 'Resultados/2-GrilladoYCV/GRK-MOD11A1_LST_Night_FR+MYD11A1_LST_Night_FR+LST_Night_Combinada_Clim_mean+x+y/2014_01_12_GRK-MOD11A1_LST_Night_FR+MYD11A1_LST_Night_FR+LST_Night_Combinada_Clim_mean+x+y.tif'), ncol = 2)
   #fechasRasters <- fechasObservaciones[which(fechasObservaciones == as.POSIXct('2014-01-12', tz=tz(fechasObservaciones[1])))]
@@ -834,8 +834,8 @@ plotMultiRastersEnPaneles <- function(pathsRasters, fechasRasters, carpetaSalida
     clusterEvalQ(cl = cl, expr = {
       require(rgdal)
       require(Rmisc)
-      source(paste0(script.dir.funcionesAuxiliares, '/funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
-      source(paste0(script.dir.funcionesAuxiliares, '/mapearEx.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, '/funcionesAuxiliares.r'))
+      source(paste0(script.dir.funcionesAuxiliares, '/mapearEx.r'))
     })
     parSapplyLB(cl=cl, X=1:nrow(pathsRasters), FUN=plotMultiRastersEnPanelesI, pathsRasters=pathsRasters, fechasRasters=fechasRasters, shpBase=shpBase, escalas=escalas, 
                 carpetaSalida=carpetaSalida, postFijoNomArchSalida=postFijoNomArchSalida, replot=replot, nCols=nCols, widthPx=widthPx, heightPx=heightPx,
@@ -896,7 +896,7 @@ crearDFLeonardo <- function() {
     estaciones, CRS(projargs = "+proj=longlat +datum=WGS84", SRS_string = "EPSG:4326"))
   coords <- sp::coordinates(estacs)
   
-  # nro estacion | lon | lat | altura | año | mes | día | modis 1 | modis 2 |  temperaturas registradas ese día|
+  # nro estacion | lon | lat | altura | aÃ±o | mes | dÃ­a | modis 1 | modis 2 |  temperaturas registradas ese dÃ­a|
   iEstac <- integer()
   lon <- numeric()
   lat <- numeric()
@@ -957,7 +957,7 @@ rellenarRegresores <- function(pathsRegresores, carpetasSalida=paste(apply(X = p
       clusterExport(cl, varlist = c('script.dir.funcionesAuxiliares'))
       clusterEvalQ(cl = cl, expr = {
         require('rgdal')
-        source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
+        source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'))
       })
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       parSapplyLB(cl=cl, X=1:length(pathsRegresores[, i]), FUN=rellenarRegresor_ti, 
@@ -1008,28 +1008,28 @@ dividirEnCuadrantes <- function(
 muestrearEnCuadrantes <- function(sp, size, nCuadrantesX = 2, nCuadrantesY=2, zcol=-1) {
   cuadrantes <- dividirEnCuadrantes(sp, nCuadrantesX=nCuadrantesX, nCuadrantesY=nCuadrantesY)
   
-  # Obtengo los índices de sp sobre cada cuadrante en una lista con un array de índices por cada cuadrante
+  # Obtengo los Ã­ndices de sp sobre cada cuadrante en una lista con un array de Ã­ndices por cada cuadrante
   iES <- over(cuadrantes, geometry(sp), returnList = T)
   nMuestrasPorCuadrante <- trunc((size / length(iES)))
   
   if (zcol > 0) {
-    # Saco los píxeles que tienen valores NA
+    # Saco los pÃ­xeles que tienen valores NA
     iNAs <- which(is.na(sp@data[,zcol]))
     iES <- lapply(iES, FUN= function(x) { base::setdiff(x, iNAs) })
   }
   
-  # over puede retornar pixeles en dos polígonos distintos (si el pixel cae en el borde)
-  # con esto fuerzo a que cada pixel pertenezca solo al primer polígono en el que aparece
+  # over puede retornar pixeles en dos polÃ­gonos distintos (si el pixel cae en el borde)
+  # con esto fuerzo a que cada pixel pertenezca solo al primer polÃ­gono en el que aparece
   for (i in seq.int(from = 1, to = length(iES) -1, by = 1)) {
     for (j in seq.int(from = i+1, to = length(iES), by = 1)) {
       iES[[j]] <- base::setdiff(x = iES[[j]], y = iES[[i]])
     }
   }
   
-  # iTodos son índices de los cuadrantes que tienen menos píxeles que nMuestrasPorCuadrante.
-  # En esos cuadrantes elijo todos los píxeles, y reparto los píxeles que les sobraron (nMuestrasPorCuadrante - length(cuadrante))
-  # entre los demás cuadrantes.
-  # Una vez que el cuadrante está completo lo saco de iTodos y sigo la ronda
+  # iTodos son Ã­ndices de los cuadrantes que tienen menos pÃ­xeles que nMuestrasPorCuadrante.
+  # En esos cuadrantes elijo todos los pÃ­xeles, y reparto los pÃ­xeles que les sobraron (nMuestrasPorCuadrante - length(cuadrante))
+  # entre los demÃ¡s cuadrantes.
+  # Una vez que el cuadrante estÃ¡ completo lo saco de iTodos y sigo la ronda
   muestras <- integer(0)
   iTodos <- which(sapply(iES, function(x) { length(x) <= nMuestrasPorCuadrante }))
   while (length(iTodos) > 0) {
@@ -1057,11 +1057,11 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
                                        maxNMuestrasPorCuadrante = round(1.5 * size / (nCuadrantesX * nCuadrantesY))) {
   #sp <- readGDAL(pathsRegresores[17, 1])
   #size = 2000
-  # Esta versión reparte las muestras en nCuadrantesX * nCuadrantesY en el espacio y además entre una agrupación de nCuadrantesZ conjuntos
-  # de los cuantiles de la variable. El objetivo es obtener un muestreo de toda la distribución de los valores en cada cuadrante
+  # Esta versiÃ³n reparte las muestras en nCuadrantesX * nCuadrantesY en el espacio y ademÃ¡s entre una agrupaciÃ³n de nCuadrantesZ conjuntos
+  # de los cuantiles de la variable. El objetivo es obtener un muestreo de toda la distribuciÃ³n de los valores en cada cuadrante
   cuadrantes <- dividirEnCuadrantes(object = sp, nCuadrantesX=nCuadrantesX, nCuadrantesY=nCuadrantesY)
   
-  # Obtengo los índices de sp sobre cada cuadrante en una lista con un array de índices por cada cuadrante
+  # Obtengo los Ã­ndices de sp sobre cada cuadrante en una lista con un array de Ã­ndices por cada cuadrante
   iES <- over(x = cuadrantes, y = geometry(sp), returnList = T)
   
   # Asigno la misma cantidad de muestras a cada cuadrante, si me quedan muestras sin asignar las reparto
@@ -1075,12 +1075,12 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
     nMuestrasCuadrantes[iESConMasMuestras] <- nMuestrasCuadrantes[iESConMasMuestras] + 1
   }
   
-  # Saco los píxeles que tienen valores NA
+  # Saco los pÃ­xeles que tienen valores NA
   iNAsOAExcluir <- c(which(is.na(sp@data[, zcol])), iEsAExcluir)
   iES <- lapply(iES, FUN= function(x) { base::setdiff(x, iNAsOAExcluir) })
   
-  # over puede retornar pixeles en dos polígonos distintos (si el pixel cae en el borde)
-  # con esto fuerzo a que cada pixel pertenezca solo al primer polígono en el que aparece
+  # over puede retornar pixeles en dos polÃ­gonos distintos (si el pixel cae en el borde)
+  # con esto fuerzo a que cada pixel pertenezca solo al primer polÃ­gono en el que aparece
   for (i in seq.int(from = 1, to = length(iES) - 1, by = 1)) {
     for (j in seq.int(from = i + 1, to = length(iES), by = 1)) {
       iES[[j]] <- base::setdiff(x = iES[[j]], y = iES[[i]])
@@ -1089,10 +1089,10 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
   # La cantidad de pixeles en todos los grupos de iES debe ser igual a la cantidad de pixeles totales
   # sum(sapply(iES, FUN=length)) == length(sp)
   
-  # iTodos son índices de los cuadrantes que tienen menos píxeles que nMuestrasPorCuadrante.
-  # En esos cuadrantes elijo todos los píxeles, y reparto los píxeles que les sobraron (nMuestrasPorCuadrante - length(cuadrante))
-  # entre los demás cuadrantes.
-  # Una vez que el cuadrante está completo lo saco de iTodos y sigo la ronda
+  # iTodos son Ã­ndices de los cuadrantes que tienen menos pÃ­xeles que nMuestrasPorCuadrante.
+  # En esos cuadrantes elijo todos los pÃ­xeles, y reparto los pÃ­xeles que les sobraron (nMuestrasPorCuadrante - length(cuadrante))
+  # entre los demÃ¡s cuadrantes.
+  # Una vez que el cuadrante estÃ¡ completo lo saco de iTodos y sigo la ronda
   muestras <- integer(0)
   iTodos <- which(sapply(X = seq_along(iES), FUN = 
                          function(x, iES, nMuestrasCuadrantes) { 
@@ -1127,14 +1127,14 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
     i <- 1
     i <- i + 1
     for (i in seq_along(iESCuadrantesOrdenados)) {
-      # Ordeno los índices del cuadrante según la distribución de z (sp@data[, zcol])
-      # Reparto las muestras proporcionalmente entre los cuantiles de z agrupándolos en nCuadrantesZ
+      # Ordeno los Ã­ndices del cuadrante segÃºn la distribuciÃ³n de z (sp@data[, zcol])
+      # Reparto las muestras proporcionalmente entre los cuantiles de z agrupÃ¡ndolos en nCuadrantesZ
       # P.ej: si nCuadrantesZ es 3 reparto las muestras del intervalo en 1 / 3 por cada tercil,
       #       si nCuadrantesZ es 4 reparto las muestras del intervalo en 1 / 4 por cada cuartil, etc
       iESCuadranteOrdenados <- iESCuadrantesOrdenados[[i]]
 
       # Al menos tengo que tener una muestra por cuadranteZ si no tengo suficiente, disminuyo los 
-      # cuadrantesZ para el i-ésimo cuadranteXY
+      # cuadrantesZ para el i-Ã©simo cuadranteXY
       if (length(iESCuadranteOrdenados) > nCuadrantesZ) { nCuadrantesZAux <- nCuadrantesZ 
       } else { nCuadrantesZAux <- length(iESCuadranteOrdenados) }
             
@@ -1173,7 +1173,7 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
   }
 
   if (F) {
-    # Gráficos para mostrar los resultados
+    # GrÃ¡ficos para mostrar los resultados
     if (gridded(sp)) {
       g1 <- mapearGrillaGGPlot(grilla = sp, continuo = T, dibujar = F, titulo = 'LST MODIS: 2002-07-20')  
     } else {
@@ -1196,7 +1196,7 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
     tryCatch(expr = {  
       par(mfrow=c(nCuadrantesX,nCuadrantesY))
       for (i in 1:length(i1)) {
-        plot(ecdf(i1[[i]][,1]), main = paste('ECDF LST MODIS: 2002-07-20. Cuadrante ', nombresCuadrantes[i], sep=''), xlab='LST [°C]', xlim=range(sp@data[,zcol], na.rm=T))
+        plot(ecdf(i1[[i]][,1]), main = paste('ECDF LST MODIS: 2002-07-20. Cuadrante ', nombresCuadrantes[i], sep=''), xlab='LST [Â°C]', xlim=range(sp@data[,zcol], na.rm=T))
         lines(ecdf(i2[[i]][,1]), col='blue', lwd=2, pch='')
         legend("topleft", inset=.05, cex = 2, c("Original","Muestra n=2000"), horiz=F, lty=c(1,1,1), lwd=c(2,2), col=c("black","blue"), bg="grey96")
       }
@@ -1206,7 +1206,7 @@ muestrearEnCuadrantesYECDF <- function(sp, size, nCuadrantesX = 4, nCuadrantesY=
     
     png('Resultados/Ejemplos/MuestreoPorCuadrantesYECDF_ECDF.png', width = 1920, height = 1017)
     tryCatch(expr = {  
-      plot(ecdf(sp@data[,zcol]), main = 'ECDF LST MODIS: 2002-07-20', xlab='LST [°C]', xlim=range(sp@data[,zcol], na.rm=T))
+      plot(ecdf(sp@data[,zcol]), main = 'ECDF LST MODIS: 2002-07-20', xlab='LST [Â°C]', xlim=range(sp@data[,zcol], na.rm=T))
       lines(ecdf(sp@data[muestras,zcol]), col='blue', lwd=2, pch='')
       legend("topleft", inset=.05, cex = 2, c("Original","Muestra n=2000"), horiz=F, lty=c(1,1), lwd=c(2,2), col=c("black","blue"), bg="grey96")
     }, finally = dev.off())
@@ -1219,19 +1219,19 @@ muestrearEnCuadrantesYECDF_V2 <- function(sp, size, nCuadrantesX = 2, nCuadrante
   # sp <- readGDAL(pathsRegresores[17, 1])
   # size = 2000
   # NO-USAR.
-  # Otro intento, la idea era asignar una clase a cada dato según el cuadrante y el intervalo de la ECDF a la que correspondiera y repartir las 
-  # muestras entre esas clases pero no tuvo exito. La ECDF general sigue sesgada y además se sesgan las ECDFs de cada cuadrante
+  # Otro intento, la idea era asignar una clase a cada dato segÃºn el cuadrante y el intervalo de la ECDF a la que correspondiera y repartir las 
+  # muestras entre esas clases pero no tuvo exito. La ECDF general sigue sesgada y ademÃ¡s se sesgan las ECDFs de cada cuadrante
   cuadrantes <- dividirEnCuadrantes(sp, nCuadrantesX=nCuadrantesX, nCuadrantesY=nCuadrantesY)
   
-  # Obtengo los índices de sp sobre cada cuadrante en una lista con un array de índices por cada cuadrante
+  # Obtengo los Ã­ndices de sp sobre cada cuadrante en una lista con un array de Ã­ndices por cada cuadrante
   iES <- over(cuadrantes, geometry(sp), returnList = T)
   
-  # Saco los píxeles que tienen valores NA
+  # Saco los pÃ­xeles que tienen valores NA
   iNAs <- which(is.na(sp@data[, zcol]))
   iES <- lapply(iES, FUN= function(x) { base::setdiff(x, iNAs) })
   
-  # over puede retornar pixeles en dos polígonos distintos (si el pixel cae en el borde)
-  # con esto fuerzo a que cada pixel pertenezca solo al primer polígono en el que aparece
+  # over puede retornar pixeles en dos polÃ­gonos distintos (si el pixel cae en el borde)
+  # con esto fuerzo a que cada pixel pertenezca solo al primer polÃ­gono en el que aparece
   for (i in seq.int(from = 1, to = length(iES) -1, by = 1)) {
     for (j in seq.int(from = i+1, to = length(iES), by = 1)) {
       iES[[j]] <- base::setdiff(x = iES[[j]], y = iES[[i]])
@@ -1274,10 +1274,10 @@ muestrearEnCuadrantesYECDF_V2 <- function(sp, size, nCuadrantesX = 2, nCuadrante
   
   cbind(clases, sapply(iES, length))
   
-  # iTodos son índices de los cuadrantes que tienen menos píxeles que nMuestrasPorCuadrante.
-  # En esos cuadrantes elijo todos los píxeles, y reparto los píxeles que les sobraron (nMuestrasPorCuadrante - length(cuadrante))
-  # entre los demás cuadrantes.
-  # Una vez que el cuadrante está completo lo saco de iTodos y sigo la ronda
+  # iTodos son Ã­ndices de los cuadrantes que tienen menos pÃ­xeles que nMuestrasPorCuadrante.
+  # En esos cuadrantes elijo todos los pÃ­xeles, y reparto los pÃ­xeles que les sobraron (nMuestrasPorCuadrante - length(cuadrante))
+  # entre los demÃ¡s cuadrantes.
+  # Una vez que el cuadrante estÃ¡ completo lo saco de iTodos y sigo la ronda
   muestras <- integer(0)
   iTodos <- which(sapply(iESPorClase, function(x) { length(x) < nMuestrasPorClase }))
   while (length(iTodos) > 0) {
@@ -1399,7 +1399,7 @@ contarNoNulosPorCuadrantes <- function(
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
     clusterEvalQ(cl, {
       require('rgdal')
-      source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'))
     })
     disponiblesPorCuadrantes <- parSapplyLB(
       cl = cl, X=as.vector(pathsGeoTiffs), FUN = contarNoNulosPorCuadrantesTi, 
@@ -1601,7 +1601,7 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
   print(i)
   if (!is.na(pathsRasters[i])) {
     nomArchSalida <- paste(carpetaSalida, basename(pathsRasters[i]), sep='')
-    source(paste0(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
+    source(paste0(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r'))
     
     run <- reRun || !file.exists(nomArchSalida) || file.info(nomArchSalida)$size <= 0 || !evaluarConReintentos(readGDAL(fname = nomArchSalida, silent = T), maxNIntentos = 1)
   
@@ -1621,10 +1621,10 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
           plots[[length(plots) + 1]] <- mapearGrillaGGPlot(rasterI, shpBase = shpBase, escala = escala, dibujar = F, titulo = paste('Dato Original. [', rango[1], ', ', rango[2], ']', sep=''), alturaEscalaContinua=alturaEscalaContinua)
         }
   
-        # Los píxeles que tienen al menos 10% de valores nulos en la bola chica son sospechosos
-        # Los píxeles de arriba que tienen al menos 66.6% de nulos en la bola chica se descartan
-        # Los píxeles de arriba que tienen una anomalía respecto al promedio en la bola grande sin la bola interior de más de 1 sd se descartan
-        # Los píxeles en donde no tengo al menos 66.6% de los píxeles de la la bola grande sin la bola interior para calcular el promedio se descartan
+        # Los pÃ­xeles que tienen al menos 10% de valores nulos en la bola chica son sospechosos
+        # Los pÃ­xeles de arriba que tienen al menos 66.6% de nulos en la bola chica se descartan
+        # Los pÃ­xeles de arriba que tienen una anomalÃ­a respecto al promedio en la bola grande sin la bola interior de mÃ¡s de 1 sd se descartan
+        # Los pÃ­xeles en donde no tengo al menos 66.6% de los pÃ­xeles de la la bola grande sin la bola interior para calcular el promedio se descartan
         pctNulosEnBolaChica <- sapply(iPixelesEnBolaChica, 
                                       FUN = function(x, rasterI, zcol) {
                                         if (length(x) > 0) { return(sum(is.na(rasterI@data[x, zcol])) / length(x))
@@ -1638,7 +1638,7 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
           if (!is.null(pathsRastersCentrado) ) {
             rasterCentrado <- readGDAL(pathsRastersCentrado[i], silent = T)
             anoms@data[,zcol] <- anoms@data[, zcol] - rasterCentrado@data[, zcol]
-            if (doPlots & F) plots[[length(plots) + 1]] <- mapearGrillaGGPlot(rasterCentrado, shpBase = shpBase, dibujar = F, escala = escala, titulo = 'Media Climatológica', alturaEscalaContinua=alturaEscalaContinua)
+            if (doPlots & F) plots[[length(plots) + 1]] <- mapearGrillaGGPlot(rasterCentrado, shpBase = shpBase, dibujar = F, escala = escala, titulo = 'Media ClimatolÃ³gica', alturaEscalaContinua=alturaEscalaContinua)
             rm(rasterCentrado)
             
             rasterICentrado <- anoms
@@ -1650,16 +1650,16 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
             anoms@data[,zcol] <- anoms@data[, zcol] / rasterEscalado@data[, zcol]
             if (doPlots & F) {
               escalaSD <- crearEscalaEquiespaciada(rasterEscalado@data[,zcol], brewerPal = 'Reds', continuo = T)
-              plots[[length(plots) + 1]] <- mapearGrillaGGPlot(rasterEscalado, shpBase = shpBase, dibujar = F, escala = escalaSD, titulo = 'Desv. Estándar Climatológica', alturaEscalaContinua=alturaEscalaContinua)
+              plots[[length(plots) + 1]] <- mapearGrillaGGPlot(rasterEscalado, shpBase = shpBase, dibujar = F, escala = escalaSD, titulo = 'Desv. EstÃ¡ndar ClimatolÃ³gica', alturaEscalaContinua=alturaEscalaContinua)
             }
             rm(rasterEscalado)
           }
           
           if (doPlots) { 
-            if (!is.null(pathsRastersCentrado) && !is.null(pathsRastersEscalado)) { titulo <- 'Eliminación de Píxeles Aislados, Centrado y Escalado'
-            } else if (!(is.null(pathsRastersCentrado))) { titulo <- 'Eliminación de Píxeles Aislados y Centrado'
-            } else if (!(is.null(pathsRastersEscalado))) { titulo <- 'Eliminación de Píxeles Aislados Y Escalado'
-            } else { titulo <- 'Eliminación de Píxeles Aislados' }
+            if (!is.null(pathsRastersCentrado) && !is.null(pathsRastersEscalado)) { titulo <- 'EliminaciÃ³n de PÃ­xeles Aislados, Centrado y Escalado'
+            } else if (!(is.null(pathsRastersCentrado))) { titulo <- 'EliminaciÃ³n de PÃ­xeles Aislados y Centrado'
+            } else if (!(is.null(pathsRastersEscalado))) { titulo <- 'EliminaciÃ³n de PÃ­xeles Aislados Y Escalado'
+            } else { titulo <- 'EliminaciÃ³n de PÃ­xeles Aislados' }
             escalaCentradoYEscalado <- crearEscalaEquiespaciada(anoms@data[, zcol], continuo = T)
             plots[[length(plots) + 1]] <- mapearGrillaGGPlot(anoms, shpBase = shpBase, dibujar = F, escala=escalaCentradoYEscalado, titulo = titulo, alturaEscalaContinua=alturaEscalaContinua)
           }
@@ -1696,7 +1696,7 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
             if (!is.na(varAnoms) & varAnoms > 1E-3) { escalaAnom <- crearEscalaEnQuantiles(datos = anomsLocales@data[, zcol], probs = c(0, 0.05, 0.1, 0.15, 0.2, 0.995, 0.999, 0.9995, 0.9999,1), continuo = F, brewerPal = 'RdYlBu', nDigitos = 1)
             } else { escalaAnom <- crearEscalaEquiespaciada(c(0, 1), continuo = F, brewerPal = 'RdYlBu') }
             
-            plots[[length(plots) + 1]] <- mapearGrillaGGPlot(anomsLocales, shpBase = shpBase, escala = escalaAnom, dibujar = F, titulo = 'Anomalías', alturaEscalaContinua=alturaEscalaContinua)
+            plots[[length(plots) + 1]] <- mapearGrillaGGPlot(anomsLocales, shpBase = shpBase, escala = escalaAnom, dibujar = F, titulo = 'AnomalÃ­as', alturaEscalaContinua=alturaEscalaContinua)
           }
           
           lims <- quantile(anomsLocales@data[, zcol], probs=c(0.1, 0.9995), na.rm=T)
@@ -1707,16 +1707,16 @@ filtrarRasterIGradienteAbrupto <- function(i, pathsRasters, pathsRastersCentrado
           # lowerLim <- medianaAnoms - 1.5 * madAnoms
           # upperLim <- medianaAnoms + 4 * madAnoms
           
-          # Los píxeles que tengan menos de 5% de los píxeles nulos en la bola grande  se excluyen del control
+          # Los pÃ­xeles que tengan menos de 5% de los pÃ­xeles nulos en la bola grande  se excluyen del control
           # anoms@data[pctNulosEnBolaChica <= 0.05 | (!is.na(rasterI@data[, zcol]) & rasterI@data[, zcol] > limitesControlAnomalias[1] & rasterI@data[, zcol] < limitesControlAnomalias[2]), zcol] <- NA
-          # Los píxeles tengan anomalías negativas y su valor original sea mayor que limitesControlAnomalias[1] o 
-          # los píxeles tengan anomalías positivas y su valor original sea menor que limitesControlAnomalias[2] se excluyen del control 
+          # Los pÃ­xeles tengan anomalÃ­as negativas y su valor original sea mayor que limitesControlAnomalias[1] o 
+          # los pÃ­xeles tengan anomalÃ­as positivas y su valor original sea menor que limitesControlAnomalias[2] se excluyen del control 
           anomsLocales@data[!is.na(anomsLocales@data[, zcol]) & 
                             (pctNulosEnBolaGrande <= 0.05 |
                             ((anomsLocales@data[, zcol] < 0 & rasterICentrado@data[, zcol] > limitesControlAnomalias[1]) | 
                              (anomsLocales@data[, zcol] > 0 & rasterICentrado@data[, zcol] < limitesControlAnomalias[2]))), zcol] <- NA
           iFiltroAnomaliasLocales <- !is.na(anomsLocales@data[,zcol]) & (anomsLocales@data[, zcol] < lowerLim | anomsLocales@data[,zcol] > upperLim) | is.na(promedioEnBolaGrande)
-          if (doPlots) plots[[length(plots) + 1]] <- mapearGrillaGGPlot(anomsLocales, shpBase = shpBase, escala = escalaAnom, dibujar = F, titulo = 'Anomalías. Píxeles Sospechosos')
+          if (doPlots) plots[[length(plots) + 1]] <- mapearGrillaGGPlot(anomsLocales, shpBase = shpBase, escala = escalaAnom, dibujar = F, titulo = 'AnomalÃ­as. PÃ­xeles Sospechosos')
           anomsLocales@data[iFiltroAnomaliasLocales, zcol] <- NA
           
           rm(pctNulosEnBolaChica, anomsLocales)
@@ -1848,7 +1848,7 @@ filtrarRastersGradienteAbrupto <- function(pathsRasters, pathsRastersCentrado=NU
     #iPixelesEnBolaChica <- parOver(nCoresAUsar = nCoresAUsar, spgeom1 = bolaChica, spgeom2 = puntosRaster, returnList = T)
     rm(bolaChica)
     
-    # Saco los siempre nulos de la bola chica y el píxel en cuestión para que no se consideren al buscar sospechosos
+    # Saco los siempre nulos de la bola chica y el pÃ­xel en cuestiÃ³n para que no se consideren al buscar sospechosos
     cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
     iPixelesEnBolaChica <- parLapplyLB(cl, seq_along(iPixelesEnBolaChica),
                                        fun = function(x, iPixelesEnBolaChica, iPixelesSiempreNulos) {
@@ -1866,7 +1866,7 @@ filtrarRastersGradienteAbrupto <- function(pathsRasters, pathsRastersCentrado=NU
     gc(T)
     
     print('Bola grande creada')
-    # Saco los siempre nulos de la bola grande para que trate de usarlos sin que estén cada vez que hace los promedios (performance)
+    # Saco los siempre nulos de la bola grande para que trate de usarlos sin que estÃ©n cada vez que hace los promedios (performance)
     cl <- makeCluster(getOption("cl.cores", nCoresAUsar))
     iPixelesEnBolaGrande <- parLapplyLB(cl, seq_along(iPixelesEnBolaGrande),
                                         fun = function(x, iPixelesEnBolaGrande, iPixelesSiempreNulos) {
@@ -1876,7 +1876,7 @@ filtrarRastersGradienteAbrupto <- function(pathsRasters, pathsRastersCentrado=NU
     stopCluster(cl)
     print('Bola grande pronta')
     
-    # Obtengo el conjunto de píxeles de la bola grande sin la bola interior para calcular los promedios
+    # Obtengo el conjunto de pÃ­xeles de la bola grande sin la bola interior para calcular los promedios
     #iPixelesEnBolaGrande <- parLapplyLB(cl, 1:length(iPixelesEnBolaGrande), 
     #                                    fun = function(x, iPixelesEnBolaGrande, iPixelesEnBolaInterior) { 
     #                                                   setdiff(x = iPixelesEnBolaGrande[[x]], y = c(iPixelesEnBolaInterior[[x]], x))
@@ -1907,7 +1907,7 @@ filtrarRastersGradienteAbrupto <- function(pathsRasters, pathsRastersCentrado=NU
       require(rgdal)
       require(sp)
       require(Rmisc)
-      source(paste0(script.dir.funcionesAuxiliares, 'mapearEx.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, 'mapearEx.r'))
     })
     parSapplyLB(cl=cl, X=1:length(pathsRasters), FUN=filtrarRasterIGradienteAbrupto, pathsRasters=pathsRasters, pathsRastersCentrado=pathsRastersCentrado, 
                 pathsRastersEscalado=pathsRastersEscalado, minValAbs=minValAbs, maxValAbs=maxValAbs, carpetaSalida=carpetaSalida, zcol=zcol, 
@@ -2157,7 +2157,7 @@ seleccionarMejorRegresorPorFechasI <- function(i, fechasObservaciones, valoresOb
       iNoNAsReg <- complete.cases(xMat)
       df <- na.omit(data.frame(y = valoresObservaciones[i, ], xMat))
       if (sum(!is.na(valoresObservaciones[i,])) <= 3) {
-        # Si no hay al menos 4 observaciones no puedo hacer regresión. Hago el mse sin ajustar
+        # Si no hay al menos 4 observaciones no puedo hacer regresiÃ³n. Hago el mse sin ajustar
         mses[j] <- mean((df$y - df$band1)^2)
       } else if (sum(iNoNAsReg) >= minNoNAs) {
         modelo <- rlm(formula = y ~ ., data = df)
@@ -2341,9 +2341,9 @@ mapearRastersCentradoYEscalado <- function(pathsRasters, pathsRastersCentrado, p
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.funcionesAuxiliares'))
     clusterEvalQ(cl = cl, expr = {
-      source(paste0(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
-      source(paste0(script.dir.funcionesAuxiliares, 'mapearEx.r'), encoding = 'WINDOWS-1252')
-      source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.funcionesAuxiliares, '../TryUtils/tryUtils.r'))
+      source(paste0(script.dir.funcionesAuxiliares, 'mapearEx.r'))
+      source(paste0(script.dir.funcionesAuxiliares, 'funcionesAuxiliares.r'))
     })
     
     res <- parSapplyLB(cl = cl, X=1:nrow(pathsRasters), FUN = mapearRastersCentradoYEscaladoI, pathsRasters=pathsRasters, 

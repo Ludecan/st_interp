@@ -34,7 +34,7 @@ while ((is.null(script.dir.parsearParamsMosaicAndClip) || is.na(regexpr('parsear
 if (is.null(script.dir.parsearParamsMosaicAndClip)) { script.dir.parsearParamsMosaicAndClip <- ''
 } else { script.dir.parsearParamsMosaicAndClip <- paste0(dirname(script.dir.parsearParamsMosaicAndClip), '/') }
 
-source(paste0(script.dir.parsearParamsMosaicAndClip, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.parsearParamsMosaicAndClip, '../parsearParams/parsearParamsUtils.r'))
 
 createParamsMosaic <- function(pathEjecucion='./',
                                pathProceso='',

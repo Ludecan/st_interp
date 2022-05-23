@@ -32,7 +32,7 @@ while ((is.null(script.dir.uIOGrillas) || is.na(regexpr('uIOGrillas.r', script.d
 if (is.null(script.dir.uIOGrillas)) { script.dir.uIOGrillas <- ''
 } else { script.dir.uIOGrillas <- paste(dirname(script.dir.uIOGrillas), '/', sep='') }
 
-source(paste0(script.dir.uIOGrillas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.uIOGrillas, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(c('sp', 'rgdal'))
 
 # para todas las funciones grilla tiene que ser un objeto spatialPixelsDataFrame
@@ -58,7 +58,7 @@ guardarDatosGrilla <- function(archivoDatos, grilla) {
 
 guardarGrillaArchDefYArchDatoBin <- function(archivoDefinicion, grilla) {
   guardarDefinicionGrilla(archivoDefinicion, grilla)
-  # cambio la extensión por .bin
+  # cambio la extensiÃ³n por .bin
   archivoDatos <- paste(c(substr(archivoDefinicion, 1, tail(unlist(gregexpr("\\.", archivoDefinicion)), 1) - 1), '.bin'), collapse='')
   guardarDatosGrilla(archivoDatos, grilla)
 }
@@ -106,7 +106,7 @@ leerDatosGrilla <- function(archivoDatos, grilla) {
 
 leerGrilla <- function(archivoDefinicion) {
   grilla <- leerDefinicionGrilla(archivoDefinicion)
-  # cambio la extensión por .bin
+  # cambio la extensiÃ³n por .bin
   archivoDatos <- paste(c(substr(archivoDefinicion, 1, tail(unlist(gregexpr("\\.", archivoDefinicion)), 1) - 1), '.bin'), collapse='')
   leerDatosGrilla(archivoDatos, grilla)
   return (grilla)
@@ -247,7 +247,7 @@ guardarSPobj_netCDF <- function(
     expr = {
       ncout <- ncdf4::nc_create(filename=archivoSalida, vars=list(ncvar), force_v4=TRUE)
       ncdf4::ncatt_put(ncout, 0, "title", "Monthly Rainfall")
-      ncdf4::ncatt_put(ncout, 0, "institution", "Instituto Uruguayo de Meteorología")
+      ncdf4::ncatt_put(ncout, 0, "institution", "Instituto Uruguayo de MeteorologÃ­a")
       ncdf4::ncatt_put(ncout, 0, "date_created", as.character(Sys.Date()))
       ncdf4::ncatt_put(ncout, 0, "creator_name", "Pablo Alfaro")
       ncdf4::ncatt_put(ncout, 0, "creator_email", "palfaro@motionsoft.com.uy")

@@ -34,13 +34,13 @@ while ((is.null(script.dir.qcTests) || is.na(regexpr('qcTests.r', script.dir.qcT
 if (is.null(script.dir.qcTests)) { script.dir.qcTests <- ''
 } else { script.dir.qcTests <- paste0(dirname(script.dir.qcTests), '/') }
 
-source(paste0(script.dir.qcTests, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.qcTests, '../interpolar/interpolarEx.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.qcTests, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.qcTests, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.qcTests, '../interpolar/interpolarEx.r'))
+source(paste0(script.dir.qcTests, '../sysutils/sysutils.r'))
 instant_pkgs(c('sp', 'robustbase', 'ragg'))
 
 
-# CÛdigos para los distintos tipos de outliers detectables por los mÈtodos
+# C√≥digos para los distintos tipos de outliers detectables por los m√©todos
 TTO_SinProblemasDetectados = 0L
 TTO_OutlierPorLoBajo = 1L
 TTO_OutlierPorLoAlto = 2L
@@ -52,9 +52,9 @@ TTO_SinDatosSuficientesEnLaEstacion = -2L
 TTO_SinDatosSuficientesEnVecinos = -3L
 TTO_ValorConfirmado = -4L
 
-stringsTTO <- c('Valor Confirmado', 'Sin Datos Suficientes En Vecinos', 'Sin Datos Suficientes En La EstaciÛn', 
+stringsTTO <- c('Valor Confirmado', 'Sin Datos Suficientes En Vecinos', 'Sin Datos Suficientes En La Estaci√≥n', 
                 'Valor Nulo', 'Sin Problemas Detectados', 'Outlier Por Lo Bajo', 'Outlier Por Lo Alto', 
-                'PrecipitaciÛn Aislada', 'Sequedad Aislada')
+                'Precipitaci√≥n Aislada', 'Sequedad Aislada')
 
 TTipoOutlierToString <- function(tipoOutlier) {
   return(stringsTTO[tipoOutlier - TTO_ValorConfirmado + 1])
@@ -241,10 +241,10 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
     # n2 = y1 + 1/m * x1
     # El punto donde intersectan r y r2 cumple
     # m * x + n = -1/m * x + n2
-    # Entonces, el x de la proyecciÛn ortogonal de P sobre r es:
+    # Entonces, el x de la proyecci√≥n ortogonal de P sobre r es:
     # x = (n2 - n) / (m + 1/m)
-    # n podrÌa ser cualquiera ya que solo nos importa la direcciÛn pero para que todo quede dentro del ·rea del gr·fico
-    # definimos n para que r pase por el punto medio del ·rea del gr·fico Q => 
+    # n podr√≠a ser cualquiera ya que solo nos importa la direcci√≥n pero para que todo quede dentro del √°rea del gr√°fico
+    # definimos n para que r pase por el punto medio del √°rea del gr√°fico Q => 
     # n = yq + -m * xq
     Q <- (rowMeans(bbox(coordsObservaciones)) - c(rX[1], rY[1])) / maxD
     n <- Q[2] - m * Q[1]
@@ -253,7 +253,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
     xs <- as.numeric(sort((n2s - n) / (m + invM)))
     
     iAux <- 1:(length(xs)-1)
-    # Tomo los medios de los intervalos entre los xs originales proyectados sobre la direcciÛn perpendicular al gradiente
+    # Tomo los medios de los intervalos entre los xs originales proyectados sobre la direcci√≥n perpendicular al gradiente
     # y calculo sus ys
     nuevosXs <- (xs[iAux] + xs[iAux+1]) * 0.5
     nuevosYs <- nuevosXs * m + n
@@ -322,7 +322,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
                               coordsObservaciones = coordsObservaciones, dibujarPuntosObservaciones = F)
       p
       
-      # DirecciÛn del gradiente, sin ubicaciÛn
+      # Direcci√≥n del gradiente, sin ubicaci√≥n
       df <- data.frame(x1 = x1, x2 = x2, y1 = m * x1 + intercept, y2 = m * x2 + intercept, value=NA)
       p <- mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpBase, xyLims = xyLims, zcol = 'value',
                               continuo = T, dibujarTexto = T, dibujar = F) + 
@@ -333,7 +333,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       
       ggsave(p, file='D:/testsMCH/SRT/3-DireccionGradiente.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
-      # DirecciÛn perpendicular del gradiente, sin ubicaciÛn
+      # Direcci√≥n perpendicular del gradiente, sin ubicaci√≥n
       p <- mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpBase, xyLims = xyLims, zcol = 'value',
                               continuo = T, dibujarTexto = T, dibujar = F) + 
         geom_abline(slope = m, intercept = -m * medioCoords[1] + medioCoords[2])
@@ -341,7 +341,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       ggsave(p, file='D:/testsMCH/SRT/4-PosicionGradiente1.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
       # x = (x1/m + y1 - c) / (m + 1/m)
-      # Ubicaciones potenciales, proyecciÛn sobre perpendicular
+      # Ubicaciones potenciales, proyecci√≥n sobre perpendicular
       coordsOrig <- sp::coordinates(coordsObservacionesVecinos)
       xsAux <- as.numeric((coordsOrig[, 1] * invM + coordsOrig[, 2] - intercept) / (m + invM))
       ysAux <- xsAux * m + intercept
@@ -364,7 +364,7 @@ deteccionGradienteEnPuntos <- function(coordsObservaciones, iPuntoATestear, maxD
       p3
       ggsave(p3, file='D:/testsMCH/SRT/4-PosicionGradiente3.png', dpi=90, width = 630 / 90, height = 630 / 90, units = 'in')
       
-      # Gradiente final, ubicaciÛn y direcciÛn
+      # Gradiente final, ubicaci√≥n y direcci√≥n
       i2 <- -mPerpendicular * (x0y0[1] * maxD + rX[1]) + (x0y0[2] * maxD + rY[1])
       # i2 <- -mPerpendicular * (x0y0[1]) + (x0y0[2])
       p4 <- mapearPuntosGGPlot(puntos = coordsObservaciones, shpBase = shpBase, xyLims=xyLims, zcol = 'value', continuo = T, dibujarTexto = T,
@@ -457,7 +457,7 @@ deteccionGradienteEnMatrizDeObservaciones <- function(coordsObservaciones, fecha
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r'), encoding = 'WINDOWS-1252'))
+    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r')))
     
     # structure(vapply(m, y, numeric(1)), dim=dim(m))
     hayGradiente <- parSapply(cl, X = 1:length(valoresObservaciones), FUN = deteccionGradienteEnMatrizDeObservacionesI, 
@@ -495,7 +495,7 @@ mapearResultadosDeteccionOutliers <- function(test, carpetaSalida=NULL, coordsOb
     iOutliers <- which(test$fecha == fecha)
     
     if (length(iOutliers) > 1) {
-      # Si hay m·s de un outlier los ordeno por latitud, longitud
+      # Si hay m√°s de un outlier los ordeno por latitud, longitud
       iEstaciones <- match(test$estacion[iOutliers], row.names(coordsObservaciones))
       coordsIEstaciones <- sp::coordinates(coordsObservaciones)[iEstaciones,, drop=F]
       
@@ -538,8 +538,8 @@ mapearResultadosDeteccionOutliers <- function(test, carpetaSalida=NULL, coordsOb
       clusterExport(cl, varlist = c('script.dir.qcTests'))
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       clusterEvalQ(cl = cl, expr = {
-        source(paste0(script.dir.qcTests, 'qcTests.r'), encoding = 'WINDOWS-1252')
-        source(paste0(script.dir.qcTests, '../interpolar/mapearEx.r'), encoding = 'WINDOWS-1252') 
+        source(paste0(script.dir.qcTests, 'qcTests.r'))
+        source(paste0(script.dir.qcTests, '../interpolar/mapearEx.r')) 
       })
       parLapplyLB(cl = cl, seq.int(from = 1, to = nrow(test), by = 1), fun = mapearResultadosDeteccionOutliersI, test=test, carpetaSalida=carpetaSalida, 
                   coordsObservaciones=coordsObservaciones, valoresObservaciones=valoresObservaciones, shpBase=shpBase, xyLims=xyLims, tamaniosPuntos=tamaniosPuntos)
@@ -581,7 +581,7 @@ mapearResultadosDeteccionOutliersV2 <- function(
       
       if (length(iOutliers) > 0) {
         if (length(iOutliers) > 1) {
-          # Si hay m·s de un outlier los ordeno por latitud, longitud
+          # Si hay m√°s de un outlier los ordeno por latitud, longitud
           iEstaciones <- match(test$estacion[iOutliers], row.names(coordsObservaciones))
           coordsIEstaciones <- sp::coordinates(coordsObservaciones)[iEstaciones,, drop=F]
           
@@ -662,8 +662,8 @@ mapearResultadosDeteccionOutliersV2 <- function(
       clusterExport(cl, varlist = c('script.dir.qcTests'))
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       clusterEvalQ(cl = cl, expr = { 
-        source(paste0(script.dir.qcTests, 'qcTests.r'), encoding = 'WINDOWS-1252') 
-        source(paste0(script.dir.qcTests, '../interpolar/mapearEx.r'), encoding = 'WINDOWS-1252') 
+        source(paste0(script.dir.qcTests, 'qcTests.r')) 
+        source(paste0(script.dir.qcTests, '../interpolar/mapearEx.r')) 
       })
       parLapplyLB(
         cl = cl, seq_along(fechas), fun = mapearResultadosDeteccionOutliersV2I, 
@@ -688,11 +688,11 @@ mapearResultadosDeteccionOutliersV2 <- function(
 
 ejecutarReemplazosSRT <- function(test, valoresObservaciones) {
   # Se efectua el reemplazo segun test$reemplazar
-  # Los que tienen 0 se dejan como est·n
+  # Los que tienen 0 se dejan como est√°n
   # Los que tienen 1 se reemplazan por NA
   # Los que tienen 2 se reemplazan por el estimado de SRT
   # Los que tienen 3 se reemplazan por test$valorReemplazo
-  # Los que tienen 4 se dejan como est·n pero adem·s no volveran a ser chequeados en futuras ejecuciones de SRT
+  # Los que tienen 4 se dejan como est√°n pero adem√°s no volveran a ser chequeados en futuras ejecuciones de SRT
   iNAs <- which(test$reemplazar == 1)
   i <- iNAs[1]
   for (i in iNAs) valoresObservaciones[test$fecha[i], test$estacion[i]] <- NA
@@ -732,8 +732,8 @@ getIVecinosAMenosDeMaxDist_i <- function(i, coordsObservaciones, maxDist, filtra
 
 getIVecinosAMenosDeMaxDist <- function(
     coordsObservaciones, maxDist=50, filtrarDistanciaCero=FALSE, nCoresAUsar=0) {
-  # Retorna para cada punto i en coordsObservaciones una lista con los Ìndices de los dem·s puntos de coordsObservaciones
-  # que estÈn a menos de maxDist de i. Las unidades de distancia son las especificadas en la 
+  # Retorna para cada punto i en coordsObservaciones una lista con los √≠ndices de los dem√°s puntos de coordsObservaciones
+  # que est√©n a menos de maxDist de i. Las unidades de distancia son las especificadas en la 
   # proj4string de coordsObservaciones
   if (nCoresAUsar <= 0) nCoresAUsar <- min(detectCores(T, T), length(coordsObservaciones))
   if (nCoresAUsar > 1) {
@@ -761,13 +761,13 @@ getICuadrantes <- function(iPunto, iesVecinosI, coords) {
 
 getICuadrante <- function(iVecino, iPunto, coords) {
   #coords[c(iVecino, iPunto), ]
-  if (coords[iVecino, 1] <= coords[iPunto, 1]) { # El vecino est· a la izquierda
-    if (coords[iVecino, 2] <= coords[iPunto, 2]) { return(1L) # El vecino est· a la izquierda, abajo
-    } else { return(2L) } # El vecino est· a la izquierda, arriba
+  if (coords[iVecino, 1] <= coords[iPunto, 1]) { # El vecino est√° a la izquierda
+    if (coords[iVecino, 2] <= coords[iPunto, 2]) { return(1L) # El vecino est√° a la izquierda, abajo
+    } else { return(2L) } # El vecino est√° a la izquierda, arriba
   } else {
-    # El vecino est· a la derecha
-    if (coords[iVecino, 2] <= coords[iPunto, 2]) { return(3L) # El vecino est· a la derecha, abajo
-    } else { return(4L) } # El vecino est· a la derecha, arriba
+    # El vecino est√° a la derecha
+    if (coords[iVecino, 2] <= coords[iPunto, 2]) { return(3L) # El vecino est√° a la derecha, abajo
+    } else { return(4L) } # El vecino est√° a la derecha, arriba
   }
 }
 
@@ -817,15 +817,15 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
       if (verbose) print(paste(i, '.', colnames(dfValoresObservaciones)[i], ', ', iFecha, '. ', row.names(dfValoresObservaciones)[iFecha], ', ', val, sep=''))
       
       tsVentana <- getVentana(ti = iFecha, nT = length(fechasObservaciones), tamanioSemiVentana = ventana)
-      # Saco las fechas que son NA en la estaciÛn que se est· chequeando
+      # Saco las fechas que son NA en la estaci√≥n que se est√° chequeando
       tsAUsarVentana <- tsVentana$tsVentana[iNoNAs[tsVentana$tsVentana, i]]
       rm(tsVentana)
       
       if (length(tsAUsarVentana) >= ventana) {
-        # La fecha en cuestiÛn la dejo siempre, aunque sea NA, para poder hacer el estimado
+        # La fecha en cuesti√≥n la dejo siempre, aunque sea NA, para poder hacer el estimado
         tsAUsarVentana <- base::union(tsAUsarVentana, iFecha)
         iTiEnTsVentana <- which(iFecha == tsAUsarVentana)
-        # Idea para considerar el ciclo diario, no dio buenos resultados, empeorÛ los RMSE y Adj R^2
+        # Idea para considerar el ciclo diario, no dio buenos resultados, empeor√≥ los RMSE y Adj R^2
         # tsAUsarVentana <- tsAUsarVentana[tsAUsarVentana %% 24 == tsAUsarVentana[iTiEnTsVentana] %% 24]
         # iTiEnTsVentana <- which(iFecha == tsAUsarVentana)
         
@@ -833,10 +833,10 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
         # exijo al menos (semi)ventana o 100 fechas disponibles y disponer del dato de iFecha
         bVecinoConDatosSuficientes <- iNoNAs[tsAUsarVentana[iTiEnTsVentana], ies[[i]]]
         iesConDatosSuficientes <- ies[[i]][bVecinoConDatosSuficientes]
-        # Hasta ac· iesConDatosSuficientes tiene los que no son NA en iFecha
+        # Hasta ac√° iesConDatosSuficientes tiene los que no son NA en iFecha
         
         if (length(iesConDatosSuficientes) >= 4 & usarDeteccionDeGradientes) {
-          # Solo se considerar· gradiente si al menos hay 2 puntos a cada lado del gradiente, asÌ que al menos
+          # Solo se considerar√° gradiente si al menos hay 2 puntos a cada lado del gradiente, as√≠ que al menos
           # debe haber 4 vecinos para calcular el gradiente
           coordsObservaciones@data[,'value'] <- as.numeric(dfValoresObservaciones[iFecha, ])
           
@@ -914,12 +914,12 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
           # cbind(t(dfValoresObservaciones[tsAUsarVentana[iTiEnTsVentana], iesConDatosSuficientes]), fitValues, pesos)
           # round(cbind(t(dfValoresObservaciones[tsAUsarVentana[iTiEnTsVentana], iesConDatosSuficientes]), fitValues, pesos),2)
           
-          # VersiÛn Original paper 2005
+          # Versi√≥n Original paper 2005
           # Hago los cuadrados preservando el signo
           # estimado <- sum((fitValues^2) * sign(fitValues) * pesos)
           # estimado <- sqrt(abs(estimado)) * sign(estimado)
           
-          # VersiÛn del paper 2012
+          # Versi√≥n del paper 2012
           estimado <- sum(fitValues * pesos)
           
           if (is.na(val)) {
@@ -928,15 +928,15 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
             tiposOutliers[n] <- TTO_ValorNulo
             stdDifs[n] <- NA_real_
           } else  {
-            # VersiÛn original de Hubbard 2005 y 2012
+            # Versi√≥n original de Hubbard 2005 y 2012
             meanInvMSEs <- mean(invMSEs)
             
-            # VersiÛn revisada, en vez de hacer el promedio simple hace la suma ponderada de los MSEs
+            # Versi√≥n revisada, en vez de hacer el promedio simple hace la suma ponderada de los MSEs
             # meanInvMSEs <- sum(invMSEs * pesos)
             
             # Esta otra trata a los residuos como distribuciones normales y a su MSE como la varianza.
-            # La varianza de la combinaciÛn lineal de normales es la sumatoria de las varianzas por los 
-            # pesos de la combinaciÛn al cuadrado
+            # La varianza de la combinaci√≥n lineal de normales es la sumatoria de las varianzas por los 
+            # pesos de la combinaci√≥n al cuadrado
             # s <- sum(sqrt(mses * pesos^2))
             s <- 1 / sqrt(meanInvMSEs)
             
@@ -950,13 +950,13 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
             stdDifs[n] <- stdDif
           }
         } else {
-          # No hay al menos minStn vecinos con AdjR^2 > minAdjR2 y con al menos ventana valores disponibles en el perÌodo de la ventana
+          # No hay al menos minStn vecinos con AdjR^2 > minAdjR2 y con al menos ventana valores disponibles en el per√≠odo de la ventana
           estimados[n] <- NA_real_
           tiposOutliers[n] <- TTO_SinDatosSuficientesEnVecinos
           stdDifs[n] <- NA_real_
         }
       } else {
-        # La estaciÛn no tiene al menos ventana valores disponibles en el perÌodo de la ventana
+        # La estaci√≥n no tiene al menos ventana valores disponibles en el per√≠odo de la ventana
         estimados[n] <- NA_real_
         tiposOutliers[n] <- TTO_SinDatosSuficientesEnLaEstacion
         stdDifs[n] <- NA_real_      
@@ -987,7 +987,7 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r'), encoding = 'WINDOWS-1252'))
+    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r')))
     test <- parLapplyLB(cl = cl, X=iColumnasATestear, fun = spatialRegressionTestI, 
                         ies=ies, itsATestear=itsATestear, coordsObservaciones=coordsObservaciones, 
                         fechasObservaciones=fechasObservaciones, dfValoresObservaciones=dfValoresObservaciones, 
@@ -1008,7 +1008,7 @@ spatialRegressionTest <- function(coordsObservaciones, fechasObservaciones, valo
   }
   
   # test[[1]][215,]
-  # CÛdigo para profiling
+  # C√≥digo para profiling
   #system.time({
   #Rprof()
   #lele <- spatialRegressionTestI(i = 5,
@@ -1128,7 +1128,7 @@ testEspacialPrecipitacionI <- function(i, iesVecinos, coordsObservaciones, fecha
         nVecinosPorCuadrante <- rep(0L, minNCuadrantes)
         for (iCuadrante in seq_along(cuadrantesVecinosNoNA)) nVecinosPorCuadrante[cuadrantesVecinosNoNA[iCuadrante]] <- nVecinosPorCuadrante[cuadrantesVecinosNoNA[iCuadrante]] + 1L
 
-        # Si hay alg˙n vecino no NA y la cantidad de vecinos por cuadrante es mayor a minNVecinosPorCuadrante en el cuadrante con menos
+        # Si hay alg√∫n vecino no NA y la cantidad de vecinos por cuadrante es mayor a minNVecinosPorCuadrante en el cuadrante con menos
         # valores disponibles
         if (min(nVecinosPorCuadrante) >= minNVecinosPorCuadrante) {
           valoresVecinos <- as.numeric(dfValoresObservaciones[iFecha, iesVecinosI[iNoNAsVecinos]])
@@ -1226,9 +1226,9 @@ testEspacialPrecipitacionIV2 <- function(
     coordsPolares <- coordsPolares[iesVecinosI, , drop=F]
     coordsPolares <- coordsPolares[order(coordsPolares[, 2]), , drop=F]
     diferenciasAngulares <- (coordsPolares[c(seq.int(2, nrow(coordsPolares)), 1), 2] - coordsPolares[, 2]) %% 360
-    # Centro los ejes de los cuadrantes de manera que dividan al medio el ·ngulo donde
-    # se da la m·xima diferencia angular entre vecinos
-    # En vez de rotar los ejes, roto las observaciones que es equivalente y m·s f·cil
+    # Centro los ejes de los cuadrantes de manera que dividan al medio el √°ngulo donde
+    # se da la m√°xima diferencia angular entre vecinos
+    # En vez de rotar los ejes, roto las observaciones que es equivalente y m√°s f√°cil
     coordsPolares[, 2] <- (coordsPolares[, 2] - max(diferenciasAngulares) / 2) %% 360
     cuadrantesVecinos <- coordsPolares[, 2] %/% 90 + 1
     
@@ -1289,7 +1289,7 @@ testEspacialPrecipitacionIV2 <- function(
                 } else if (stdDifs[iFecha] > fSup) { tiposOutliers[iFecha] <- TTO_OutlierPorLoAlto
                 } else { tiposOutliers[iFecha] <- TTO_SinProblemasDetectados }
               } else {
-                # Si ninguno de los vecinos muestra precipitaciÛn y Pobs no fue precipitaciÛn aislada
+                # Si ninguno de los vecinos muestra precipitaci√≥n y Pobs no fue precipitaci√≥n aislada
                 # asumimos que no hay problemas
                 tiposOutliers[iFecha] <- TTO_SinProblemasDetectados 
               }
@@ -1412,7 +1412,7 @@ testEspacialPrecipitacion <- function(
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
-    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r'), encoding = 'WINDOWS-1252'))
+    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r')))
     test <- parLapplyLB(
       cl = cl, X=iColumnasATestear, fun = testEspacialPrecipitacionIV2,
       coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
@@ -1433,7 +1433,7 @@ testEspacialPrecipitacion <- function(
       datosProtegidos=datosProtegidos, verbose=verbose)
   }
   # test[[1]][215,]
-  # CÛdigo para profiling
+  # C√≥digo para profiling
   #system.time({
   #Rprof()
   #lele <- spatialRegressionTestI(i = 5,
@@ -1495,7 +1495,7 @@ testMaxToMeanRatios <- function(valoresObservaciones, minMaxVal=20, maxRatio=30,
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.qcTests'))
-    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r'), encoding = 'WINDOWS-1252'))
+    clusterEvalQ(cl = cl, expr = source(paste0(script.dir.qcTests, 'qcTests.r')))
     if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
     test <- parLapplyLB(
       cl = cl, X=1:nrow(valoresObservaciones), fun = testMaxToMeanRatios_i,

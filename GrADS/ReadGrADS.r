@@ -32,7 +32,7 @@ while ((is.null(script.dir.ReadGrADS) || is.na(regexpr('ReadGrADS.r', script.dir
 if (is.null(script.dir.ReadGrADS)) { script.dir.ReadGrADS <- ''
 } else { script.dir.ReadGrADS <- paste0(dirname(script.dir.ReadGrADS), '/') }
 
-source(paste0(script.dir.ReadGrADS, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.ReadGrADS, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(c('stringi', 'rgdal', 'sp', 'akima', 'RANN'))
 
 formaWGS84 <- '+ellps=WGS84 +datum=WGS84 +units=m'
@@ -54,13 +54,13 @@ parsePDef <- function(PDef, formaTierra=formaDeLaTierra) {
     sLon <- as.numeric(PDef[11]);
     dx <- as.numeric(PDef[12]);
     dy <- as.numeric(PDef[13]);
-    # WRF no usa el datum  WGS84 sino que usa un datum esférico
-    # Más información acá: http://www.pkrc.net/wrf-lambert.html
+    # WRF no usa el datum  WGS84 sino que usa un datum esfÃ©rico
+    # MÃ¡s informaciÃ³n acÃ¡: http://www.pkrc.net/wrf-lambert.html
     proj4string <- paste0('+proj=lcc +lat_1=', STrueLat, ' +lat_2=', NTrueLat, 
                          ' +lat_0=', latRef, ' ', ' +lon_0=', sLon, ' ', 
                          formaTierra, ' +no_defs')
     
-    # TODO: agregar parámetro SRS_string al CRS y cambiar proj4string por wkt
+    # TODO: agregar parÃ¡metro SRS_string al CRS y cambiar proj4string por wkt
     puntoRef <- SpatialPoints(coords = matrix(c(lonRef, latRef), nrow = 1), 
                               proj4string = CRS(paste0('+proj=longlat ', formaTierra, ' +no_defs')))
     puntoRef <- spTransform(puntoRef, proj4string)
@@ -73,7 +73,7 @@ parsePDef <- function(PDef, formaTierra=formaDeLaTierra) {
                  iRef=iRef, jRef=jRef, STrueLat=STrueLat, NTrueLat=NTrueLat, sLon=sLon, dx=dx, dy=dy, 
                  proj4string=proj4string))
   } else {
-    stop(paste0('Error leyendo el campo PDEF. Tipo de proyección no implementada "', tipoProyeccion, '"'))
+    stop(paste0('Error leyendo el campo PDEF. Tipo de proyecciÃ³n no implementada "', tipoProyeccion, '"'))
   }
 }
 
@@ -112,7 +112,7 @@ parseGradsAbsoluteTime <- function(s) {
       # 123
       hora <- as.numeric(substring(s, 1, 2))
       minuto <- 0
-    } else { stop(paste0('Fecha inválida: "', s, '"')) }
+    } else { stop(paste0('Fecha invÃ¡lida: "', s, '"')) }
   } else  {
     hora <- 0
     minuto <- 0
@@ -291,8 +291,8 @@ getGrillaRectilineaLatLong <- function(ctl, formaTierra=formaDeLaTierra) {
   sp::coordinates(coords) <- c('lon', 'lat')
   grilla <- points2grid(coords)
   # proj4string <- CRS('+proj=longlat +ellps=WGS84 +no_defs')
-  # WRF no usa el datum  WGS84 sino que usa un datum esférico
-  # Más información acá: http://www.pkrc.net/wrf-lambert.html
+  # WRF no usa el datum  WGS84 sino que usa un datum esfÃ©rico
+  # MÃ¡s informaciÃ³n acÃ¡: http://www.pkrc.net/wrf-lambert.html
   return(SpatialGrid(grid = grilla, proj4string = CRS(paste0('+proj=longlat ', formaTierra, ' +no_defs'))))
 }
 
@@ -435,7 +435,7 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
       longs <- readXYGrid(ctl = ctl, dsetOverride = dsetOverride, idxFecha = idxFecha, idxVar = 2, idxNivelZ = idxNivelZ)
       
       prjLongLatWRF <- paste0('+proj=longlat ', formaDeLaTierra, ' +no_defs')
-      # TODO: el SRS_string está hardcodeado para formaDeLaTierra WGS84
+      # TODO: el SRS_string estÃ¡ hardcodeado para formaDeLaTierra WGS84
       SRS_string <- "EPSG:4326"
       
       puntosGrillaNativa <- spTransform(
@@ -503,7 +503,7 @@ readXYGridSP <- function(ctl, dsetOverride=NA, idxFecha=1, idxVar=1, idxNivelZ=1
       proj4string = grillaLatLong@proj4string,
       data = data.frame(value=rep(NA_real_, length(grillaLatLong))))
     
-    # Proyecto los centroides de la grilla LatLong a la proyección de la grilla nativa
+    # Proyecto los centroides de la grilla LatLong a la proyecciÃ³n de la grilla nativa
     puntosGrillaLatLong <- spTransform(puntosGrillaLatLong, grillaXY@proj4string)
     
     # Obtengo los valores interpolados en la grilla de LatLong
@@ -539,12 +539,12 @@ inicializarCTL <- function(ctl) {
   # dimensions such as EOFs. The default size of the E dimension is 1 -- if no E dimension exists, it is not 
   # necessary to explicity declare it the descriptor file.
   
-  # bytesPorHiperCuboT es la cantidad de bytes entre un paso de tiempo y otro. En la iteración se va incrementando
+  # bytesPorHiperCuboT es la cantidad de bytes entre un paso de tiempo y otro. En la iteraciÃ³n se va incrementando
   # de a ctl$bytesPorGrillaLonLat[i] para construir ctl$bytesHastaVariableINivelZ
   ctl$bytesPorHiperCuboT <- ctl$tHeader
-  # bytesPorGrillaLonLat es la cantidad de bytes en una grilla XY de un nivel fijo de elevación
+  # bytesPorGrillaLonLat es la cantidad de bytes en una grilla XY de un nivel fijo de elevaciÃ³n
   ctl$bytesPorGrillaLonLat <- integer(length=ctl$nVars)
-  # bytesHastaVariableINivelZ[[i]][j] es la cantidad de bytes hasta el nivel de elevación j de la variable i desde
+  # bytesHastaVariableINivelZ[[i]][j] es la cantidad de bytes hasta el nivel de elevaciÃ³n j de la variable i desde
   # el comienzo de un hipercubo de tiempo
   ctl$bytesHastaVariableINivelZ <- list()
   i <- 1

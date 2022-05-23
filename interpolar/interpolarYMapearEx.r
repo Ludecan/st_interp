@@ -33,11 +33,11 @@ while ((is.null(script.dir.interpolarYMapearEx) || is.na(regexpr('interpolarYMap
 }
 if (is.null(script.dir.interpolarYMapearEx)) { script.dir.interpolarYMapearEx <- ''
 } else { script.dir.interpolarYMapearEx <- paste0(dirname(script.dir.interpolarYMapearEx), '/') }
-source(paste0(script.dir.interpolarYMapearEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarYMapearEx, "mapearEx.r"), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarYMapearEx, 'funcionesAuxiliares.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarYMapearEx, 'leerEscalas.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.interpolarYMapearEx, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.interpolarYMapearEx, 'interpolarEx.r'))
+source(paste0(script.dir.interpolarYMapearEx, "mapearEx.r"))
+source(paste0(script.dir.interpolarYMapearEx, 'funcionesAuxiliares.r'))
+source(paste0(script.dir.interpolarYMapearEx, 'leerEscalas.r'))
+source(paste0(script.dir.interpolarYMapearEx, '../sysutils/sysutils.r'))
 
 createDefaultListaMapas <- function(
   paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
@@ -132,7 +132,7 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
       #espEscalaFija <- crearEspecificacionEscalaEquiespaciadaParaLluvia(interpolacion$predictions@data[,1])
       #escala <- darEscala(especificacion = espEscalaFija, valores = interpolacion$predictions@data[,1])
       #mapearGrillaGGPlot(grilla=interpolacion$predictions, shpBase=shpMask$shp, escala=escala, nomArchResultados=nomArch,
-      #                   xyLims=xyLims, dibujar=interactive(), titulo='Precipitación Acumulada 24 al 25 de mayo del 2017',
+      #                   xyLims=xyLims, dibujar=interactive(), titulo='PrecipitaciÃ³n Acumulada 24 al 25 de mayo del 2017',
       #                   isolineas = F, dibujarPuntosObservaciones = T, 
       #                   coordsObservaciones=coordsObservaciones, puntosAResaltar = puntosAResaltar)
     }
@@ -171,9 +171,9 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
     }
   }  
   
-  # Comento código viejo. No se usaba para nada pero esto permitía hacer el mapa de los puntos de observaciones directamente o
-  # el mapa de varianza de predicción. Si alguna vez interesa, habría que actualizar este código al nuevo formato 
-  # de los parámetros de mapeo
+  # Comento cÃ³digo viejo. No se usaba para nada pero esto permitÃ­a hacer el mapa de los puntos de observaciones directamente o
+  # el mapa de varianza de predicciÃ³n. Si alguna vez interesa, habrÃ­a que actualizar este cÃ³digo al nuevo formato 
+  # de los parÃ¡metros de mapeo
   #if (length(especificacionesEscalasObservaciones) > 0) {
   #  escalas <- darEscalas(especificaciones = especificacionesEscalasObservaciones, valores = interpolacion$predictions@data[,1])
   #  if (paramsIyM$graficarObservaciones) {
@@ -206,7 +206,7 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
   #  if (paramsIyM$graficarVarianza && !is.null(interpolacion$campoVarianza)) {
   #    escalas <- darEscalas(especificaciones = especificacionesEscalasVarianza, interpolacion$predictions@data[,1])
   #    iEscala<-1
-  #    if (paramsIyM$titulo != '') { titulo <- paste('Varianza de Interpolación de', paramsIyM$titulo, seriesfechasObservaciones[ti])
+  #    if (paramsIyM$titulo != '') { titulo <- paste('Varianza de InterpolaciÃ³n de', paramsIyM$titulo, seriesfechasObservaciones[ti])
   #    } else { titulo <- ''}
   #    for (iEscala in seq_along(along.with = escalas)) {
   #      nomArch <- paste(paramsIyM$baseNomArchResultados, '_', format(fechasObservaciones[ti], format="%Y_%m_%d"), '_VarPredictor.png', sep='')
@@ -225,7 +225,7 @@ interpolarYMapearI <- function(
   espEscalaAdaptada=NULL
 ) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
-  # iTi <- 1
+  # iTi <- 156
   # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-03')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
@@ -294,7 +294,7 @@ interpolarYMapearI <- function(
     } else {
       auxInterpolacion <- interpolacion$predictions
     }
-    source(paste0(script.dir.interpolarYMapearEx, '../grillas/uIOGrillas.r'), encoding = 'WINDOWS-1252')
+    source(paste0(script.dir.interpolarYMapearEx, '../grillas/uIOGrillas.r'))
     
     guardarSPobj_netCDF(
       archivoSalida=changeFileExt(nomArch, '.nc'), objSP=auxInterpolacion, 
@@ -341,9 +341,9 @@ interpolarYMapear <- function(
         paramsIyM$incorporarDistanciaAlAgua | 
         paramsIyM$incorporarAltitud | 
         paramsIyM$incorporarTiempo)) {
-    # Elimino estaciones que no tengan ninguna observación para mejorar performance, sobre todo de la CV
+    # Elimino estaciones que no tengan ninguna observaciÃ³n para mejorar performance, sobre todo de la CV
     # Aplico esto solo si hay menos de 500 observaciones, sino asumo que es un relleno de regresores en donde no conviene
-    # sacar los NA porque hay que volver a cachear los regresores estáticos
+    # sacar los NA porque hay que volver a cachear los regresores estÃ¡ticos
     iConDatos <- apply(valoresObservaciones, MARGIN = 2, FUN = function(x) { return( !all(is.na(x))) })
     coordsObservaciones <- coordsObservaciones[iConDatos,]
     valoresObservaciones <- valoresObservaciones[,iConDatos, drop=F]
@@ -360,7 +360,7 @@ interpolarYMapear <- function(
       factorMADHaciaAbajo = paramsIyM$difMaxFiltradoDeOutliersRLM)
   } else { outliersRLM <- NULL }
   
-  # Eliminación de outliers
+  # EliminaciÃ³n de outliers
   if (paramsIyM$difMaxFiltradoDeOutliersCV > 0) {
     # params = paramsIyM
     # maxOutlyingness = paramsIyM$difMaxFiltradoDeOutliersCV
@@ -374,7 +374,7 @@ interpolarYMapear <- function(
     outliers <- rbind(outliersRLM, outliersCV)
     outliers <- outliers[!duplicated(outliers$iOutlier), ]
     
-    # Solo guardo los mapas de las fechas que tengan algún outlier interno al país
+    # Solo guardo los mapas de las fechas que tengan algÃºn outlier interno al paÃ­s
     if (!is.null(shpMask)) { iEstacionesInternas <- !is.na(over(x = geometry(coordsObservaciones), y = geometry(shpMask$shp)))
     } else { iEstacionesInternas <- rep(T, length(coordsObservaciones)) }
     
@@ -426,7 +426,7 @@ interpolarYMapear <- function(
     rm(outliers)
   }
   
-  # Reducción de series
+  # ReducciÃ³n de series
   if (paramsIyM$radioReduccionSeriesKm > 0) {
     # radioReduccionSeriesKm = paramsIyM$radioReduccionSeriesKm
     # funcionReduccionSeries = paramsIyM$funcionReduccionSeries
@@ -484,8 +484,8 @@ interpolarYMapear <- function(
       clusterExport(cl, varlist = c('script.dir.interpolarYMapearEx'))
       clusterEvalQ(cl, {
         set.seed(31)
-        source(paste0(script.dir.interpolarYMapearEx, 'interpolarEx.r'), encoding = 'WINDOWS-1252')
-        source(paste0(script.dir.interpolarYMapearEx, 'interpolarYMapearEx.r'), encoding = 'WINDOWS-1252')
+        source(paste0(script.dir.interpolarYMapearEx, 'interpolarEx.r'))
+        source(paste0(script.dir.interpolarYMapearEx, 'interpolarYMapearEx.r'))
       })
       if (exists(x = 'setMKLthreads')) { clusterEvalQ(cl = cl, expr = setMKLthreads(1)) }
       
@@ -561,7 +561,7 @@ interpolarYMapear <- function(
     # Extiendo la matriz de paths de regresores para incluir los lags temporales 
     i <- 1
     for (i in 1:length(paramsIyM$tlagsAR)) {
-      # Cargo los valores de los pasos de inicialización en el vector de paths de cada lag temporal
+      # Cargo los valores de los pasos de inicializaciÃ³n en el vector de paths de cada lag temporal
       pathsRegresores <- cbind(pathsRegresores, rep(NA_character_, nrow(pathsRegresores)))
       
       colnames(pathsRegresores)[nOrig + i] <- paste('T_', paramsIyM$tlagsAR[i], sep='')
@@ -572,7 +572,7 @@ interpolarYMapear <- function(
       }
     }
 
-    # A partir de acá es con AR
+    # A partir de acÃ¡ es con AR
     # iTi <- tUltimoValorSinAR + 1
     #iTi <- 632
     #for (iTi in (tUltimoValorSinAR+1):631) {
