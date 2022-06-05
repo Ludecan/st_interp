@@ -26,7 +26,16 @@ require('parallel')
 
 getTotalRAM_GB <- function() {
   if (.Platform$OS.type == "windows") {
-    memtot_gb <- memory.size(max=NA) / 1024
+    # memtot_gb <- memory.size(max=NA) / 1024
+	memtot_gb <- Inf
+	# TODO: finish this
+	#info <- system("systeminfo", intern=TRUE)
+	#as.numeric(gsub(
+	#  pattern="(?:[[:alpha:]][[:punct:]])*([[:digit:]]+)\\.([[:digit:]]+) MB", 
+	#  replacement="\\1\\2",
+	#  ignore.case=T,
+	#  x=info[grepl("Memoria f\xa1sica disponible|Available Phyisical Memory", info)]
+	#))
   } else {
     memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2
   }

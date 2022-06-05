@@ -46,9 +46,7 @@ getProporcionDeLaDiagonalValida <- function(nObservaciones) {
 getBoundariesPVariogramaEmpirico <- function(fml, observaciones, minDivDist=5, 
                                              maxDivDist=14, proporcionDeLaDiagonalValida=0) {
   require(gstat)
-  source(paste0(
-    script.dir.getBoundariesPVariogramaEmpirico, 'funcsCalidadVariogramasEmpiricos.r'), 
-    encoding = 'WINDOWS-1252')
+  source(paste0(script.dir.getBoundariesPVariogramaEmpirico, 'funcsCalidadVariogramasEmpiricos.r'))
   
   if (proporcionDeLaDiagonalValida <= 0) { proporcionDeLaDiagonalValida <- getProporcionDeLaDiagonalValida(nrow(observaciones)) }
   
@@ -56,7 +54,7 @@ getBoundariesPVariogramaEmpirico <- function(fml, observaciones, minDivDist=5,
   if(is.na(longlat)) longlat <- FALSE
   diagonal <- spDists(t(bbox(observaciones)), longlat=longlat)[1,2] * proporcionDeLaDiagonalValida # times the length of the central axis through the area
   
-  # para funcs de maximización
+  # para funcs de maximizaciÃ³n
   #valorOptimo <- -.Machine$double.xmax
   #for (i in maxDivDist:minDivDist) {
   #  ancho <- diagonal / i
@@ -71,7 +69,7 @@ getBoundariesPVariogramaEmpirico <- function(fml, observaciones, minDivDist=5,
   #}
 
   # try different amounts of intervals
-  # para funcs de minimización
+  # para funcs de minimizaciÃ³n
   valorOptimo <- .Machine$double.xmax
   i<-maxDivDist
   i<- i-1
@@ -173,9 +171,9 @@ fitLinearSplitVariogram <- function(x, y) {
   r2 <- function(Cx) { sum((y - f(Cx))^2) }
   
   rango <- range(x)
-  # Como mínimo Cx vale la distancia a la que hay al menos 30 elementos o la mínima distancia mas 25% del recorrido
+  # Como mÃ­nimo Cx vale la distancia a la que hay al menos 30 elementos o la mÃ­nima distancia mas 25% del recorrido
   minimo <- max(rango[1] + (rango[2] - rango[1]) * 0.25, sort(x)[30], na.rm=T)
-  # Como máximo puede valer el máximo de x menos 10% del recorrido
+  # Como mÃ¡ximo puede valer el mÃ¡ximo de x menos 10% del recorrido
   maximo <- rango[2] - (rango[2] - rango[1]) * 0.1
 
   # sapply(seq(minimo, maximo, length.out = 100), r2)

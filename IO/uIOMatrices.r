@@ -32,7 +32,7 @@ getDefaultSizeOf <- function(what='double') {
   } else if (what == 'logical' | what == 'raw') {
     return(1L)
   } else 
-    stop(paste('uIOMatrices.getDefaultSizeOf: parámetro what desconocido ', what, sep = ''))
+    stop(paste('uIOMatrices.getDefaultSizeOf: parÃ¡metro what desconocido ', what, sep = ''))
 }
 
 salvarVectorABinarioSinDimensiones <- function(pathArchivo, vector, NAValue=-.Machine$double.xmax, recordSize=getDefaultSizeOf(typeof(vector))) {

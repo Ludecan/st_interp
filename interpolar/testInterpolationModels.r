@@ -34,7 +34,7 @@ while ((is.null(script.dir.testInterpolationModels) || is.na(regexpr('testInterp
 if (is.null(script.dir.testInterpolationModels)) { script.dir.testInterpolationModels <- ''
 } else { script.dir.testInterpolationModels <- paste0(dirname(script.dir.testInterpolationModels), '/') }
 
-source(paste0(script.dir.testInterpolationModels, '../verificacionPronosticos/verificacionPronosticos.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.testInterpolationModels, '../verificacionPronosticos/verificacionPronosticos.r'))
 
 getTSeqs <- function(fechasObservaciones) {
   anios <- sort(unique(year(fechasObservaciones)), decreasing = T)
@@ -57,8 +57,8 @@ testRegressors <- function(
   
   res <- matrix(nrow=ncol(pathsRegresores), ncol = 8)
   colnames(res) <- c(
-    'Pearson', 'Spearman', 'Adj. R^2', 'RMSE', 'CantDatos', 'CoberturaMínima', 'CoberturaMedia', 
-    'CoberturaMáxima')
+    'Pearson', 'Spearman', 'Adj. R^2', 'RMSE', 'CantDatos', 'CoberturaMÃ­nima', 'CoberturaMedia', 
+    'CoberturaMÃ¡xima')
   rownames(res) <- colnames(pathsRegresores)
   rainfallDetectionStats <- matrix(
     nrow=ncol(pathsRegresores), ncol=3 * length(rainfallDetectionThresholds))
@@ -162,9 +162,9 @@ st_interpCrossValidation <- function(
     #params$nCoresAUsar <- 1
     #estimarNAs=FALSE
     
-    # La función universalGriddingCV retorna una matriz de las mismas dimensiones que 
+    # La funciÃ³n universalGriddingCV retorna una matriz de las mismas dimensiones que 
     # valoresObservaciones, con cv[i, j] el valor de la LOOCV de la estacion j en la fecha i. 
-    # Es decir el valor de cv[i, j] es la estimación LOOCV de valoresObservaciones[i, j]
+    # Es decir el valor de cv[i, j] es la estimaciÃ³n LOOCV de valoresObservaciones[i, j]
     cv <- universalGriddingCV(
       coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
       valoresObservaciones = valoresObservaciones, params = params, pathsRegresores = pathsRegresores,
@@ -201,7 +201,7 @@ st_interpCrossValidations <- function(
 calcValidationStatisticsMultipleModels <- function(
     valoresObservaciones, cvs, climatologias=NULL, pathResultados='Resultados/4-Validacion/') {
   i <- 1
-  # Estadísticos de Validación
+  # EstadÃ­sticos de ValidaciÃ³n
   validationStatsOverall <- data.frame()
   validationStatsEspaciales <- list()
   validationStatsTemporales <- list()

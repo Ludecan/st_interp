@@ -32,8 +32,8 @@ while ((is.null(script.dir.leerEscalas) || is.na(regexpr('leerEscalas.r', script
 if (is.null(script.dir.leerEscalas)) { script.dir.leerEscalas <- ''
 } else { script.dir.leerEscalas <- paste(dirname(script.dir.leerEscalas), '/', sep='') }
 
-source(paste0(script.dir.leerEscalas, 'mapearEx.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.leerEscalas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.leerEscalas, 'mapearEx.r'))
+source(paste0(script.dir.leerEscalas, '../instalarPaquetes/instant_pkgs.r'))
 
 instant_pkgs(c('jsonlite'))
 
@@ -205,14 +205,14 @@ darEscala <- function(especificacion, valores, ajustarExtremos=T) {
         colores <- colorRamp(c(colorInf, colorNeutro), space=espacioColores)(seq(from=0, to = 1, length.out = nIntervalosSiTodosAUnLadoDelNeutro))
       } else {
         escala <- seq(from=min, to = max, length.out = nIntervalos + 1)
-        # TO-DO: Esto no está bien, los colores no deberían repartirse según 0, 0.5, 1, sino según cotaInf, valorNeutro, cotaSup
+        # TO-DO: Esto no estÃ¡ bien, los colores no deberÃ­an repartirse segÃºn 0, 0.5, 1, sino segÃºn cotaInf, valorNeutro, cotaSup
         colores <- colorRamp(c(colorInf, colorNeutro, colorSup), space=espacioColores)(seq(from=0, to = 1, length.out = nIntervalos))
       }
     }
 
     escala <- crearEscala(escala = redondearEscala(escala, nDigitos = especificacion$nDigitos), colores = colores, continuo=especificacion$continuo)
   } else {
-    stop(paste('leerEscalas.darEscala: clase de especificación de escala no implementada ', especificacion$Clase, sep=''))
+    stop(paste('leerEscalas.darEscala: clase de especificaciÃ³n de escala no implementada ', especificacion$Clase, sep=''))
   }
   if (ajustarExtremos) {
     escala <- ajustarExtremosEscala(escala, datos=valores, nDigitos = especificacion$nDigitos, redondear = F)

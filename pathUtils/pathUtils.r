@@ -8,9 +8,9 @@ while ((is.null(script.dir.PathUtils) || is.na(regexpr('pathUtils.r', script.dir
 if (is.null(script.dir.PathUtils)) { script.dir.PathUtils <- ''
 } else { script.dir.PathUtils <- paste0(dirname(script.dir.PathUtils), '/') }
 
-# source(paste0(script.dir.PathUtils, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+# source(paste0(script.dir.PathUtils, '../instalarPaquetes/instant_pkgs.r'))
 # instant_pkgs("tools")
-# funciones útiles que ya vienen en R
+# funciones Ãºtiles que ya vienen en R
 # basename, dirname, dir.create
 
 nombreArchSinExtension <- function(filename) {
@@ -20,8 +20,8 @@ nombreArchSinExtension <- function(filename) {
   #filename <- '//192.168.0.11/wrfout_d02_2014-02-15_00%3A00%3A00' => '//192.168.0.11/wrfout_d02_2014-02-15_00%3A00%3A00'
   iUltimaBarra <- max(gregexpr(pattern = '/', filename)[[1]])
   iUltimoPunto <- max(gregexpr(pattern = '\\.', filename)[[1]])
-  # lo que hay después del último punto es una extensión solo si el último punto
-  # está después de la última barra
+  # lo que hay despuÃ©s del Ãºltimo punto es una extensiÃ³n solo si el Ãºltimo punto
+  # estÃ¡ despuÃ©s de la Ãºltima barra
   if (iUltimoPunto >= 1 & iUltimaBarra < iUltimoPunto) { 
     return(substr(filename, start=1, stop=iUltimoPunto-1))
   } else { return(filename) }
@@ -31,13 +31,13 @@ nombreArchSinPathNiExtension <- function(filename) {
   return (nombreArchSinExtension(basename(filename)))
 }
 
-# devuelve la extensión sin el punto
+# devuelve la extensiÃ³n sin el punto
 getFileExt <- function(filename) {
   iUltimaBarra <- sapply(gregexpr(pattern = '/', filename), FUN = max)
   iUltimoPunto <- sapply(gregexpr(pattern = '\\.', filename), FUN = max)
   
-  # lo que hay después del último punto es una extensión solo si el último punto
-  # está después de la última barra
+  # lo que hay despuÃ©s del Ãºltimo punto es una extensiÃ³n solo si el Ãºltimo punto
+  # estÃ¡ despuÃ©s de la Ãºltima barra
   res <- character(length(filename))
   for (i in 1:length(filename)) {
     if (!is.na(iUltimoPunto[i]) & iUltimoPunto[i] >= 1 & iUltimaBarra[i] < iUltimoPunto[i]) {

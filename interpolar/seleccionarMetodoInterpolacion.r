@@ -23,7 +23,7 @@
 ############################################################################
 
 seleccionarMetodoInterpolacion <- function(valoresObservados) {
-  # adaptado de la descripción de interpolate de la documentación de intamap
+  # adaptado de la descripciÃ³n de interpolate de la documentaciÃ³n de intamap
   dataObs <- valoresObservados
   minObs <- min(dataObs)
   if (minObs <= 0)

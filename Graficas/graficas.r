@@ -73,7 +73,7 @@ colores269 <- c('#000000','#FFFF00','#1CE6FF','#FF34FF','#FF4A46',
                 '#D83D66','#2F5D9B','#6C5E46','#D25B88','#5B656C','#00B57F','#545C46','#866097','#365D25','#252F99',
                 '#00CCFF','#674E60','#FC009C','#92896B')
 
-source(paste0(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.graficas, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(c("colorspace", "ggplot2", "ragg", 'reshape'))
 
 crearXYLims <- function(xMin, xMax, yMin, yMax, expand=0) {
@@ -103,7 +103,7 @@ getColoresParaSeries <- function(y, seriesAdicionalesReservadas=0) {
 }
 
 getTiposDeLineaParaNSeries <- function(n, tiposDistintos=FALSE, seriesAdicionalesReservadas=0) {
-  # Imagen con los tipos de línea disponibles en:
+  # Imagen con los tipos de lÃ­nea disponibles en:
   # http://www.sthda.com/english/wiki/ggplot2-line-types-how-to-change-line-types-of-a-graph-in-r-software
   if (tiposDistintos) { res <- c('solid', 'longdash', 'dotdash', 'dotted', 'twodash', 'dashed')[1:n]
   } else { res <- rep('solid', n) }
@@ -359,13 +359,13 @@ graficoCorrVsDistancia <- function(
     xMin=0, xMax=agrandarToNDigitos(max(dist[upperTri]), 1)
   )
   
-  # TODO: agregar labels de los puntos. Idea interesante acá:
+  # TODO: agregar labels de los puntos. Idea interesante acÃ¡:
   # https://stackoverflow.com/questions/52009545/r-ggplot-for-hover-text
   return(scatterPlot(
     x=dist[upperTri], y=corr[upperTri], lineaRegresion=T, intervalosConfianza=F, 
                      formulaRegresion=formulaModeloAjustada, xyLims=xyLimsScatterPlot,
     coloresPuntos=coloresPuntos[upperTri], colorMap=colorMap, 
-    tituloEjeX='Distancia[km]', tituloEjeY='Correlación',
+    tituloEjeX='Distancia[km]', tituloEjeY='CorrelaciÃ³n',
     dibujar=F, nomArchSalida=nomArchSalida, tamaniosPuntos=tamaniosPuntos,
     figurasPuntos=figurasPuntos, widthPx=widthPx, heightPx=heightPx, DPI=DPI
   ))

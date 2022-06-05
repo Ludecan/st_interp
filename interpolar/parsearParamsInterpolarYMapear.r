@@ -33,7 +33,7 @@ while ((is.null(script.dir.parsearParamsInterpolarYMapear) || is.na(regexpr('par
 }
 if (is.null(script.dir.parsearParamsInterpolarYMapear)) { script.dir.parsearParamsInterpolarYMapear <- ''
 } else { script.dir.parsearParamsInterpolarYMapear <- paste0(dirname(script.dir.parsearParamsInterpolarYMapear), '/') }
-source(paste0(script.dir.parsearParamsInterpolarYMapear, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.parsearParamsInterpolarYMapear, '../parsearParams/parsearParamsUtils.r'))
 
 #' Helper function for creating a parameter object that specifies an interpolation job.
 #' These get passed to the interpolarYMapear function, found in the
@@ -55,9 +55,9 @@ source(paste0(script.dir.parsearParamsInterpolarYMapear, '../parsearParams/parse
 #' The actual functions F and Z*, as wel as several other parameters, are specified in this object.
 #' "metodoIgualacionDistribuciones" para F e "interpolationMethod" para Z*
 #' Los valores de metodoIgualacionDistribuciones que venimos manejando en la tesis son:
-#' 1- 'ninguna'  sin ajuste de distribuciones, F(s, t) = U1(s, t), los dem醩 regresores se ignoran
-#' 2- 'regresionLineal' regresi髇 con MCO  F(s, t) = a0 + a1 * U1(s, t) + a2 * U2(s, t) + ... + an * Un(s, t) 
-#' 3- 'regresionLinealRobusta' regresi髇 robusta, igual que arriba pero con RLM
+#' 1- 'ninguna'  sin ajuste de distribuciones, F(s, t) = U1(s, t), los dem谩s regresores se ignoran
+#' 2- 'regresionLineal' regresi贸n con MCO  F(s, t) = a0 + a1 * U1(s, t) + a2 * U2(s, t) + ... + an * Un(s, t) 
+#' 3- 'regresionLinealRobusta' regresi贸n robusta, igual que arriba pero con RLM
 #' @param baseNomArchResultados. default=''. Used by the createDefaultListaMapas function as prefix
 #' of the resulting interpolation files. Dates will be appended to this for each time period to be 
 #' interpolated.
@@ -67,7 +67,7 @@ source(paste0(script.dir.parsearParamsInterpolarYMapear, '../parsearParams/parse
 #' @param proj4StringObservaciones='+proj=longlat +datum=WGS84',
 #' @param proj4StringAInterpolar='+proj=utm +zone=21 +south +ellps=WGS84 +datum=WGS84 +towgs84=0,0,0 +units=m +no_defs',
 #' @param coordsAInterpolarSonGrilla=TRUE, 
-#' @param interpolationMethod='automap', # 'none'(sin interpolaci髇), 'idw' (inverse distance weighting), 'automap' (kriging), 'copula' o 'stUniversalKriging' (Kriging Espacio - Temporal)
+#' @param interpolationMethod='automap', # 'none'(sin interpolaci贸n), 'idw' (inverse distance weighting), 'automap' (kriging), 'copula' o 'stUniversalKriging' (Kriging Espacio - Temporal)
 #' @param mLimitarValoresInterpolados='UsarPromDesvEst', #'NoLimitar', 'LimitarMinimo', 'LimitarMaximo', 'LimitarMinimoyMaximo', 'UsarPromDesvEst' o 'UsarPromDesvEstYMinimoYMaximo'
 #' @param minimoLVI=NA, 
 #' @param maximoLVI=NA,
@@ -130,7 +130,7 @@ createParamsInterpolarYMapear <- function(
     proj4StringObservaciones='+proj=longlat +datum=WGS84',
     proj4StringAInterpolar='+proj=utm +zone=21 +south +ellps=WGS84 +datum=WGS84 +towgs84=0,0,0 +units=m +no_defs',
     coordsAInterpolarSonGrilla=TRUE, 
-    interpolationMethod='automap', # 'none'(sin interpolaci髇), 'idw' (inverse distance weighting), 'automap' (kriging), 'copula' o 'stUniversalKriging' (Kriging Espacio - Temporal)
+    interpolationMethod='automap', # 'none'(sin interpolaci贸n), 'idw' (inverse distance weighting), 'automap' (kriging), 'copula' o 'stUniversalKriging' (Kriging Espacio - Temporal)
     mLimitarValoresInterpolados='UsarPromDesvEst', #'NoLimitar', 'LimitarMinimo', 'LimitarMaximo', 'LimitarMinimoyMaximo', 'UsarPromDesvEst' o 'UsarPromDesvEstYMinimoYMaximo'
     minimoLVI=NA, maximoLVI=NA,
     factorDesvEstLVI=3.5,

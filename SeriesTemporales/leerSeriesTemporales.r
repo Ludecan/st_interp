@@ -32,7 +32,7 @@ while ((is.null(script.dir.lecturaDatos) || is.na(regexpr('lecturaDatos.r', scri
 if (is.null(script.dir.lecturaDatos)) { script.dir.lecturaDatos <- ''
 } else { script.dir.lecturaDatos <- paste0(dirname(script.dir.lecturaDatos), '/') }
 
-source(paste0(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.lecturaDatos, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(pkgs = c('Rcpp', 'stringi', 'stringr', 'lubridate', 'jsonlite', 'openxlsx'))
 
 
@@ -70,7 +70,7 @@ limpiarDatos <- function(dfDatos, dfEstaciones, colIdEstaciones=-1L, header=T, o
 
 leerEstaciones <- function(pathArchivoEstaciones, columnaId=1, fileEncoding = '', sep=',') {
   estaciones <- read.table(pathArchivoEstaciones, header=T, sep=sep, dec='.', stringsAsFactors=F, fileEncoding = fileEncoding)
-  # Saco los espacios a los nombres de estaciones y agrego una X a las que empiezan con n鷐eros porque dificultan el trabajo con los dataframes
+  # Saco los espacios a los nombres de estaciones y agrego una X a las que empiezan con n煤meros porque dificultan el trabajo con los dataframes
   if (columnaId > 0) {
     estaciones[,columnaId] <- limpiarIdsEstaciones(estaciones[,columnaId])
     rownames(estaciones) <- estaciones[,columnaId]
@@ -185,19 +185,19 @@ leerDatosVarsEstacionesFechasDeJSON <- function(
   pathArchivoDatos, formatoFechas='YmdHMSz!*', truncated=6, colIdEstacion='NombreEstacion'
 ) {
   # retorna una lista con 4 componentes:
-  # - estaciones es un data.frame con la informaci髇 de las nE estaciones. Lat, Long, autom醫ica, pluviom閠rica, etc.
+  # - estaciones es un data.frame con la informaci贸n de las nE estaciones. Lat, Long, autom谩tica, pluviom茅trica, etc.
   # str(datos$estaciones)
   # - fechas es un vector de POSIXct con las nT fechas de los datos
   # str(datos$fechas)
-  # - variables es un data.frame con la informaci髇 de las nV variables. Periodicidad, unidad, tipo de medida, etc.
+  # - variables es un data.frame con la informaci贸n de las nV variables. Periodicidad, unidad, tipo de medida, etc.
   # str(datos$variables)
   # - datos es una lista de matrices de largo nV, con los datos de cada variable en variables
-  # - Si todas las variables tienen la misma periodicidad, cada matriz es de tama駉 nT x nE. 
+  # - Si todas las variables tienen la misma periodicidad, cada matriz es de tama帽o nT x nE. 
   # - Las filas de las matrices corresponden a distintas fechas y las columnas a distintas estaciones.
-  # - datos[[iV]][iT, iE] contiene la observaci髇 de la variable iV en variables, la fecha iT en fechas y la 
-  # - estaci髇 iE en estaciones
-  # - Si hay diferentes periodicidades, las variables con frecuencias de medici髇 menores tendr醤 su nT m醩 
-  # - peque駉. Usando rownames(datos[[iV]]) se obtienen las fechas correspondientes
+  # - datos[[iV]][iT, iE] contiene la observaci贸n de la variable iV en variables, la fecha iT en fechas y la 
+  # - estaci贸n iE en estaciones
+  # - Si hay diferentes periodicidades, las variables con frecuencias de medici贸n menores tendr谩n su nT m谩s 
+  # - peque帽o. Usando rownames(datos[[iV]]) se obtienen las fechas correspondientes
   # str(datos$observaciones$datos)
   
   
@@ -244,7 +244,7 @@ extraerVariableEstacionesDeFechas <- function(datosVarsEstacionesFechas, idStrVa
   iFechas <- datosVarsEstacionesFechas$observaciones$iFechas[[iVariable]] + 1
   fechas <- datosVarsEstacionesFechas$fechas[iFechas]
   
-  # TODO: terminar la implementaci髇 de esto
+  # TODO: terminar la implementaci贸n de esto
   if (variable$periodicidad == 9) {
     fechas <- trunc(fechas, units = "days")
   } else if (variable$periodicidad > 9) {
@@ -265,12 +265,26 @@ extraerVariableEstacionesDeFechas <- function(datosVarsEstacionesFechas, idStrVa
   return(datos)
 }
 
-concatenarDatos <- function(datos1, datos2) {
+concatenarDatosDeDistintasEstaciones <- function(datos1, datos2) {
   if (!is.null(datos1)) {
     if (!is.null(datos2)) {
+      stations <- c(colnames(datos1$datos), colnames(datos2$datos))
+      dates <- sort(base::union(rownames(datos1$datos), rownames(datos2$datos)))
+      
       datosRes <- datos1
       datosRes$estaciones <- rbind(datosRes$estaciones, datos2$estaciones)
-      datosRes$datos <- cbind(datosRes$datos, datos2$datos)
+      datosRes$datos <- matrix(
+        nrow=length(dates), 
+        ncol=ncol(datos1$datos) + ncol(datos2$datos),
+        dimnames=list(dates, stations)
+      )
+      
+      datesMatch <- match(x=rownames(datos1$datos), table=dates)
+      datosRes$datos[datesMatch, 1:ncol(datos1$datos)] <- datos1$datos
+      
+      datesMatch <- match(x=rownames(datos2$datos), table=dates)
+      datosRes$datos[datesMatch, (ncol(datos1$datos)+1):ncol(datosRes$datos)] <- datos2$datos
+      
       return(datosRes)
     } else {
       return(datos1)

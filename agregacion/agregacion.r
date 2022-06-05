@@ -32,12 +32,12 @@ while ((is.null(script.dir.agregacion) || is.na(regexpr('agregacion.r', script.d
 if (is.null(script.dir.agregacion)) { script.dir.agregacion <- ''
 } else { script.dir.agregacion <- paste0(dirname(script.dir.agregacion), '/') }
 
-source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.agregacion, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(c('stats', 'sp', 'Rcpp', 'raster', 'rgdal'))
 
-source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.agregacion, '../sysutils/sysutils.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.agregacion, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'))
+source(paste0(script.dir.agregacion, '../sysutils/sysutils.r'))
+source(paste0(script.dir.agregacion, '../pathUtils/pathUtils.r'))
 
 naSiTodosNAFuncSiNo <- function(x, func, ...) {
   x <- x[!is.na(x)]
@@ -128,7 +128,7 @@ agregar <- function(x, funcionAgregacion, claseIndiceI=rep(1, nrow(x)), ordenarP
   #         5, 6), claseIndiceI=(1, 1, 2) y funcionAgregacion=max 
   # retorna una matriz de 2x2 = (3, 4, 
   #                              5, 6)
-  # el valor por defecto de claseIndiceI reduce la primer dimension a un ˙nico valor
+  # el valor por defecto de claseIndiceI reduce la primer dimension a un √∫nico valor
 
   #funcionAgregacion <- max
   #claseIndiceI <- c(2,2, 1, 1, 1)
@@ -221,7 +221,7 @@ agregacionEspacialAPoligonosDesdeArchivos <- function(
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
     clusterExport(cl, varlist = c('script.dir.agregacion'))
     clusterEvalQ(cl = cl, expr = {
-      source(paste0(script.dir.agregacion, 'agregacion.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.agregacion, 'agregacion.r'))
       if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
     })
     
@@ -384,9 +384,9 @@ agregacionTemporalGrillada <- function(
 ) {
   # Para calcular agregaciones temporales de una serie temporal de un mismo regresor
   # pathsRegresor es una vector de rasters
-  # Para cada fecha fi, se toman los pÌxeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) y se
+  # Para cada fecha fi, se toman los p√≠xeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) y se
   # calcula funcionAgregacion con ellos
-  # Si no hay al menos minNfechasParaAgregar pÌxeles disponibles el pÌxel se devuelve nulo
+  # Si no hay al menos minNfechasParaAgregar p√≠xeles disponibles el p√≠xel se devuelve nulo
   if (nCoresAUsar <= 0) {
     nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), (tFin - tIni + 1) / nFechasAAgregar)
   }
@@ -435,8 +435,8 @@ agregacionTemporalGrillada <- function(
     clusterExport(cl, varlist = c('script.dir.agregacion'))
     clusterEvalQ(cl = cl, expr = {
       require('rgdal')
-      source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'), encoding = 'WINDOWS-1252')
-      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.agregacion, '../GrADS/ReadGrADS.r'))
+      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r'))
       if (exists(x = 'setMKLthreads')) { setMKLthreads(1) }
     })
 
@@ -507,7 +507,7 @@ agregacionTemporalGrillada2_ti <- function(ti=1, fechas, pathsRegresores, nFecha
     } else { res@data[, 1] <- apply(X = valsPixeles, MARGIN = 1, FUN = funcionAgregacion, na.rm=T) }
     res@data[nNoNulos < minNfechasParaAgregar, 1] <- NA
     
-    source(paste0(script.dir.agregacion, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
+    source(paste0(script.dir.agregacion, '../pathUtils/pathUtils.r'))
     
     nomArch <- format(x = fechas[ti], formatoNomArchivoSalida)
     writeGDAL(dataset = res, fname = nomArch, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
@@ -521,9 +521,9 @@ agregacionTemporalGrillada2 <- function(fechas, pathsRegresores, formatoNomArchi
                                         tIni=1, tFin=nrow(pathsRegresores), funcionAgregacion=base::mean) {
   # Para calcular agregaciones temporales combinando varios rasters de origen
   # pathsRegresores es una matriz de rasters
-  # Para cada fecha fi, se toman los pÌxeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) de 
+  # Para cada fecha fi, se toman los p√≠xeles de las fechas entre fi-trunc(nFechasAAgregar/2) y fi+trunc(nFechasAAgregar/2) de 
   # todos los regresores y se calcula funcionAgregacion con ellos
-  # Si no hay al menos minNfechasParaAgregar pÌxeles disponibles el pÌxel se devuelve nulo
+  # Si no hay al menos minNfechasParaAgregar p√≠xeles disponibles el p√≠xel se devuelve nulo
   nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), tFin - tIni + 1)
   dir.create(dirname(formatoNomArchivoSalida), showWarnings = F, recursive = T) 
   
@@ -569,7 +569,7 @@ agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, 
     pathsClaseI <- pathsClaseI[!is.na(pathsClaseI)]
     
     regresores <- raster::stack(pathsClaseI)
-    # Esto es para hacer los c·lculos en bloques y no exceder la RAM pero no est· funcionando. Revisar despuÈs.
+    # Esto es para hacer los c√°lculos en bloques y no exceder la RAM pero no est√° funcionando. Revisar despu√©s.
     #funcionAgregacion<-mean
     #blockFunction <- function(x, minNfechasParaAgregar, funcionAgregacion) {
     #  res <- funcionAgregacion(x, na.rm = T)
@@ -586,13 +586,13 @@ agregacionTemporalGrillada3_claseI <- function(iClase=1, fechas, pathsRegresor, 
     if (minNfechasParaAgregar > 0) { res[sum(!is.na(regresores)) < minNfechasParaAgregar] <- NA }
     # plot(res)
     
-    # Si hay pathShpMask se interpolan todos los pÌxeles y solo se conservan los pÌxeles dentro de el shapefile en el
-    # Si no, si hay spSinMascara se interpolan todos los pÌxeles que estÈn dentro de spSinMascara pero se conservan los que estÈn afuera tambiÈn
-    # Sino se interpola toda el ·rea
+    # Si hay pathShpMask se interpolan todos los p√≠xeles y solo se conservan los p√≠xeles dentro de el shapefile en el
+    # Si no, si hay spSinMascara se interpolan todos los p√≠xeles que est√©n dentro de spSinMascara pero se conservan los que est√©n afuera tambi√©n
+    # Sino se interpola toda el √°rea
     iNA <- is.na(getValues(res))
     if (!is.null(pathShpMask) && file.exists(pathShpMask)) {
       grilla <- as(res, 'SpatialGrid')
-      source(paste0(script.dir.agregacion, 'interpolarEx.r'), encoding = 'WINDOWS-1252')
+      source(paste0(script.dir.agregacion, 'interpolarEx.r'))
       shpMask <- cargarSHPYObtenerMascaraParaGrilla(pathSHP = pathShpMask, proj4strSHP = proj4stringShpMask, grilla = grilla, spSinMascara = spSinMascara)
       mascara <- shpMask$mask
     } else if (!is.null(spSinMascara)) {
@@ -637,12 +637,12 @@ agregacionTemporalGrillada3 <- function(
     nomArchivosSalidaClaseI=paste0(clases, '.tif'), minNfechasParaAgregar=0, 
     funcionAgregacion=base::mean, interpolarFaltantes='No', overlap=0, pathShpMask=NULL, 
     proj4stringShpMask=NULL, spSinMascara=NULL, recalcularSiYaExiste=T, nCoresAUsar=0, ...) {
-  # Para calcular climatologÌas.
+  # Para calcular climatolog√≠as.
   # Obtiene el conjunto de fechas F que tengan la misma claseFechaI que la fecha fi a calcular
-  # Calcula los pÌxeles de fi y aplicando funcionAgregacion a los mismos pÌxelespero para las fechas en F
-  # Si no hay al menos minNfechasParaAgregar pÌxeles en F con datos no nulos el pÌxel ser· nulo
-  # Si se indica overlap > 0 se toman las clases aledaÒas a las de fi
-  # Se puede pasar en interpolarFaltantes el nombre de alguno de los mÈtodos de interpolaciÛn para rellenar los pÌxeles faltantes a la salida
+  # Calcula los p√≠xeles de fi y aplicando funcionAgregacion a los mismos p√≠xelespero para las fechas en F
+  # Si no hay al menos minNfechasParaAgregar p√≠xeles en F con datos no nulos el p√≠xel ser√° nulo
+  # Si se indica overlap > 0 se toman las clases aleda√±as a las de fi
+  # Se puede pasar en interpolarFaltantes el nombre de alguno de los m√©todos de interpolaci√≥n para rellenar los p√≠xeles faltantes a la salida
   
   #pathsRegresor <- dir('D:/Tesis/Datos/LST_Night_Combinada_Filtrada', pattern = '*.tif$', full.names = T)
   
@@ -673,7 +673,7 @@ agregacionTemporalGrillada3 <- function(
       require('raster')
       require('sp')
       require('rgdal')
-      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r', encoding = 'WINDOWS-1252'))
+      source(paste0(script.dir.agregacion, '../interpolar/interpolarEx.r'))
     })
     parSapplyLB(
       cl=cl, X=1:length(clases), FUN=agregacionTemporalGrillada3_claseI, fechas=fechas, 

@@ -35,11 +35,11 @@ if (is.null(script.dir.GetMODISEx)) { script.dir.GetMODISEx <- ''
 } else { script.dir.GetMODISEx <- paste0(dirname(script.dir.GetMODISEx), '/') }
 
 # check for uninstalled dependencies, install them and load them
-source(paste0(script.dir.GetMODISEx, '../parsearParams/parsearParamsUtils.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.GetMODISEx, '../instalarPaquetes/instant_pkgs.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.GetMODISEx, '../pathUtils/pathUtils.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.GetMODISEx, '../cacheFunciones/cacheFunciones.r'), encoding = 'WINDOWS-1252')
-source(paste0(script.dir.GetMODISEx, '../tryUtils/tryUtils.r'), encoding = 'WINDOWS-1252')
+source(paste0(script.dir.GetMODISEx, '../parsearParams/parsearParamsUtils.r'))
+source(paste0(script.dir.GetMODISEx, '../instalarPaquetes/instant_pkgs.r'))
+source(paste0(script.dir.GetMODISEx, '../pathUtils/pathUtils.r'))
+source(paste0(script.dir.GetMODISEx, '../cacheFunciones/cacheFunciones.r'))
+source(paste0(script.dir.GetMODISEx, '../tryUtils/tryUtils.r'))
 instant_pkgs(c('digest', 'sp', 'rgdal', 'Rcpp', 'raster', 'RCurl', 'lubridate', 'doParallel', 'rts'))
 
 
@@ -49,7 +49,7 @@ instant_pkgs(c('digest', 'sp', 'rgdal', 'Rcpp', 'raster', 'RCurl', 'lubridate', 
 #shpGrillaMODISSinusoidalV5
 
 createParamsGetMODIS <- function(pathEjecucion, pathProceso='./', producto='MOD09Q1',
-                                 # coordenadas límite en la proyección de salida del area a recortar
+                                 # coordenadas lÃ­mite en la proyecciÃ³n de salida del area a recortar
                                  xMin, xMax, yMin, yMax,
                                  # baja todos los datos entre estas dos fechas en la periodicidad del producto. El separador debe ser '.'
                                  fechaIniUTC='2011.05.01', fechaFinUTC='2011.05.01',
@@ -57,14 +57,14 @@ createParamsGetMODIS <- function(pathEjecucion, pathProceso='./', producto='MOD0
                                  # las bandas a obtener del dataset, se deben indicar con 0 las bandas a excluir y con 1 las bandas a incluir. 
                                  # Si se especifican menos bandas que las que hay en el dataset las restantes se asumen 0
                                  bandas='0 0 1',
-                                 # ruta a la carpeta bin dentro del directorio de instalación de MRT
+                                 # ruta a la carpeta bin dentro del directorio de instalaciÃ³n de MRT
                                  MRTBinPath='C:/MRT/bin',
-                                 # string en formato proj4 de la proyección de salida de los datos
+                                 # string en formato proj4 de la proyecciÃ³n de salida de los datos
                                  proj4stringResultados,
                                  escala=1, offset=0, minRangoValido=NA, maxRangoValido=NA,
                                  pathArchivosResultado='./') {
-  # funcion auxiliar para saber todos los parámetros que se tienen que pasar en params y valores
-  # por defecto de algunos parámetros
+  # funcion auxiliar para saber todos los parÃ¡metros que se tienen que pasar en params y valores
+  # por defecto de algunos parÃ¡metros
   return(list(pathEjecucion=pathEjecucion,
               pathProceso=pathProceso,
               producto=producto,
@@ -83,8 +83,8 @@ parsearParamsGetMODIS <- function(params) {
 
 xy2MODISTile <- function(x, y, CellSize=926.62543305, TileSize=1200 * 926.62543305, 
                          ULx=-20015109.354, ULy=10007554.677) {
-  # (x, y) debe estar en la proyección sinusoidal de la grilla de modis
-  # Los valores por defecto de los parámetros son para la grilla sinusoidal v5 de MODIS
+  # (x, y) debe estar en la proyecciÃ³n sinusoidal de la grilla de modis
+  # Los valores por defecto de los parÃ¡metros son para la grilla sinusoidal v5 de MODIS
   v <- trunc(-(y - ULy) / TileSize);
   h <- trunc((x - ULx) / TileSize);
   return (list(h=h, v=v))
@@ -151,18 +151,18 @@ addDate_temporalResolution <- function(date, temporalResolution) {
 
 getMODISEx <- function(
     producto='MOD09Q1',
-    # coordenadas límite en la proyección de salida del area a recortar
+    # coordenadas lÃ­mite en la proyecciÃ³n de salida del area a recortar
     xMin, xMax, yMin, yMax,
     # baja todos los datos entre estas dos fechas en la periodicidad del producto. El separador debe ser '.'
     fechaIniUTC='2014.09.06', fechaFinUTC='2014.09.06',
     # las bandas a obtener del dataset, se deben indicar con 0 las bandas a excluir y con 1 las bandas a incluir. 
     # Si se especifican menos bandas que las que hay en el dataset las restantes se asumen 0
     bandas='0 0 1',
-    # versión del producto MODIS a descargar
+    # versiÃ³n del producto MODIS a descargar
     version='005',                       
-    # ruta a la carpeta bin dentro del directorio de instalación de MRT
+    # ruta a la carpeta bin dentro del directorio de instalaciÃ³n de MRT
     MRTBinPath='C:/MRT/bin',
-    # string en formato proj4 de la proyección de salida de los datos
+    # string en formato proj4 de la proyecciÃ³n de salida de los datos
     proj4stringResultados,
     SRS_stringResultados,
     pathArchivosResultado='./',
@@ -175,9 +175,9 @@ getMODISEx <- function(
     utm_zone <- getParamValue(tokensP4str, paramName='+zone', classOfValue='character', obligatorio=T)
     proj_params <- '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0' 
     if ('+south' %in% tokensP4str[,2]) {
-      # La opción +south no es soportada por MRT, pero lo que hace es sumar un false_northing de 10000000 
-      # a la coordenada sin la opción south, por lo tanto le restamos el false northing y obtenemos
-      # la correspondiente coordenada sin la opción
+      # La opciÃ³n +south no es soportada por MRT, pero lo que hace es sumar un false_northing de 10000000 
+      # a la coordenada sin la opciÃ³n south, por lo tanto le restamos el false northing y obtenemos
+      # la correspondiente coordenada sin la opciÃ³n
       southing <- -10000000 
       utmSur <- TRUE
     } else {
@@ -187,7 +187,7 @@ getMODISEx <- function(
   } else {
     utmSur <- FALSE
     southing <- 0
-    stop(paste('GetMODISEx.getMODISEx: proyección ', proyeccion, ' no implementada.', sep=''))
+    stop(paste('GetMODISEx.getMODISEx: proyecciÃ³n ', proyeccion, ' no implementada.', sep=''))
   }
   datum <- getParamValue(tokensP4str, paramName='+datum', classOfValue='character', obligatorio=F, paramDefaultValue='WGS84')
   doMosaic <- length(HsYVs$hs) > 1 || length(HsYVs$vs) > 1
@@ -235,7 +235,7 @@ getMODISEx <- function(
   iLineaDescBandas <- grep(lineasLog, pattern = 'band[[:blank:]]*select[[:blank:]]*type[[:blank:]]*lines[[:blank:]]*smpls[[:blank:]]*pixsiz[[:blank:]]*min[[:blank:]]*max[[:blank:]]*fill')[1]
   
   if (doMosaic) {
-    # El mosaic tool ya hace la extracción de las bandas así que si se hace mosaic solo quedan las bandas que interesan
+    # El mosaic tool ya hace la extracciÃ³n de las bandas asÃ­ que si se hace mosaic solo quedan las bandas que interesan
     lineasBandas <- strsplit(lineasLog[iLineaDescBandas + 1:nBandas], split = '[[:blank:]]+')
     unlink('Mosaic_*.hdf')
   } else {
@@ -256,7 +256,7 @@ getMODISEx <- function(
   file.rename(archivos, paste(pathArchivosResultado, archivos, sep=''))
   archivos <- paste(pathArchivosResultado, sort(archivos), sep='')
   
-  # No se usa porque hay algún bug en raster que a veces guarda corruptos los archivos comprimidos
+  # No se usa porque hay algÃºn bug en raster que a veces guarda corruptos los archivos comprimidos
   #postProcesarArchivoMODIS <- function(i, archivos, nombresBandas, minBandas, maxBandas, escala, offset, utmSur, proj4stringResultados) {
   #  require('raster')
   #  campo <- raster(archivos[[i]])
@@ -369,18 +369,18 @@ getFechasArchivos <- function(archivos) {
 
 getFechasYArchivosMODIS <- function(
     producto='MOD09Q1',
-    # coordenadas límite en la proyección de salida del area a recortar
+    # coordenadas lÃ­mite en la proyecciÃ³n de salida del area a recortar
     xMin, xMax, yMin, yMax,
     # baja todos los datos entre estas dos fechas en la periodicidad del producto. El separador debe ser '.'
     fechaIniUTC='2014.09.06', fechaFinUTC='2014.09.06',
     # las bandas a obtener del dataset, se deben indicar con 0 las bandas a excluir y con 1 las bandas a incluir. 
     # Si se especifican menos bandas que las que hay en el dataset las restantes se asumen 0
     bandas='0 0 1',
-    # versión del producto MODIS a descargar
+    # versiÃ³n del producto MODIS a descargar
     version='005',
-    # ruta a la carpeta bin dentro del directorio de instalación de MRT
+    # ruta a la carpeta bin dentro del directorio de instalaciÃ³n de MRT
     MRTBinPath='C:/MRT/bin',
-    # string en formato proj4 de la proyección de salida de los datos
+    # string en formato proj4 de la proyecciÃ³n de salida de los datos
     proj4stringResultados,
     SRS_stringResultados,
     pathArchivosResultado='./',
@@ -398,7 +398,7 @@ getFechasYArchivosMODIS <- function(
     temporalRes <- rts:::getNativeTemporalResolution(producto)
     fechaAux <- addDate_temporalResolution(as.Date(fechasArchivos$fechas[nrow(fechasArchivos)], format='%Y/%m/%d'), temporalRes)
     fechaAux <- format(fechaAux, format='%Y.%m.%d')
-    # Si la condicion se cumple quiere decir que pude bajar el período al que corresponde fechaFinUTC
+    # Si la condicion se cumple quiere decir que pude bajar el perÃ­odo al que corresponde fechaFinUTC
     # por lo tanto puedo cachear los resultados
     #if (fechaFinUTC < fechaAux & nrow(fechasArchivos) == length(modisList)) guardarCache(pathCache, fechasArchivos)
     if (fechaFinUTC < fechaAux) guardarCache(pathCache, fechasArchivos)
