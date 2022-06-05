@@ -265,12 +265,26 @@ extraerVariableEstacionesDeFechas <- function(datosVarsEstacionesFechas, idStrVa
   return(datos)
 }
 
-concatenarDatos <- function(datos1, datos2) {
+concatenarDatosDeDistintasEstaciones <- function(datos1, datos2) {
   if (!is.null(datos1)) {
     if (!is.null(datos2)) {
+      stations <- c(colnames(datos1$datos), colnames(datos2$datos))
+      dates <- sort(base::union(rownames(datos1$datos), rownames(datos2$datos)))
+      
       datosRes <- datos1
       datosRes$estaciones <- rbind(datosRes$estaciones, datos2$estaciones)
-      datosRes$datos <- cbind(datosRes$datos, datos2$datos)
+      datosRes$datos <- matrix(
+        nrow=length(dates), 
+        ncol=ncol(datos1$datos) + ncol(datos2$datos),
+        dimnames=list(dates, stations)
+      )
+      
+      datesMatch <- match(x=rownames(datos1$datos), table=dates)
+      datosRes$datos[datesMatch, 1:ncol(datos1$datos)] <- datos1$datos
+      
+      datesMatch <- match(x=rownames(datos2$datos), table=dates)
+      datosRes$datos[datesMatch, (ncol(datos1$datos)+1):ncol(datosRes$datos)] <- datos2$datos
+      
       return(datosRes)
     } else {
       return(datos1)
