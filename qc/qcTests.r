@@ -697,10 +697,10 @@ ejecutarReemplazosSRT <- function(test, valoresObservaciones) {
   i <- iNAs[1]
   for (i in iNAs) valoresObservaciones[test$fecha[i], test$estacion[i]] <- NA
   
-  iEstimados <- which(test$reemplazar == 2 && !is.na(test$estimado))
+  iEstimados <- which(test$reemplazar == 2 & !is.na(test$estimado))
   for (i in iEstimados) valoresObservaciones[test$fecha[i], test$estacion[i]] <- test$estimado[i]
   
-  iValorReemplazo <- which(test$reemplazar == 3 && !is.na(test$valorReemplazo))
+  iValorReemplazo <- which(test$reemplazar == 3 & !is.na(test$valorReemplazo))
   for (i in iValorReemplazo) valoresObservaciones[test$fecha[i], test$estacion[i]] <- test$valorReemplazo[i]
   
   return(valoresObservaciones)
