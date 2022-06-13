@@ -182,7 +182,7 @@ st_interpCrossValidations <- function(
     pathResultados='Resultados/3-GrilladoYCV/', recalcCV=FALSE, 
     modelosACorrer=1:length(listaParams)) {
   cvs <- vector(mode="list", length = length(modelosACorrer))
-  # i <- 5
+  # i <- 1
   for (i in seq_along(modelosACorrer)) {
     iModel <- modelosACorrer[i]
     params <- listaParams[[iModel]]
@@ -191,16 +191,18 @@ st_interpCrossValidations <- function(
     } else { pathsRegresores <- listaRegresores[[iModel]] }
     
     names(cvs)[i] <- nombreModelo(params = params, pathsRegresores=pathsRegresores)
-    try(cvs[[i]] <- st_interpCrossValidation(
-      coordsObservaciones, fechasObservaciones, valoresObservaciones, params = params, 
-      pathsRegresores = pathsRegresores, pathResultados=pathResultados, recalcCV=recalcCV))
+    try(
+      cvs[[i]] <- st_interpCrossValidation(
+        coordsObservaciones, fechasObservaciones, valoresObservaciones, params = params, 
+        pathsRegresores = pathsRegresores, pathResultados=pathResultados, recalcCV=recalcCV
+      )
+    )
   }
   return(cvs)
 }
 
 calcValidationStatisticsMultipleModels <- function(
     valoresObservaciones, cvs, climatologias=NULL, pathResultados='Resultados/4-Validacion/') {
-  i <- 1
   # Estadísticos de Validación
   validationStatsOverall <- data.frame()
   validationStatsEspaciales <- list()
@@ -209,14 +211,15 @@ calcValidationStatisticsMultipleModels <- function(
   length(validationStatsTemporales) <- length(cvs)
   names(validationStatsEspaciales) <- names(cvs)
   names(validationStatsTemporales) <- names(cvs)
-  
+
+  i <- 1
   for (i in seq_along(cvs)) {
     nomModelo <- names(cvs)[i]
     validationStatsOverall <- rbind(
       validationStatsOverall, 
       calcValidationStatisticsOverall(
-        nombreModelo = nomModelo, pronosticos = cvs[[i]], observaciones = valoresObservaciones, 
-        climatologias = climatologias
+        nombreModelo=nomModelo, pronosticos=cvs[[i]], observaciones=valoresObservaciones, 
+        climatologias=climatologias
       )
     )
     

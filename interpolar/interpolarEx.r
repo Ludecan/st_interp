@@ -1042,36 +1042,37 @@ interpolarEx <- function(
     # force predictions to be in given range
     if (!is.na(params$minVal)) interpolacion$predictions@data[,interpolacion$campoMedia][interpolacion$predictions@data[,interpolacion$campoMedia] < params$minVal] <- params$minVal
     if (!is.na(params$maxVal)) interpolacion$predictions@data[,interpolacion$campoMedia][interpolacion$predictions@data[,interpolacion$campoMedia] > params$maxVal] <- params$maxVal
-    
-    if (params$modoDiagnostico) {
-      escalaVariableObjetivo <- darEscala(
-        especificacion = params$especEscalaDiagnostico,
-        valores=c(observaciones$value, interpolacion$predictions@data[,interpolacion$campoMedia]))
-      
-      # En modo diagnóstico guardo el mapa con las observaciones y uno para cada regresor
-      mapearPuntosGGPlot(
-        # Mapa de observaciones
-        puntos = observaciones, shpBase = shpMask$shp, dibujarTexto = T, 
-        escala = escalaVariableObjetivo, 
-        titulo = paste0('Observaciones - ', params$strFecha), zcol = 'value', 
-        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '01-Observaciones.png'), 
-        dibujar = F)
-      
-      if (gridded(coordsAInterpolar)) {
-        mapearGrillaGGPlot(
-          grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-          escala = escalaVariableObjetivo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
-          nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '10-ProductoFinal.png'), 
-          dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
-      } else {
-        mapearPuntosGGPlot(
-          puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
-          escala = escalaVariableObjetivo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
-          nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '10-ProductoFinal.png'), 
-          dibujar = F, dibujarTexto = T)
-      }      
-    }
   }
+  
+  if (params$modoDiagnostico) {
+    escalaVariableObjetivo <- darEscala(
+      especificacion = params$especEscalaDiagnostico,
+      valores=c(observaciones$value, interpolacion$predictions@data[,interpolacion$campoMedia]))
+    
+    # En modo diagnóstico guardo el mapa con las observaciones y uno para cada regresor
+    mapearPuntosGGPlot(
+      # Mapa de observaciones
+      puntos = observaciones, shpBase = shpMask$shp, dibujarTexto = T, 
+      escala = escalaVariableObjetivo, 
+      titulo = paste0('Observaciones - ', params$strFecha), zcol = 'value', 
+      nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '01-Observaciones.png'), 
+      dibujar = F)
+    
+    if (gridded(coordsAInterpolar)) {
+      mapearGrillaGGPlot(
+        grilla = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
+        escala = escalaVariableObjetivo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '10-ProductoFinal.png'), 
+        dibujar = F, dibujarPuntosObservaciones = T, coordsObservaciones = observaciones)
+    } else {
+      mapearPuntosGGPlot(
+        puntos = interpolacion$predictions, shpBase = shpMask$shp, zcol=interpolacion$campoMedia, 
+        escala = escalaVariableObjetivo, titulo = paste0(params$nombreModelo, ' - ', params$strFecha), 
+        nomArchResultados = paste0(params$carpetaParaModoDiagnostico, '10-ProductoFinal.png'), 
+        dibujar = F, dibujarTexto = T)
+    }      
+  }
+  
   
   # mapearPuntosGGPlot(puntos = observaciones, shpBase = shpMask$shp, zcol='value', continuo = T)
   #if (!is.null(valoresCampoBase) & !is.null(valoresCampoBaseSobreObservaciones)) {
