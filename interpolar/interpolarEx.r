@@ -2864,7 +2864,7 @@ universalGriddingCV <- function(
       #iesAEstimar <- seq.int(113, 115) # funco
       #iesAEstimar <- seq.int(116, 117) # mal
       
-      res <- valoresObservaciones[, iesAEstimar]
+      res <- valoresObservaciones[, iesAEstimar, drop=FALSE]
       res[,] <- parSapplyLB(
           cl=cl, X=iesAEstimar, FUN=universalGriddingCV_i, coordsObservaciones=coordsObservaciones, 
           fechasObservaciones=fechasObservaciones, valoresObservaciones=valoresObservaciones, params=params, 
@@ -2873,7 +2873,7 @@ universalGriddingCV <- function(
           estimarNAs=estimarNAs)
       stopCluster(cl)
     } else {
-      res <- valoresObservaciones[, iesAEstimar]
+      res <- valoresObservaciones[, iesAEstimar, drop=FALSE]
       res[,] <- NA
       
       # iObservacion <- which(colnames(valoresObservaciones) == 'PRESA.BAYGORRIA.RHT')
