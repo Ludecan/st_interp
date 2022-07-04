@@ -226,7 +226,7 @@ interpolarYMapearI <- function(
 ) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
   # iTi <- 1
-  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-03')
+  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-03-01')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
 
@@ -457,7 +457,8 @@ interpolarYMapear <- function(
     cachearRegresoresEstaticos(
       coordsObservaciones=geometry(coordsObservaciones), 
       coordsAInterpolar=geometry(coordsAInterpolar),
-      nCoresAUsar=paramsIyM$nCoresAUsar)
+      nCoresAUsar=paramsIyM$nCoresAUsar
+    )
   }
   
   if (length(paramsIyM$tlagsAR) <= 0) {
