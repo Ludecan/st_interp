@@ -190,6 +190,7 @@ agregacionEspacialAPoligonosDesdeArchivo <- function(
     pathSpObj, shpPoligonos, funcionAgregacion, zcol=1, na.rm=T, guardarCSV=FALSE,
     retornarResultados=TRUE, useRaster=FALSE) {
   # pathSpObj <- pathsSpObjs[1]
+  print(pathSpObj)
   spObj <- readGDAL(pathSpObj, silent = T)
   res <- agregacionEspacialAPoligonos(
     spObj=spObj, shpPoligonos=shpPoligonos, funcionAgregacion=funcionAgregacion, zcol=zcol, 
