@@ -40,7 +40,7 @@ instant_pkgs(c('RCurl', 'curl', 'parallel', 'digest', 'data.table', 'stringi', '
 
 threadHandle <- getCurlHandle()
 
-getURLEx <- function(url) { return(getURL(url, curl = curlHandle, async = FALSE)) }
+getURLEx <- function(url) { return(getURL(url, curl=curlHandle, async=FALSE)) }
 
 extraerEnlaces <- function(urls, patronEnlaces='href="[[:print:]]"', concatenarUrlBase=FALSE,
                            maxNConexiones=4) {
@@ -339,7 +339,8 @@ isCompressed <- function(paths) {
 descargarArchivo <- function(
     i, urls, nombresArchivosDestino, forzarReDescarga=FALSE, maxRetries=5L, 
     segundosEntreIntentos=5L, curlOpts=NULL, do_unzip=isCompressed(nombresArchivosDestino),
-    useCurl=FALSE) {
+    useCurl=FALSE
+) {
   # i <- 1
   # print(i)
   
@@ -378,10 +379,9 @@ descargarArchivo <- function(
       expr = {
         while (do_download & nRetries < maxRetries) {
           if (useCurl) {
-            handle <- new_handle(verbose = FALSE)
-            if (!is.null(curlOpts)) { handle_setopt(handle, .list=curlOpts) }
-            er2 <- try(er <- curl_download(
-              url=urls[i], destfile=temp, handle=handle, quiet=FALSE))    
+            handle <- curl:::new_handle(verbose = FALSE)
+            if (!is.null(curlOpts)) { curl:::handle_setopt(handle=handle, .list=curlOpts) }
+            er2 <- try(er <- curl:::curl_download(url=urls[i], destfile=temp, handle=handle, quiet=FALSE))
           } else {
             f = CFILE(temp, mode="wb")
             er2 <- try(er <- curlPerform(url=urls[i], curl=threadHandle, writedata = f@ref))
@@ -506,7 +506,8 @@ descargarArchivos <- function(
     if (nConexionesAUsar > 1) {
       cl <- makeCluster(getOption('cl.cores', nConexionesAUsar))
       clusterExport(
-        cl, varlist = c('curlOpts', 'useCurl', 'script.dir.descargadorEx'), envir = environment())
+        cl, varlist = c('curlOpts', 'useCurl', 'script.dir.descargadorEx'), envir = environment()
+      )
       clusterEvalQ(cl, expr = {
         source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'))
         if (useCurl) {

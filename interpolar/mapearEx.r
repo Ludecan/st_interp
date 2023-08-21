@@ -44,7 +44,8 @@ paletasInvertidas <- c('Spectral', 'RdBu', 'RdYlBu', 'RdYlGn')
 
 crearEscala <- function(escala, colores=NULL, brewerPal='Spectral', 
                         invertirPaleta=brewerPal %in% paletasInvertidas, continuo=F,
-                        iniciosIntervalosIsoLineas=NULL) {
+                        iniciosIntervalosIsoLineas=NULL
+) {
   i <-  match(unique(escala), escala)
   escala <- escala[i]  
   
@@ -859,7 +860,7 @@ mapearGrillaGGPlot <- function(
   puntosAResaltar=NULL, tamanioResalto=0.8
 ) {
   #grilla <- coarsenGrid(grilla, coarse = 6)
-  if (!is.null(shpBase) & !identicalCRS(grilla, shpBase)) { 
+  if (!is.null(shpBase) && !identicalCRS(grilla, shpBase)) {
     shpBase <- spTransform(shpBase, grilla@proj4string)
   }
   if (is.null(xyLims)) {
@@ -1003,7 +1004,7 @@ mapearGrillaGGPlot <- function(
     coordsObsSobreShpBase <- coordsObsSobreShpBase[!is.na(coordsObsSobreShpBase@data[, zColObs]), ]
     
     if (length(coordsObsSobreShpBase) > 100) {
-      iMuestras <- muestrearEnCuadrantesYECDF(sp = coordsObsSobreShpBase, size = 100, nCuadrantesX = 2, nCuadrantesZ = 10, zcol = zColObs)
+      iMuestras <- muestrearEnCuadrantesYECDF(sp = coordsObsSobreShpBase, size = 60, nCuadrantesX = 2, nCuadrantesZ = 10, zcol = zColObs)
       #iMuestras <- order(coordsObsSobreShpBase$value, decreasing = TRUE)[1:10]
       coordsObsSobreShpBase <- coordsObsSobreShpBase[iMuestras,]
     }

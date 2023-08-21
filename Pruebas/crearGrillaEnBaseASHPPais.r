@@ -23,7 +23,7 @@
 ############################################################################
 
 require(rgdal)
-mod11a1 <- readGDAL('//192.168.1.223/mch/datosEnGrilla/fdg/MOD11A1/MOD11A1_LST_Day/MOD11A1_2011-12-25.LST_Day_1km.tif')
+mod11a1 <- readGDAL('//10.28.1.100/mch/datosEnGrilla/fdg/MOD11A1/MOD11A1_LST_Day/MOD11A1_2011-12-25.LST_Day_1km.tif')
 # nX
 length(unique(sp::coordinates(mod11a1)[,1]))
 # nY
@@ -31,7 +31,7 @@ length(unique(sp::coordinates(mod11a1)[,2]))
 length(unique(sp::coordinates(mod11a1)[,1]))*length(unique(coordinates(mod11a1)[,2]))
 bbox(mod11a1)
 
-grillaUy <- readGDAL('//192.168.1.223/mch/ReportesWeb/Mapas/TempAire/2016_03_18_18_00_00_TempAire_Automaticas_Horaria.tif')
+grillaUy <- readGDAL('//10.28.1.100/mch/ReportesWeb/Mapas/TempAire/2016_03_18_18_00_00_TempAire_Automaticas_Horaria.tif')
 
 # nX
 length(unique(sp::coordinates(grillaUy)[,1]))

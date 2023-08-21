@@ -82,6 +82,27 @@ importanciaOutlier <- function(tipoOutlier) {
   }
 }
 
+calcStdDifs <- function(
+    valoresObservaciones,
+    estimaciones,
+    minSDValoresObservaciones=NA,
+    minSDDiffs=NA
+) {
+  difs <- valoresObservaciones - estimaciones
+  means <- rowMeans(difs, na.rm=T)
+  sds <- rowSds(difs, na.rm=T)
+  
+  if (!is.na(minSDValoresObservaciones)) {
+    idx <- rowSds(valoresObservaciones, na.rm=T) < minSDValoresObservaciones
+    sds[idx] <- Inf
+  }
+  if (!is.na(minSDDiffs)) {
+    sds[sds < minSDDiffs] <- Inf
+  }
+  
+  return((difs - means) / sds)
+}
+
 createDFTests <- function(
     estacion, fecha, valor, estimado, tipoOutlier, stdDif, reemplazar=0L, valorReemplazo=NA_real_) {
   return(data.frame(
@@ -105,21 +126,28 @@ createDFTestsConEstimadosYStdDifs <- function(
 }
 
 createDFTestsConEstimadosYStdDifsUmbralValor <- function(
-    x, estimados, stdDifs, factorHaciaAbajo, factorHaciaArriba, umbralValor, 
-    factorHaciaAbajoSiMayorAUmbralValor, factorHaciaArribaSiMayorAUmbralValor
+    x, estimados, stdDifs, factorHaciaAbajo=3.5, factorHaciaArriba=factorHaciaAbajo, 
+    umbralValor=NA, factorHaciaAbajoSiMayorAUmbralValor=NA, factorHaciaArribaSiMayorAUmbralValor=NA
 ) {
   estaciones <- as.character(sapply(colnames(x), FUN = function(name) { rep(name, nrow(x)) }))
   fechas <- rep(rownames(x), ncol(x))
   
   tiposOutliers <- rep(TTO_SinProblemasDetectados, length(x))
 
-  idxUmbralValor <- as.logical(!is.na(x) & x < umbralValor)
-  tiposOutliers[idxUmbralValor & stdDifs < -factorHaciaAbajo] <- TTO_OutlierPorLoBajo
-  tiposOutliers[idxUmbralValor & stdDifs > factorHaciaArriba] <- TTO_OutlierPorLoAlto
-  
-  idxNotUmbralValor <- as.logical(!is.na(x) & x >= umbralValor)
-  tiposOutliers[idxNotUmbralValor & stdDifs < -factorHaciaAbajoSiMayorAUmbralValor] <- TTO_OutlierPorLoBajo
-  tiposOutliers[idxNotUmbralValor & stdDifs > factorHaciaArribaSiMayorAUmbralValor] <- TTO_OutlierPorLoAlto
+  if (is.na(umbralValor)) {
+    idxNoNA <- as.logical(!is.na(x))
+    tiposOutliers[idxNoNA & stdDifs < -factorHaciaAbajo] <- TTO_OutlierPorLoBajo
+    tiposOutliers[idxNoNA & stdDifs > factorHaciaArriba] <- TTO_OutlierPorLoAlto
+  } else {
+    idxUmbralValor <- as.logical(!is.na(x) & x < umbralValor)
+    tiposOutliers[idxUmbralValor & stdDifs < -factorHaciaAbajo] <- TTO_OutlierPorLoBajo
+    tiposOutliers[idxUmbralValor & stdDifs > factorHaciaArriba] <- TTO_OutlierPorLoAlto
+    
+    idxNotUmbralValor <- as.logical(!is.na(x) & x >= umbralValor)
+    tiposOutliers[idxNotUmbralValor & stdDifs < -factorHaciaAbajoSiMayorAUmbralValor] <- TTO_OutlierPorLoBajo
+    tiposOutliers[idxNotUmbralValor & stdDifs > factorHaciaArribaSiMayorAUmbralValor] <- TTO_OutlierPorLoAlto
+    
+  }
   
   return(createDFTests(
     estacion=estaciones, fecha=fechas, valor=as.numeric(x), estimado=as.numeric(estimados), 

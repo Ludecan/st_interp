@@ -45,10 +45,10 @@ source(paste0(script.dir.interpolarEx, 'parsearParamsInterpolarYMapear.r'))
 source(paste0(script.dir.interpolarEx, '../agregacion/agregacion.r'))
 source(paste0(script.dir.interpolarEx, '../sysutils/sysutils.r'))
 
-instant_pkgs(pkgs=c('unmarked', 'VGAM', 'cli', 'devtools'), silent=TRUE, doCargarPaquetes=FALSE)
+instant_pkgs(pkgs=c('unmarked', 'VGAM', 'cli', 'devtools', 'glmnet'), silent=TRUE, doCargarPaquetes=FALSE)
 instant_pkgs(
   pkgs=c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'Rcpp', 
-           'raster', 'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'glmnet', 
+           'raster', 'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 
            'rms', 'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
            'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC', 'ncdf4'), 
   silent=TRUE)
@@ -105,9 +105,13 @@ crearSpatialPointsDataFrame <- function(
 imitarObjetoIntamap <- function(
     observaciones, formulaString=value~1, predictions, class='automap', 
     outputWhat=list(mean=T, variance=ncol(predictions@data) > 1)) {
-  res <- createIntamapObject(
-    observations=observaciones, formulaString=formulaString, 
-    predictionLocations=geometry(predictions), class=class, outputWhat=outputWhat)
+  suppressWarnings(
+    res <- createIntamapObject(
+      observations=observaciones, formulaString=formulaString, 
+      predictionLocations=geometry(predictions), class=class, 
+      outputWhat=outputWhat
+    )
+  )
   res$campoMedia <- names(predictions@data)[1]
   if (ncol(predictions@data) > 1) { res$campoVarianza <- names(predictions@data)[2]
   } else { res$campoVarianza <- '' }
@@ -160,23 +164,15 @@ cargarObservaciones <- function(
     SRS_string=SRS_string, nombresFilas=nombresFilas))
 }
 
-cargarVectorDeBinario <- function(pathArchivo, NAValue=-.Machine$double.xmax, what='numeric', recordSize=8) {
+cargarVectorDeBinario <- function(pathArchivo, NAValue=-.Machine$double.xmax, what='numeric', recordSize=getDefaultSizeOf(what), x_names=NULL) {
   if (file.exists(pathArchivo)) {
     n <- file.info(pathArchivo)$size / recordSize
     vector <- readBin(pathArchivo, what=what, size=recordSize, n)
     vector[vector == NAValue] <- NA
+    
+    if (!is.null(x_names)) { names(vector) <- x_names }
+    
     return (vector)
-  } else {
-    return (NULL)
-  }
-}
-
-cargarMatrizDeBinario <- function(pathArchivo, nFilas, NAValue=-.Machine$double.xmax, what='numeric', recordSize=8) {
-  if (file.exists(pathArchivo)) {
-    n <- file.info(pathArchivo)$size / recordSize
-    matriz <- matrix(readBin(pathArchivo, what=what, size=recordSize, n), nrow=nFilas, byrow=T)
-    matriz[matriz == NAValue] <- NA
-    return (matriz)
   } else {
     return (NULL)
   }
@@ -413,19 +409,22 @@ extraerValoresRegresorSingleNetCDFSobreSP <- function(
 }
 
 extraerValoresRegresoresSobreSP <- function(
-  objSP, pathsRegresores, iInicial=1, iFinal=nrow(pathsRegresores), fn=NULL, zcol=1, 
-  silent=T, nCoresAUsar=0, setNames=T, ...
+  objSP, pathsRegresores, iInicial=1, iFinal=nrow(pathsRegresores), fn=NULL, 
+  zcol=1, silent=T, nCoresAUsar=0, setNames=T, ...
 ) {
   # TO-DO: paralelizar esta función. Hoy se está haciendo paralelo en el tiempo pero si solo se 
   # quiere cargar una fecha para más de un regresor se está serializando innecesariamente. Hay que 
   # hacer que decida si paralelizar por filas o columnas para aprovechar mejor los recursos
   res <- vector(mode="list", ncol(pathsRegresores))
 
-  # i <- 1
-  for (i in 1:ncol(pathsRegresores)) {
-    res[[i]] <- extraerValoresRegresorSobreSP(
-      objSP=objSP, pathsRegresor=pathsRegresores[, i, drop=F], iInicial=iInicial, iFinal=iFinal, 
-      fn=fn, zcol=zcol, silent=silent, nCoresAUsar=nCoresAUsar, setNames=setNames, ...=...)
+  if (ncol(pathsRegresores) > 0) {
+    # i <- 1
+    for (i in 1:ncol(pathsRegresores)) {
+      res[[i]] <- extraerValoresRegresorSobreSP(
+        objSP=objSP, pathsRegresor=pathsRegresores[, i, drop=F], iInicial=iInicial, iFinal=iFinal, 
+        fn=fn, zcol=zcol, silent=silent, nCoresAUsar=nCoresAUsar, setNames=setNames, ...=...)
+    }
+    names(res) <- colnames(pathsRegresores)    
   }
   
   # Código para verificación
@@ -439,7 +438,6 @@ extraerValoresRegresoresSobreSP <- function(
   #   print(max(abs(valoresRegresoresSobreObservaciones[[1]][i,] - over(auxSP, vr))))
   # }
 
-  names(res) <- colnames(pathsRegresores)
   return(res)
 }
 
@@ -461,7 +459,11 @@ cargarSHP <- function(pathSHP, proj4strSHP=NULL, overrideP4str=FALSE, encoding=N
 
     archPrj <- changeFileExt(pathSHP, '.prj')
     if (!overrideP4str && file.exists(archPrj)) { proj4strSHP <- NULL }
-    return (readOGR(dsn=dsnSHP, layer=layerSHP, p4s=proj4strSHP, encoding=encoding))
+    return (
+      suppressWarnings(
+        readOGR(dsn=dsnSHP, layer=layerSHP, p4s=proj4strSHP, encoding=encoding, verbose=FALSE)
+      )
+    )
   } else {
     return (NULL)
   }
@@ -566,12 +568,20 @@ setMinMaxVal <- function(observacionesValue, params) {
   return(params)
 }
 
+usarAFVGLS <- function(coordsObservaciones, params) {
+  if (is.na(params$usarFitVariogramGLS) || !is.logical(params$usarFitVariogramGLS)) {
+    return(length(coordsObservaciones) <= 50)
+  } else {
+    return(params$usarFitVariogramGLS)
+  }
+}
+
 getDefaultSpatialCutoff <- function(coordsObservaciones, params) {
   dists <- spDists(coordsObservaciones, longlat=!is.projected(coordsObservaciones))  
   dists <- dists[upper.tri(dists)]
   #return(max(dists/2.5))
-  if ((params$usarFitVariogramGLS == 'auto' && length(coordsObservaciones) <= 50) || 
-      (is.logical(params$usarFitVariogramGLS) && as.logical(params$usarFitVariogramGLS))) { 
+  
+  if (usarAFVGLS(coordsObservaciones, params)) { 
     if (length(coordsObservaciones) <= 100) { p <- 2/3
     } else { p <- 0.1 }
   } else { p <- 0.75 }
@@ -754,17 +764,17 @@ interpolarEx <- function(
             fit.method=7)
           variogramas$var_model$range <- maxDist
         } else {
-          usarAFVGLS <- (params$usarFitVariogramGLS == 'auto' && length(interpolacion$observations) <= 50) || (is.logical(params$usarFitVariogramGLS) && as.logical(params$usarFitVariogramGLS))
           source(paste0(script.dir.interpolarEx, 'getBoundariesPVariogramaEmpirico.r'))
           
-          if (usarAFVGLS) {
+          useAFVGLS <- usarAFVGLS(observaciones, params)
+          if (useAFVGLS) {
             variogramas <- afvGLS(
               formula=interpolacion$formulaString, input_data=interpolacion$observations, 
               cutoff=params$cutoff, model=params$modelosVariograma, verbose=params$verbose, 
               useNugget=params$usarNugget)
           }
           
-          if (!usarAFVGLS || is.null(variogramas$var_model)) {
+          if (!useAFVGLS || is.null(variogramas$var_model)) {
             # find the "best" amount onf intervals for the empirical variogram
             limites <- getBoundariesPVariogramaEmpiricoV8(fml=interpolacion$formulaString, observaciones=observaciones, cutoff=params$cutoff)
             if (params$usarNugget) { fixNugget <- NA
@@ -1973,6 +1983,8 @@ incorporarRegresoresEstaticos <- function(
   pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros=list(geomCoordsInterp, version=2))
   pathCacheDatosCoordsObservaciones <- getPathCache(objParametros=list(geomCoordsObs, version=2))
   if (
+    !file.exists(pathCacheDatosCoordsAInterpolar) | 
+    !file.exists(pathCacheDatosCoordsObservaciones) | 
     !tryExpr(dfDatosCoordsAInterpolar <- cargarCache(pathCacheDatosCoordsAInterpolar), silent=TRUE) | 
     !tryExpr(dfDatosCoordsObservaciones <- cargarCache(pathCacheDatosCoordsObservaciones), silent=TRUE)
   ) {
@@ -2769,7 +2781,7 @@ universalGriddingCV_i <- function(
   
   # ti <- which(fechasObservaciones==as.POSIXct('2019-07-14', tz=tz(fechasObservaciones[1])))
   # ti <- ts[302]
-  # ti <- 269
+  # ti <- 9
   for (ti in ts) {
     print(c(iObservacion, ti))
     if (!iNAs[ti]) {
@@ -2802,8 +2814,8 @@ universalGriddingCV_i <- function(
 }
 
 universalGriddingCV <- function(
-    coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores=NULL, 
-    longitudesEnColumnas=T, iesAEstimar=1:ncol(valoresObservaciones), 
+    coordsObservaciones, fechasObservaciones, valoresObservaciones, params, 
+    pathsRegresores=NULL, longitudesEnColumnas=T, iesAEstimar=1:ncol(valoresObservaciones), 
     eliminarSerieTemporalCompleta=TRUE, estimarNAs=FALSE) {
   # longitudesEnColumnas=T
   # iesAEstimar=1:ncol(valoresObservaciones)
@@ -3892,9 +3904,15 @@ deteccionOutliersUniversalGriddingCV <- function(
     # estimarNAs=iPasada > 1
     # paramsAux$nCoresAUsar <- 1
     
-    estimacionCV <- universalGriddingCV(coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, valoresObservaciones=aux, 
-                                        params=paramsAux, pathsRegresores=pathsRegresores, eliminarSerieTemporalCompleta=F, 
-                                        estimarNAs=iPasada > 1)
+    estimacionCV <- universalGriddingCV(
+      coordsObservaciones=coordsObservaciones, 
+      fechasObservaciones=fechasObservaciones, 
+      valoresObservaciones=aux, 
+      params=paramsAux, 
+      pathsRegresores=pathsRegresores, 
+      eliminarSerieTemporalCompleta=F, 
+      estimarNAs=iPasada > 1
+    )
 
     x <- valoresObservaciones - estimacionCV
     diffs <- cbind(diffs, x)
@@ -4003,7 +4021,6 @@ grillaPixelesSobreBoundingBox <- function(
     'SpatialPixels'))
 }
 
-
 projectedToGeodeticGrid <- function(objSP, pixelSizeDegrees=0.05) {
   # objSP=interpolacion$predictions
   outputCRS <- CRS(SRS_string="EPSG:4326")
@@ -4014,6 +4031,27 @@ projectedToGeodeticGrid <- function(objSP, pixelSizeDegrees=0.05) {
   
   caja[, 1] <- floor(caja[, 1] / pixelSizeDegrees) * pixelSizeDegrees
   caja[, 2] <- caja[, 1] + c(pixelSizeDegrees * nCeldasX, pixelSizeDegrees * nCeldasY)
+  largoDimensiones <- diff(t(caja))
+  
+  newGrid <- grillaPixelesSobreBoundingBox(
+    objSP=objSP, caja=caja, outputCRS=outputCRS, largoDimensiones=largoDimensiones, 
+    nCeldasX=nCeldasX, nCeldasY=nCeldasY)
+  gridCentroids <- sp::SpatialPoints(newGrid, proj4string=newGrid@proj4string)
+  gridCentroids <- sp::spTransform(gridCentroids, CRSobj=objSP@proj4string)
+  newGrid <- sp::SpatialPixelsDataFrame(points=geometry(newGrid), data=over(gridCentroids, objSP))
+  return(newGrid)
+}
+
+geodeticToProjectedGrid <- function(objSP, pixelSize=506.6844, SRS_string="EPSG:32721") {
+  # Default SRS_string is UTM 21S
+  outputCRS <- CRS(SRS_string=SRS_string)
+  caja <- bbox(getPoligonoBoundingBox(objSP=objSP, outputCRS=outputCRS))
+  largoDimensiones <- diff(t(caja))
+  nCeldasX <- ceil(largoDimensiones[1] / pixelSize)
+  nCeldasY=round(nCeldasX * largoDimensiones[2] / largoDimensiones[1])
+  
+  caja[, 1] <- floor(caja[, 1] / pixelSize) * pixelSize
+  caja[, 2] <- caja[, 1] + c(pixelSize * nCeldasX, pixelSize * nCeldasY)
   largoDimensiones <- diff(t(caja))
   
   newGrid <- grillaPixelesSobreBoundingBox(

@@ -1108,12 +1108,11 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   if (useNugget) { fixNugget <- NA
   } else { fixNugget <- 0 }
   
-  # i <- 1
   fitModels <- vector(mode = "list", length = length(model))
   mses <- rep(NA_real_, length(model))
-  
+
+  # i <- 1
   for (i in 1:length(model)) {
-    # i <- 3
     if (verbose) print(paste0(i, ': ', model[[i]]))
     vgIni <- afvmod(
       formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, 
@@ -1122,18 +1121,18 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
     
     if (!is.null(vgIni)) {
       vg <- try(expr={
-        vg <- fit.variogram.gls_mod(
+          vg <- fit.variogram.gls_mod(
           formula=formula, data=input_data, trace=verbose, model=vgIni, 
           ignoreInitial=F, maxiter=100) 
       }, silent=TRUE)
-      
-      if (is(vg, "try-error")) {
+        
+      if (is(vg, "try-error") || isInvalidVariogram(vg)) {
         vg <- vgIni
       }
       
       fitModels[[i]] <- vg
       mses[i] <- mean((variogramLine(object = vg, dist_vector = vc$dist)$gamma - vc$gamma)^2)
-      
+        
       if (verbose) {
         print(fitModels[[i]])
         print(mses[i])

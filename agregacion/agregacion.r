@@ -311,7 +311,7 @@ agregacionTemporalGrillada_ti <- function(
           )
         )
       } else { 
-        regresorTs[[n]] <- try(readGDAL(pathsRegresor[i], silent=T))
+        regresorTs[[n]] <- try(suppressWarnings(readGDAL(pathsRegresor[i], silent=T)))
       }
       if (!('try-error' %in% class(regresorTs[[n]]))) {
         if (!is.null(iOver)) {

@@ -43,8 +43,14 @@ cargarPaquetes <- function(pkgs, silent=T, nRetries=25) {
     if (silent) {
       for (i in seq_along(need_to_attach)) { 
         nIntentos <- 0
-        while (!try(suppressPackageStartupMessages(library(need_to_attach[i], character.only=T, logical.return = T, quietly = silent))) &
-               nIntentos < nRetries) {
+        while (
+          !try(
+            suppressPackageStartupMessages(
+              library(need_to_attach[i], character.only=T, logical.return=T, quietly=silent)
+            )
+          )
+          & nIntentos < nRetries
+        ) {
           Sys.sleep(1)
           nIntentos <- nIntentos + 1
         }
@@ -52,8 +58,12 @@ cargarPaquetes <- function(pkgs, silent=T, nRetries=25) {
     } else {
       for (i in seq_along(need_to_attach)) { 
         nIntentos <- 0
-        while (!try(library(need_to_attach[i], character.only=T, logical.return = T, quietly = silent)) &
-               nIntentos < nRetries) {
+        while (
+          !try(
+            library(need_to_attach[i], character.only=T, logical.return = T, quietly = silent)
+          ) 
+          & nIntentos < nRetries
+        ) {
           Sys.sleep(1)
           nIntentos <- nIntentos + 1
         }

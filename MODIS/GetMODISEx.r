@@ -273,7 +273,7 @@ getMODISEx <- function(
   #    if (utmSur) campo <- projectRaster(campo, crs = CRS(proj4stringResultados))
   #    writeRaster(x=campo, filename=archivos[[i]], overwrite=T, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
   #    #writeRaster(x=campo, filename='D:/lele.tif', overwrite=T, options = c('COMPRESS=DEFLATE', 'PREDICTOR=2', 'ZLEVEL=9'))
-  #    #campo <- raster('//192.168.1.223/mch/datosEnGrilla/fdg/MYD11A1/MYD11A1_LST_Night/MYD11A1_2002-07-08.LST_Night_1km.tif')
+  #    #campo <- raster('//10.28.1.100/mch/datosEnGrilla/fdg/MYD11A1/MYD11A1_LST_Night/MYD11A1_2002-07-08.LST_Night_1km.tif')
   #  }
   #}
   
