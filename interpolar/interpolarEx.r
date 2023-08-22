@@ -47,10 +47,12 @@ source(paste0(script.dir.interpolarEx, '../sysutils/sysutils.r'))
 
 instant_pkgs(pkgs=c('unmarked', 'VGAM', 'cli', 'devtools', 'glmnet'), silent=TRUE, doCargarPaquetes=FALSE)
 instant_pkgs(
-  pkgs=c('sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 'Rcpp', 
-           'raster', 'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 
-           'rms', 'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 
-           'htmltools', 'httr', 'stats', 'float', 'intamap', 'pROC', 'ncdf4'), 
+  pkgs=c(
+    'sf', 'terra', 'sp', 'digest', 'rgdal', 'parallel', 'doParallel', 'iterators', 'MASS', 'hash', 
+    'Rcpp', 'raster', 'fields', 'xts', 'spacetime', 'lattice', 'numDeriv', 'Rmisc', 'nlme', 'rms', 
+    'leaps', 'AICcmodavg', 'zoo', 'FNN', 'gtools', 'gstat', 'automap', 'evd', 'htmltools', 'httr',
+    'stats', 'float', 'intamap', 'pROC', 'ncdf4'
+  ), 
   silent=TRUE)
 
 formulaStr <- function(coeficientes, nDecimales=1, quitarCeros=TRUE) {
