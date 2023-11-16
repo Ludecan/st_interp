@@ -208,6 +208,80 @@ createParamsInterpolarYMapear <- function(
   return(res)
 }
 
+createParamsInterpolarYMapearFromEspecificacion <- function(
+  eInterp,
+  baseNomArchResultados='',
+  pathEjecucion='', 
+  pathProceso='',
+  proj4StringObservaciones='+proj=longlat +datum=WGS84',
+  coordsAInterpolarSonGrilla=TRUE,
+  pathSHPMapaBase='',
+  ejesXYLatLong=TRUE,
+  nCoresAUsar=0
+) {
+  return(createParamsInterpolarYMapear(
+    baseNomArchResultados=baseNomArchResultados,
+    pathEjecucion=pathEjecucion, 
+    pathProceso=pathProceso,
+    proj4StringObservaciones=proj4StringObservaciones,
+    proj4StringAInterpolar=eInterp$proj4String,
+    coordsAInterpolarSonGrilla=coordsAInterpolarSonGrilla, 
+    interpolationMethod=eInterp$interpolationMethod,
+    mLimitarValoresInterpolados=eInterp$mLimitarValoresInterpolados,
+    minimoLVI=eInterp$minimoLVI, 
+    maximoLVI=eInterp$maximoLVI,
+    factorDesvEstLVI=eInterp$factorDesvEstLVI,
+    metodoIgualacionDistribuciones=eInterp$metodoIgualacionDistribuciones,
+    # TODO allow passing all the hardcoded parameters here via eInterp
+    #formulaRegresion='', 
+    #ventanaIgualacionDistribuciones=1,
+    incorporarCoordenadas=eInterp$incorporarCoordenadas, 
+    #formulaCoordenadas='x + y',
+    #incorporarTiempo=FALSE, 
+    #formulaTiempo='t',
+    incorporarDistanciaAlAgua=eInterp$incorporarDistanciaAlAgua, 
+    #formulaDistanciaAlAgua='I(dist^0.125)',
+    incorporarAltitud=eInterp$incorporarAltitud, 
+    #formulaAltitud='alt',
+    #descartarCoordenadasNoSignificativas=FALSE,
+    #rellenarRegresores=FALSE,
+    #invertirAjusteRegresores=FALSE,
+    usarNugget=eInterp$usarNugget,
+    #block=NA,
+    #nmin=0,
+    #nmax=Inf,
+    #maxdist=Inf,
+    #inverseDistancePower=NA,
+    umbralMascaraCeros=eInterp$umbralMascaraCeros,
+    metodoRemocionDeSesgo=eInterp$metodoRemocionDeSesgo,
+    #modelosVariograma=c('Exp', 'Sph', 'Pow', 'Cir', 'Pen'),
+    #cutoff=Inf,
+    #tlags=0:5, 
+    #nTsST=5,#max(tlags),
+    #tlagsAR=NULL,
+    tryFixNugget=eInterp$tryFixNugget,
+    #nPuntosIniciales=2,
+    usarFitVariogramGLS=eInterp$usarFitVariogramGLS,
+    #modelosVariogramaST=c('Separable', 'ProductSum', 'Metric', 'SimpleSumMetric', 'SumMetric'),
+    #fit.methodST=6,
+    #verbose=FALSE,
+    pathSHPMapaBase=pathSHPMapaBase,
+    nCoresAUsar=nCoresAUsar,
+    radioReduccionSeriesKm=eInterp$radioReduccionSeriesKm,
+    funcionReduccionSeries=eInterp$funcionReduccionSeries,
+    difMaxFiltradoDeOutliersRLM=eInterp$difMaxFiltradoDeOutliersRLM,
+    difMaxFiltradoDeOutliersCV=eInterp$difMaxFiltradoDeOutliersCV,
+    #modoDiagnostico=FALSE,
+    imitarSurfer=eInterp$imitarSurfer,
+    #simpleKrigingEnRK=TRUE,
+    #betaSimpleKriging=NULL,
+    #preECDFMatching=FALSE,
+    #minRatioRangosParaExtrapolacion=2/3,
+    #proporcionNuevasMuestras=0.25,
+    ejesXYLatLong=ejesXYLatLong
+  ))
+}
+
 parsearParamsInterpolarYMapear <- function(params) {
   return(getParamValuesFromConstructorParams(params, funcCrearParams=createParamsInterpolarYMapear))
 }

@@ -226,9 +226,16 @@ calcValidationStatisticsEspacial <- function(pronosticos, observaciones, climato
 }
 
 calcValidationStatisticsOverall <- function(nombreModelo, pronosticos, observaciones, climatologias) {
+  if (is.null(climatologias)) {
+    climatologia <- NULL
+  } else {
+    climatologia <- as.vector(as.matrix(climatologias))
+  }
   res <- calcValidationStatistics(
-    pronostico=as.vector(pronosticos), observacion=as.vector(observaciones), 
-    climatologia=as.vector(climatologias))
+    pronostico=as.vector(as.matrix(pronosticos)), 
+    observacion=as.vector(as.matrix(observaciones)), 
+    climatologia=climatologia
+  )
   rownames(res) <- nombreModelo
   return(res)
 }

@@ -27,7 +27,7 @@ autokrigeVGMPanelMod <- function (x, y, model, subscripts, ...) {
   no_digits = function(a) {
     if (a > 10) { return(0)
     } else {
-      if (a < 1) { return(2) 
+      if (a < 1) { return(3) 
       } else { return(1) }
     }
   }
@@ -310,7 +310,9 @@ isInvalidVariogram <- function(v, minPsill = 1E-3, minRange = 0.05) {
    length(v) == 0 |
    any(!v$model %in% c('Nug', "Pow")  & ((v$psill < minPsill) | (v$range <= minRange))) |
    any(v$model == 'Nug' & v$psill < 0) |
-   any(v$model == 'Pow' & ((v$psill < 1e-6) | v$range >= 2 | v$range <= 0))))
+   # A power variogram with a range > 1.8 is producing all nan outputs. It should be
+   # able to go to > 2, but something in intamap implementation is preventing it
+   any(v$model == 'Pow' & ((v$psill < 1e-4) | v$range > 1.8 | v$range <= 0))))
 }
 
 getModelVariogram <- function(experimental_variogram, formula, input_data = NULL, model = c("Sph", "Exp", "Gau", "Ste"),
@@ -1102,26 +1104,15 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
   # verbose <- T
   vc <- variogram(formula, input_data, cloud=T, cutoff=cutoff)
 
-  withWarnings <- function(expr) {
-    myWarnings <- NULL
-    wHandler <- function(w) {
-      myWarnings <<- c(myWarnings, list(w))
-      invokeRestart("muffleWarning")
-    }
-    val <- withCallingHandlers(expr, warning = wHandler)
-    list(value = val, warnings = myWarnings)
-  }
-  
-  # i <- 1
-  fitModels <- vector(mode = "list", length = length(model))
-  mses <- rep(NA_real_, length(model))
-  
   limites <- getBoundariesPVariogramaEmpiricoV8(fml=formula, observaciones=input_data, cutoff=cutoff)
   if (useNugget) { fixNugget <- NA
   } else { fixNugget <- 0 }
+  
+  fitModels <- vector(mode = "list", length = length(model))
+  mses <- rep(NA_real_, length(model))
 
+  # i <- 1
   for (i in 1:length(model)) {
-    # i <- 2
     if (verbose) print(paste0(i, ': ', model[[i]]))
     vgIni <- afvmod(
       formula=formula, input_data=input_data, model=model[[i]], boundaries=limites, 
@@ -1129,24 +1120,23 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
       nPuntosIniciales=3, fit.method = 7)$var_model
     
     if (!is.null(vgIni)) {
-      try({
-        res <- withWarnings(expr={
+      vg <- try(expr={
           vg <- fit.variogram.gls_mod(
-            formula=formula, data=input_data, trace=verbose, model=vgIni, 
-            ignoreInitial=F, maxiter=100) 
-        })
+          formula=formula, data=input_data, trace=verbose, model=vgIni, 
+          ignoreInitial=F, maxiter=100) 
+      }, silent=TRUE)
         
-        # res <- withWarnings(expr = { vg <- fit.variogram.gls(formula = formula, data = input_data, trace = verbose, model = vgIni, ignoreInitial = T, maxiter = 100) })
-        #if (length(res$warnings) == 0) {
-        # plot(x=vc$dist, y=(variogramLine(object = vg, dist_vector = vc$dist)$gamma))
-        fitModels[[i]] <- res$value
-        mses[i] <- mean((variogramLine(object = vg, dist_vector = vc$dist)$gamma - vc$gamma)^2)
+      if (is(vg, "try-error") || isInvalidVariogram(vg)) {
+        vg <- vgIni
+      }
+      
+      fitModels[[i]] <- vg
+      mses[i] <- mean((variogramLine(object = vg, dist_vector = vc$dist)$gamma - vc$gamma)^2)
         
-        if (verbose) {
-          print(fitModels[[i]])
-          print(mses[i])
-        }
-      }, silent=TRUE)      
+      if (verbose) {
+        print(fitModels[[i]])
+        print(mses[i])
+      }
     }
   }
   
@@ -1156,6 +1146,9 @@ afvGLS <- function(formula, input_data, model, cutoff=Inf, verbose=FALSE, useNug
     minRange <- 0.05
     
     iesAConsiderar <- !sapply(X=fitModels, FUN=isInvalidVariogram, minPsill=minPsill, minRange=minRange)
+    if (length(iesAConsiderar) == 0) {
+      stop("Couldn't fit any valid variogram model")
+    }
     fitModels <- fitModels[iesAConsiderar]
     mses <- mses[iesAConsiderar]
     bestMSE <- min(mses, na.rm = T)

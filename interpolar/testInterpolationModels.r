@@ -37,25 +37,25 @@ if (is.null(script.dir.testInterpolationModels)) { script.dir.testInterpolationM
 source(paste0(script.dir.testInterpolationModels, '../verificacionPronosticos/verificacionPronosticos.r'))
 
 getTSeqs <- function(fechasObservaciones) {
-  anios <- sort(unique(year(fechasObservaciones)), decreasing = T)
+  anios <- sort(unique(year(fechasObservaciones)), decreasing=T)
   getInicioFinAnio <- function(anio, fechasObservaciones) {
     ts <- which(year(fechasObservaciones) == anio)
     tIni <- ts[1]
     tFin <- ts[length(ts)]
     return(c(tIni, tFin))
   }
-  tSeqs <- sapply(anios, FUN = getInicioFinAnio, fechasObservaciones = fechasObservaciones)
-  return(data.frame(anio=anios, tIni = tSeqs[1,], tFin=tSeqs[2,]))
+  tSeqs <- sapply(anios, FUN=getInicioFinAnio, fechasObservaciones=fechasObservaciones)
+  return(data.frame(anio=anios, tIni=tSeqs[1,], tFin=tSeqs[2,]))
 }
 
 testRegressors <- function(
     valoresObservaciones, pathsRegresores, pathSHPNotNUll, pathResultados='Resultados/1-Exploracion/', 
     seriesName='Rainfall', outputTableFilename=NULL, logTransforms=FALSE, 
     rainfallDetectionThresholds=NULL) {
-  dir.create(pathResultados, showWarnings = FALSE, recursive = TRUE)
+  dir.create(pathResultados, showWarnings=FALSE, recursive=TRUE)
   serie <- unlist(c(valoresObservaciones))
   
-  res <- matrix(nrow=ncol(pathsRegresores), ncol = 8)
+  res <- matrix(nrow=ncol(pathsRegresores), ncol=8)
   colnames(res) <- c(
     'Pearson', 'Spearman', 'Adj. R^2', 'RMSE', 'CantDatos', 'CoberturaMínima', 'CoberturaMedia', 
     'CoberturaMáxima')
@@ -69,15 +69,15 @@ testRegressors <- function(
   for (i in 1:ncol(pathsRegresores)) {
     print(paste(Sys.time(), ' : TestsRegresores ', i, ' - ', colnames(pathsRegresores)[i], sep=''))
     
-    aux <- readGDAL(fname = pathsRegresores[which(!is.na(pathsRegresores[, i]))[1], i])
-    shpMaskNoNulos <- cargarSHPYObtenerMascaraParaGrilla(pathSHP = pathSHPNotNUll, grilla=aux)
+    aux <- readGDAL(fname=pathsRegresores[which(!is.na(pathsRegresores[, i]))[1], i])
+    shpMaskNoNulos <- cargarSHPYObtenerMascaraParaGrilla(pathSHP=pathSHPNotNUll, grilla=aux)
     nPixeles <- sum(shpMaskNoNulos$mask)
     
-    # mapearGrillaGGPlot(grilla = aux, shpBase = shpMaskNoNulos$shp, continuo=T)
+    # mapearGrillaGGPlot(grilla=aux, shpBase=shpMaskNoNulos$shp, continuo=T)
     rm(aux)
     
     regresor <- as.vector(extraerValoresRegresorSobreSP(
-      objSP = coordsObservaciones, pathsRegresor = pathsRegresores[, i, drop=F], silent = F))
+      objSP=coordsObservaciones, pathsRegresor=pathsRegresores[, i, drop=F], silent=F))
     
     # which(is.na(pathsRegresores[, i, drop=F]))[1]
     
@@ -91,15 +91,15 @@ testRegressors <- function(
       }
 
       res[i, 1] <- cor(s, r)
-      res[i, 2] <- cor(s, r, method = 'spearman')
-      m <- lm(formula = 'y~x+1', data = data.frame(x=r, y=s))
+      res[i, 2] <- cor(s, r, method='spearman')
+      m <- lm(formula='y~x+1', data=data.frame(x=r, y=s))
       smry <- summary(m)
       res[i, 3] <- smry$adj.r.squared
       res[i, 4] <- sqrt(mean((s - r) ^ 2))
       res[i, 5] <- length(iNoNa)
       
       nNoNulosPorCuadrantes <- contarNoNulosPorCuadrantes(
-        pathsGeoTiffs = pathsRegresores[, i, drop=F], shpMask=shpMaskNoNulos, nCoresAUsar = 0)
+        pathsGeoTiffs=pathsRegresores[, i, drop=F], shpMask=shpMaskNoNulos, nCoresAUsar=0)
       nNoNulos <- rowSums(nNoNulosPorCuadrantes[, -ncol(nNoNulosPorCuadrantes)])
       
       # plot(nNoNulos)
@@ -112,13 +112,13 @@ testRegressors <- function(
       arch <- paste(pathResultados, seriesName, '_vs_', colnames(pathsRegresores)[i], '.png', sep='')
       linePlot(
         x=r, y=s, tituloEjeX=colnames(pathsRegresores)[i], tituloEjeY=seriesName, 
-        lineaRegresion = T, intervalosConfianza = T,  dibujarPuntos = T, dibujarLineas = F,
-        titulo = paste(seriesName, ' vs ', colnames(pathsRegresores)[i], sep=''), 
-        dibujar = interactive(), nomArchSalida = arch)
+        lineaRegresion=T, intervalosConfianza=T,  dibujarPuntos=T, dibujarLineas=F,
+        titulo=paste(seriesName, ' vs ', colnames(pathsRegresores)[i], sep=''), 
+        dibujar=interactive(), nomArchSalida=arch)
       
       if (!is.null(rainfallDetectionThresholds)) {
         rainfallStats <- calcRainfallDetectionMultiThresholds(
-          pronostico = r, observacion = s, thresholds = rainfallDetectionThresholds)
+          pronostico=r, observacion=s, thresholds=rainfallDetectionThresholds)
         
         rainfallDetectionStats[i, ] <- rainfallStats
         if (is.null(colnames(rainfallDetectionStats))) {
@@ -136,9 +136,9 @@ testRegressors <- function(
   }
   
   if (!is.null(outputTableFilename)) {
-    write.table(res, file = paste(pathResultados, outputTableFilename), col.names=T, row.names=T, 
-                append = F, quote = F, sep = "\t", eol = "\r", dec = ".", 
-                qmethod = c("escape", "double"))  
+    write.table(res, file=paste(pathResultados, outputTableFilename), col.names=T, row.names=T, 
+                append=F, quote=F, sep="\t", eol="\r", dec=".", 
+                qmethod=c("escape", "double"))  
   }
   rm(serie)
   
@@ -148,16 +148,16 @@ testRegressors <- function(
 st_interpCrossValidation <- function(
     coordsObservaciones, fechasObservaciones, valoresObservaciones, params, pathsRegresores, 
     pathResultados='Resultados/3-GrilladoYCV/', recalcCV=FALSE) {
-  nomModelo <- nombreModelo(params = params, pathsRegresores=pathsRegresores)
-  archCV <- paste(pathResultados, nomModelo, '/cv/cv_', nomModelo, '.tsv', sep = '')
+  nomModelo <- nombreModelo(params=params, pathsRegresores=pathsRegresores)
+  archCV <- paste(pathResultados, nomModelo, '/cv/cv_', nomModelo, '.tsv', sep='')
   if (recalcCV || !file.exists(archCV) || file.info(archCV)$size == 0) {
-    dir.create(dirname(archCV), showWarnings = F, recursive = T)
+    dir.create(dirname(archCV), showWarnings=F, recursive=T)
     linea <- paste(Sys.time(), ': CV ', nomModelo, sep='')
     print(linea)
     write(linea, file="tiemposEjecucion.txt", append=TRUE)
     
-    #eliminarSerieTemporalCompleta = FALSE
-    #longitudesEnColumnas = T
+    #eliminarSerieTemporalCompleta=FALSE
+    #longitudesEnColumnas=T
     #iesAEstimar=1:ncol(valoresObservaciones)
     #params$nCoresAUsar <- 1
     #estimarNAs=FALSE
@@ -166,13 +166,13 @@ st_interpCrossValidation <- function(
     # valoresObservaciones, con cv[i, j] el valor de la LOOCV de la estacion j en la fecha i. 
     # Es decir el valor de cv[i, j] es la estimación LOOCV de valoresObservaciones[i, j]
     cv <- universalGriddingCV(
-      coordsObservaciones = coordsObservaciones, fechasObservaciones = fechasObservaciones, 
-      valoresObservaciones = valoresObservaciones, params = params, pathsRegresores = pathsRegresores,
-      eliminarSerieTemporalCompleta = FALSE, longitudesEnColumnas = TRUE)
+      coordsObservaciones=coordsObservaciones, fechasObservaciones=fechasObservaciones, 
+      valoresObservaciones=valoresObservaciones, params=params, pathsRegresores=pathsRegresores,
+      eliminarSerieTemporalCompleta=FALSE, longitudesEnColumnas=TRUE)
     
-    write.table(x = cv, file = archCV, sep = '\t', na = '-99', dec = '.', row.names = T, col.names = T)
+    write.table(x=cv, file=archCV, sep='\t', na='-99', dec='.', row.names=T, col.names=T)
   } else {
-    cv <- read.csv(archCV, sep = '\t', na.strings = '-99', dec = '.')
+    cv <- read.csv(archCV, sep='\t', na.strings='-99', dec='.')
   }
   return(cv)
 }
@@ -181,8 +181,8 @@ st_interpCrossValidations <- function(
     coordsObservaciones, fechasObservaciones, valoresObservaciones, listaParams, listaRegresores, 
     pathResultados='Resultados/3-GrilladoYCV/', recalcCV=FALSE, 
     modelosACorrer=1:length(listaParams)) {
-  cvs <- vector(mode="list", length = length(modelosACorrer))
-  # i <- 5
+  cvs <- vector(mode="list", length=length(modelosACorrer))
+  # i <- 1
   for (i in seq_along(modelosACorrer)) {
     iModel <- modelosACorrer[i]
     params <- listaParams[[iModel]]
@@ -190,17 +190,19 @@ st_interpCrossValidations <- function(
     if (is.na(listaRegresores[iModel])) { pathsRegresores <- NULL
     } else { pathsRegresores <- listaRegresores[[iModel]] }
     
-    names(cvs)[i] <- nombreModelo(params = params, pathsRegresores=pathsRegresores)
-    try(cvs[[i]] <- st_interpCrossValidation(
-      coordsObservaciones, fechasObservaciones, valoresObservaciones, params = params, 
-      pathsRegresores = pathsRegresores, pathResultados=pathResultados, recalcCV=recalcCV))
+    names(cvs)[i] <- nombreModelo(params=params, pathsRegresores=pathsRegresores)
+    try(
+      cvs[[i]] <- st_interpCrossValidation(
+        coordsObservaciones, fechasObservaciones, valoresObservaciones, params=params, 
+        pathsRegresores=pathsRegresores, pathResultados=pathResultados, recalcCV=recalcCV
+      )
+    )
   }
   return(cvs)
 }
 
 calcValidationStatisticsMultipleModels <- function(
     valoresObservaciones, cvs, climatologias=NULL, pathResultados='Resultados/4-Validacion/') {
-  i <- 1
   # Estadísticos de Validación
   validationStatsOverall <- data.frame()
   validationStatsEspaciales <- list()
@@ -209,25 +211,26 @@ calcValidationStatisticsMultipleModels <- function(
   length(validationStatsTemporales) <- length(cvs)
   names(validationStatsEspaciales) <- names(cvs)
   names(validationStatsTemporales) <- names(cvs)
-  
+
+  i <- 1
   for (i in seq_along(cvs)) {
     nomModelo <- names(cvs)[i]
     validationStatsOverall <- rbind(
       validationStatsOverall, 
       calcValidationStatisticsOverall(
-        nombreModelo = nomModelo, pronosticos = cvs[[i]], observaciones = valoresObservaciones, 
-        climatologias = climatologias
+        nombreModelo=nomModelo, pronosticos=cvs[[i]], observaciones=valoresObservaciones, 
+        climatologias=climatologias
       )
     )
     
     validationStatsEspaciales[[i]] <- calcValidationStatisticsEspacial(
-      pronosticos = cvs[[i]], observaciones = valoresObservaciones, climatologias = climatologias)
+      pronosticos=cvs[[i]], observaciones=valoresObservaciones, climatologias=climatologias)
     validationStatsTemporales[[i]] <- calcValidationStatisticsTemporal(
-      pronosticos = cvs[[i]], observaciones = valoresObservaciones, climatologias = climatologias)
+      pronosticos=cvs[[i]], observaciones=valoresObservaciones, climatologias=climatologias)
   }
-  dir.create(pathResultados, showWarnings = F, recursive = T)
-  write.table(x = validationStatsOverall, paste0(pathResultados, 'validationStatsOverall.tsv'), 
-              sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
+  dir.create(pathResultados, showWarnings=F, recursive=T)
+  write.table(x=validationStatsOverall, paste0(pathResultados, 'validationStatsOverall.tsv'), 
+              sep='\t', dec='.', row.names=TRUE, col.names=TRUE)
   
   return(list(validationStatsOverall=validationStatsOverall,
               validationStatsEspaciales=validationStatsEspaciales,
@@ -235,7 +238,11 @@ calcValidationStatisticsMultipleModels <- function(
 }
 
 calcRainfallDetectionStatisticsMultipleModels <- function(
-    valoresObservaciones, cvs, thresholds, pathResultados='Resultados/4-Validacion/') {
+    valoresObservaciones,
+    cvs,
+    thresholds=c(0, 0.1, 1, 5),
+    pathResultados='Resultados/4-Validacion/'
+) {
   rainfallDetectionStatsOverall <- data.frame()
   rainfallDetectionStatsEspaciales <- list()
   length(rainfallDetectionStatsEspaciales) <- length(cvs)
@@ -254,9 +261,9 @@ calcRainfallDetectionStatisticsMultipleModels <- function(
   }
   colnames(rainfallDetectionStatsOverall) <- names(rainfallDetectionStatsOverall_i)
   
-  dir.create(pathResultados, showWarnings = F, recursive = T)
+  dir.create(pathResultados, showWarnings=F, recursive=T)
   write.table(x=rainfallDetectionStatsOverall, paste0(pathResultados, 'rainfallDetectionStats.tsv'), 
-              sep = '\t', dec = '.', row.names = TRUE, col.names = TRUE)
+              sep='\t', dec='.', row.names=TRUE, col.names=TRUE)
   
   return(list(rainfallDetectionStatsOverall=rainfallDetectionStatsOverall,
               rainfallDetectionStatsEspaciales=rainfallDetectionStatsEspaciales))

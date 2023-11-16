@@ -40,7 +40,8 @@ source(paste0(script.dir.interpolarYMapearEx, 'leerEscalas.r'))
 source(paste0(script.dir.interpolarYMapearEx, '../sysutils/sysutils.r'))
 
 createDefaultListaMapas <- function(
-  paramsIyM, fechasObservaciones, nObservacionesTemporales=length(fechasObservaciones), 
+  paramsIyM, fechasObservaciones, formatoFechasTitulo='auto', 
+  nObservacionesTemporales=length(fechasObservaciones), 
   dibujarObservacionesEscalaFija=FALSE, dibujarEscalaFija=TRUE, 
   dibujarObservacionesEscalaAdaptada=FALSE, dibujarEscalaAdaptada=FALSE, 
   generarThumbnailFija=FALSE, generarThumbnailAdaptada=FALSE, 
@@ -52,16 +53,20 @@ createDefaultListaMapas <- function(
   recalcularSiYaExiste=TRUE
 ) {
   if (!is.null(fechasObservaciones)) {
-    if (any(format(fechasObservaciones, format = "%H:%M") != "00:00")) { 
-      formatoFechasArchivo <- "%Y_%m_%d_%H_%M"
-      formatoFechasTitulo <- "%Y-%m-%d %H:%M"
-    } else { 
-      formatoFechasArchivo <- "%Y_%m_%d" 
-      formatoFechasTitulo <- "%Y-%m-%d"
+    if (formatoFechasTitulo == 'auto') {
+      if (any(format(fechasObservaciones, format="%H:%M") != "00:00")) { 
+        formatoFechasTitulo <- "%Y-%m-%d %H:%M"
+      } else { 
+        formatoFechasTitulo <- "%Y-%m-%d"
+      }
     }
-    
+
+    formatoFechasArchivo <- gsub(x=formatoFechasTitulo, pattern="[-/ ]", replacement="_")
     nombreArchivo <- pathParaGuardadoDeArchivos(
-      filename=paste0(paramsIyM$baseNomArchResultados, format(fechasObservaciones, format=formatoFechasArchivo), '.png'), 
+      filename=paste0(
+        paramsIyM$baseNomArchResultados, 
+        format(fechasObservaciones, format=formatoFechasArchivo, justify="none"), 
+      '.png'), 
       pathProceso=paramsIyM$pathProceso
     )
   } else {
@@ -124,10 +129,13 @@ mapearI <- function(ti, coordsObservaciones, fechasObservaciones, valoresObserva
     }
     
     if (listaMapas$dibujarEscalaFija[ti]) {
-      mapearGrillaGGPlot(grilla=interpolacion$predictions, shpBase=shpMask$shp, escala=escala, nomArchResultados=nomArch,
-                         xyLims=xyLims, dibujar=interactive(), titulo=listaMapas$titulo[ti], subtitulo=subtitulo,
-                         isolineas = listaMapas$incluirIsolineasFija[ti], dibujarPuntosObservaciones = listaMapas$dibujarPuntosObservacionesFija[ti], 
-                         coordsObservaciones = coordsObservaciones, puntosAResaltar = puntosAResaltar)
+      mapearGrillaGGPlot(
+        grilla=interpolacion$predictions, shpBase=shpMask$shp, escala=escala, nomArchResultados=nomArch,
+        xyLims=xyLims, dibujar=interactive(), titulo=listaMapas$titulo[ti], subtitulo=subtitulo, 
+        isolineas=listaMapas$incluirIsolineasFija[ti], 
+        dibujarPuntosObservaciones=listaMapas$dibujarPuntosObservacionesFija[ti], 
+        coordsObservaciones=coordsObservaciones, puntosAResaltar=puntosAResaltar
+      )
       
       #espEscalaFija <- crearEspecificacionEscalaEquiespaciadaParaLluvia(interpolacion$predictions@data[,1])
       #escala <- darEscala(especificacion = espEscalaFija, valores = interpolacion$predictions@data[,1])
@@ -225,8 +233,8 @@ interpolarYMapearI <- function(
   espEscalaAdaptada=NULL
 ) {
   # tsAInterpolar=1:nrow(valoresObservaciones)
-  # iTi <- 156
-  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-02-03')
+  # iTi <- 1
+  # iTi <- which(as.character(fechasObservaciones[tsAInterpolar]) == '2018-03-01')
   ti <- tsAInterpolar[iTi]
   print(paste(ti, ': ', fechasObservaciones[ti], sep=''))
 
@@ -310,7 +318,7 @@ interpolarYMapearI <- function(
             valoresRegresoresSobreObservaciones=valoresRegresoresSobreObservaciones, 
             coordsAInterpolar=coordsAInterpolar, interpolacion=interpolacion, paramsIyM=paramsIyM, 
             shpMask=shpMask, xyLims=xyLims, listaMapas=listaMapas, espEscalaFija=espEscalaFija, 
-            espEscalaAdaptada=espEscalaAdaptada, puntosAResaltar = paramsIyM$puntosAResaltar[[iTi]])
+            espEscalaAdaptada=espEscalaAdaptada, puntosAResaltar=paramsIyM$puntosAResaltar[[iTi]])
   }
   
   returnInterpolacion <- as.integer(returnInterpolacion) 
@@ -457,7 +465,8 @@ interpolarYMapear <- function(
     cachearRegresoresEstaticos(
       coordsObservaciones=geometry(coordsObservaciones), 
       coordsAInterpolar=geometry(coordsAInterpolar),
-      nCoresAUsar=paramsIyM$nCoresAUsar)
+      nCoresAUsar=paramsIyM$nCoresAUsar
+    )
   }
   
   if (length(paramsIyM$tlagsAR) <= 0) {

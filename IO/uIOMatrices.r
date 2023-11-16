@@ -46,7 +46,7 @@ salvarMatrizABinarioSinDimensiones <- function(pathArchivo, matriz, NAValue=-.Ma
   } else { writeBin(as.vector(matriz), pathArchivo, size=recordSize) }
 }
 
-leerMatrizDeBinario <- function(pathArchivo, NAValue=-.Machine$double.xmax, byRow=T, tipoCon='file', what='double', size=getDefaultSizeOf(what)) {
+leerMatrizDeBinario <- function(pathArchivo, NAValue=-.Machine$double.xmax, byRow=T, tipoCon='file', what='double', size=getDefaultSizeOf(what), row_names=NULL, col_names=NULL) {
   if (tipoCon == 'file') { arch <- file(pathArchivo, "rb")
   } else if (tipoCon == 'gzfile') { arch <- gzfile(pathArchivo, "rb")
   } else { stop(paste('Tipo de conexion desconocida', tipoCon)) }
@@ -59,6 +59,9 @@ leerMatrizDeBinario <- function(pathArchivo, NAValue=-.Machine$double.xmax, byRo
   
   datos <- matrix(data = datos, nrow = nFilas, ncol = nColumnas, byrow = byRow)  
   datos[datos == NAValue] <- NA
+  
+  if (!is.null(row_names)) { rownames(datos) <- row_names }
+  if (!is.null(col_names)) { colnames(datos) <- col_names }
   return(datos)
 }
 

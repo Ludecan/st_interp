@@ -44,7 +44,8 @@ paletasInvertidas <- c('Spectral', 'RdBu', 'RdYlBu', 'RdYlGn')
 
 crearEscala <- function(escala, colores=NULL, brewerPal='Spectral', 
                         invertirPaleta=brewerPal %in% paletasInvertidas, continuo=F,
-                        iniciosIntervalosIsoLineas=NULL) {
+                        iniciosIntervalosIsoLineas=NULL
+) {
   i <-  match(unique(escala), escala)
   escala <- escala[i]  
   
@@ -414,7 +415,7 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
     resYImagenes <- round(resXImagenes * (yLim[2] - yLim[1]) / (xLim[2] - xLim[1]))
   } else if (is.null(resXImagenes) || resXImagenes <= 0) {
       resXImagenes <- round(resYImagenes * (xLim[2] - xLim[1]) / (yLim[2] - yLim[1])) 
-  }  
+  }
   
   if (ejesXYLatLong) {
     # Hago el "cuadrado" en lat/long
@@ -483,8 +484,8 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
     lons <- cortesEjeX@coords[,1]
     i<-1
     for (i in 1:length(lons)) {
-      if (lons[i] < 0) { textoEjeX <- c(textoEjeX, sprintf('%dW', -as.integer(lons[i])))
-      } else { textoEjeX <- c(textoEjeX, sprintf('%dE', as.integer(lons[i]))) }
+      if (lons[i] < 0) { textoEjeX <- c(textoEjeX, sprintf('%dW', -round(lons[i])))
+      } else { textoEjeX <- c(textoEjeX, sprintf('%dE', round(lons[i]))) }
     }    
     
     # Borde izquierdo del marco de ploteo
@@ -497,8 +498,8 @@ getXYLims <- function(spObjs, resXImagenes=640, resYImagenes=NULL, ejesXYLatLong
     textoEjeY <- character(0)
     lats <- cortesEjeY@coords[,2]
     for (i in 1:length(lats)) {
-      if (lats[i] < 0) { textoEjeY <- c(textoEjeY, sprintf('%dS', -as.integer(lats[i])))
-      } else { textoEjeY <- c(textoEjeY, sprintf('%dN', as.integer(lats[i]))) }
+      if (lats[i] < 0) { textoEjeY <- c(textoEjeY, sprintf('%dS', -round(lats[i])))
+      } else { textoEjeY <- c(textoEjeY, sprintf('%dN', round(lats[i]))) }
     }    
 
     lineasLatLong <- SpatialLinesDataFrame(sl=lineasLatLong, data=data.frame(dummy=rep(1, length(lineasLatLong))), match.ID=F)
@@ -859,7 +860,7 @@ mapearGrillaGGPlot <- function(
   puntosAResaltar=NULL, tamanioResalto=0.8
 ) {
   #grilla <- coarsenGrid(grilla, coarse = 6)
-  if (!is.null(shpBase) & !identicalCRS(grilla, shpBase)) { 
+  if (!is.null(shpBase) && !identicalCRS(grilla, shpBase)) {
     shpBase <- spTransform(shpBase, grilla@proj4string)
   }
   if (is.null(xyLims)) {
