@@ -35,18 +35,32 @@ if (is.null(script.dir.cacheFunciones)) { script.dir.cacheFunciones <- ''
 } else { script.dir.cacheFunciones <- paste0(dirname(script.dir.cacheFunciones), '/') }
 
 source(paste0(script.dir.cacheFunciones, '../instalarPaquetes/instant_pkgs.r'))
-instant_pkgs(pkgs=c('digest'))
+instant_pkgs(pkgs=c('digest', 'filelock'))
 
-getPathCache <- function(objParametros, dirEjecucion='', prefijoNombreArchivoCache='') {
-  return (paste0(dirEjecucion, 'RCache_', .Platform$OS.type, '/', prefijoNombreArchivoCache, 
-                 digest(objParametros), '.rds'))
+getPathCache <- function(
+    objParametros, dirEjecucion='', prefijoNombreArchivoCache='', subPathFuncionConBarra='/'
+) {
+  return (
+    paste0(
+      dirEjecucion, 
+      'RCache_', .Platform$OS.type, '/',
+      subPathFuncionConBarra,
+      prefijoNombreArchivoCache, 
+      digest(objParametros), 
+      '.rds'
+    )
+  )
 }
 
 guardarCache <- function(pathCache, obj) {
-  dir.create(dirname(pathCache), recursive=T, showWarnings=F)
+  dir.create(path=dirname(pathCache), recursive=T, showWarnings=FALSE)  
+  lck <- filelock::lock(path=paste0(pathCache, '_lock'), exclusive=TRUE)
   saveRDS(object=obj, file=pathCache)
+  filelock::unlock(lck)
 }
 
 cargarCache <- function(pathCache) {
-  return(readRDS(file = pathCache))
+  lck <- filelock::lock(paste0(pathCache, '_lock'), exclusive=FALSE)
+  return(readRDS(file=pathCache))
+  filelock::unlock(lck)
 }

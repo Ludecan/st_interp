@@ -26,16 +26,16 @@ require('parallel')
 
 getTotalRAM_GB <- function() {
   if (.Platform$OS.type == "windows") {
-    # memtot_gb <- memory.size(max=NA) / 1024
-	memtot_gb <- Inf
-	# TODO: finish this
-	#info <- system("systeminfo", intern=TRUE)
-	#as.numeric(gsub(
-	#  pattern="(?:[[:alpha:]][[:punct:]])*([[:digit:]]+)\\.([[:digit:]]+) MB", 
-	#  replacement="\\1\\2",
-	#  ignore.case=T,
-	#  x=info[grepl("Memoria f\xa1sica disponible|Available Phyisical Memory", info)]
-	#))
+    tryCatch(
+      expr={
+        res <- trim(system("wmic memorychip get capacity", intern = TRUE))
+        res <- as.integer(as.numeric(res[grepl(pattern="^[0-9]+$", res)]) / 2 ** 30)
+        memtot_gb <- sum(res)
+      },
+      error={
+        memtot_gb <- Inf
+      }
+    )
   } else {
     memtot_gb <- as.numeric(system("awk '/MemTot/ {print $2}' /proc/meminfo", intern=TRUE)) / 1024**2
   }
@@ -43,5 +43,5 @@ getTotalRAM_GB <- function() {
 }
 
 getAvailableCores <- function(logicalCores=TRUE, maxCoresPerGB=Inf) {
-  return(min(detectCores(T, logical=logicalCores), getTotalRAM_GB() * maxCoresPerGB))
+  return(min(detectCores(T, logical=logicalCores), trunc(getTotalRAM_GB() * maxCoresPerGB)))
 }
