@@ -91,7 +91,7 @@ checkInstallPackages <- function(pkgs, minVersions) {
   return(bPaquetesAInstalar)
 }
 
-instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, doCargarPaquetes=TRUE) {
+instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, type=type, doCargarPaquetes=TRUE) {
   if (length(pkgs) > 0) {
     bPaquetesAInstalar <- checkInstallPackages(pkgs, minVersions)
     paquetesAInstalar <- pkgs[bPaquetesAInstalar]
@@ -210,9 +210,10 @@ if (!exists('installedPackagesChecked') && file.exists(minPkgVersionsPath)) {
 installedPackagesChecked <- TRUE
 
 createMinPackageVersions <- function() {
-  packages <-installed.packages()
+  packages <- installed.packages()
   write.table(x = packages, file = minPkgVersionsPath, sep='\t', row.names = T, col.names = T, 
               fileEncoding = 'UTF-8')
 }
 
 # renv::snapshot(type="all")
+# 

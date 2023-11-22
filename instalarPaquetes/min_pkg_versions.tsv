@@ -776,8 +776,6 @@ stinepack, strucchange, timeDate, timeSeries, tis, tseries, xts"	NA	"GPL-2 | GPL
 "KernSmooth"	"KernSmooth"	"C:/Program Files/R/R-4.2.2/library"	"2.23-20"	"recommended"	"R (>= 2.5.0), stats"	NA	NA	"MASS, carData"	NA	"Unlimited"	NA	NA	NA	NA	"yes"	"4.2.2"
 "lattice"	"lattice"	"C:/Program Files/R/R-4.2.2/library"	"0.20-45"	"recommended"	"R (>= 3.0.0)"	"grid, grDevices, graphics, stats, utils"	NA	"KernSmooth, MASS, latticeExtra"	"chron"	"GPL (>= 2)"	NA	NA	NA	NA	"yes"	"4.2.2"
 "MASS"	"MASS"	"C:/Program Files/R/R-4.2.2/library"	"7.3-58.1"	"recommended"	"R (>= 3.3.0), grDevices, graphics, stats, utils"	"methods"	NA	"lattice, nlme, nnet, survival"	NA	"GPL-2 | GPL-3"	NA	NA	NA	NA	"yes"	"4.2.2"
-"Matrix"	"Matrix"	"C:/Program Files/R/R-4.2.2/library"	"1.5-1"	"recommended"	"R (>= 3.5.0)"	"methods, graphics, grid, stats, utils, lattice"	NA	"expm, MASS"	"MatrixModels, graph, SparseM, sfsmisc, igraph, maptools, sp,
-spdep"	"GPL (>= 2) | file LICENCE"	NA	NA	NA	NA	"yes"	"4.2.2"
 "methods"	"methods"	"C:/Program Files/R/R-4.2.2/library"	"4.2.2"	"base"	NA	"utils, stats"	NA	"codetools"	NA	"Part of R 4.2.2"	NA	NA	NA	NA	"yes"	"4.2.2"
 "mgcv"	"mgcv"	"C:/Program Files/R/R-4.2.2/library"	"1.8-41"	"recommended"	"R (>= 3.6.0), nlme (>= 3.1-64)"	"methods, stats, graphics, Matrix, splines, utils"	NA	"parallel, survival, MASS"	NA	"GPL (>= 2)"	NA	NA	NA	NA	"yes"	"4.2.2"
 "nlme"	"nlme"	"C:/Program Files/R/R-4.2.2/library"	"3.1-160"	"recommended"	"R (>= 3.5.0)"	"graphics, stats, utils, lattice"	NA	"Hmisc, MASS, SASmixed"	NA	"GPL (>= 2)"	NA	NA	NA	NA	"yes"	"4.2.2"
