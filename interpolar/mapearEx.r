@@ -38,7 +38,8 @@ source(paste0(script.dir.mapearEx, '../pathUtils/pathUtils.r'))
 source(paste0(script.dir.mapearEx, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(
   c("sp", "RColorBrewer", "colorspace", "ggplot2", "rgeos", "maptools", "directlabels", "ggrepel", 
-    "ragg", "mapproj"))
+    "ragg", "mapproj")
+)
 
 paletasInvertidas <- c('Spectral', 'RdBu', 'RdYlBu', 'RdYlGn')
 

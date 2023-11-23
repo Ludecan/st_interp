@@ -91,8 +91,31 @@ checkInstallPackages <- function(pkgs, minVersions) {
   return(bPaquetesAInstalar)
 }
 
+write_packages_to_file <- function(pkgs) {
+  file_path <- "required_packages.txt"
+  
+  # Check if the file exists
+  if (!file.exists(file_path)) {
+    # If the file doesn't exist, create it and write all unique package names
+    writeLines(sort(unique(pkgs)), file_path)
+  } else {
+    # If the file exists, read existing package names
+    existing_packages <- readLines(file_path)
+    
+    # Identify unique package names not already in the file
+    new_packages <- unique(sort(c(pkgs, existing_packages)))
+    
+    # Append the new package names to the file
+    writeLines(new_packages, file_path)
+  }
+}
+
 instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, type=type, doCargarPaquetes=TRUE) {
-  if (length(pkgs) > 0) {
+  if (length(pkgs) > 0 && interactive()) {
+    if (options("instant_pkgs_write_packages_to_file")[[1]]) {
+      write_packages_to_file(pkgs)
+    }
+    
     bPaquetesAInstalar <- checkInstallPackages(pkgs, minVersions)
     paquetesAInstalar <- pkgs[bPaquetesAInstalar]
 

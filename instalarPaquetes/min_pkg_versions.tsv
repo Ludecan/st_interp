@@ -333,7 +333,7 @@ rstantools, spdep, testthat (>= 2.1.0)"	NA	"GPL (>= 3)"	NA	NA	NA	NA	"no"	"4.2.3"
 "mapdata"	"mapdata"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"2.3.1"	NA	"R (>= 2.14.0), maps (>= 2.0-7)"	NA	NA	NA	NA	"GPL-2"	NA	NA	NA	NA	"yes"	"4.2.3"
 "mapproj"	"mapproj"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"1.2.11"	NA	"R (>= 3.0.0), maps (>= 2.3-0)"	"stats, graphics"	NA	NA	NA	"Lucent Public License"	NA	NA	NA	NA	"yes"	"4.2.3"
 "maps"	"maps"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"3.4.1"	NA	"R (>= 3.5.0)"	"graphics, utils"	NA	"mapproj (>= 1.2-0), mapdata (>= 2.3.0), sp, rnaturalearth"	NA	"GPL-2"	NA	NA	NA	NA	"yes"	"4.2.3"
-"maptools"	"maptools"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"1.1-8"	NA	"R (>= 2.10), sp (>= 1.0-11)"	"foreign (>= 0.8), methods, grid, lattice, stats, utils,
+"maptools"	"maptools"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"1.1-4"	NA	"R (>= 2.10), sp (>= 1.0-11)"	"foreign (>= 0.8), methods, grid, lattice, stats, utils,
 grDevices"	NA	"rgeos (>= 0.1-8), spatstat.geom (>= 1.65-0), PBSmapping,
 maps, RColorBrewer, raster, polyclip, plotrix, spatstat.linnet
 (>= 1.65-3), spatstat.utils (>= 1.19.0), spatstat (>= 2.0-0)"	NA	"GPL (>= 2)"	NA	NA	NA	NA	"yes"	"4.2.3"
@@ -343,7 +343,7 @@ servr, sf, sp, webshot"	NA	"covr, knitr, later, leaflet.extras2, leafsync, lwgeo
 mapdeck, plainview, poorman, rgdal, rmarkdown, rstudioapi, s2,
 stars, tinytest"	NA	"GPL (>= 3) | file LICENSE"	NA	NA	NA	NA	"no"	"4.2.3"
 "markdown"	"markdown"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"1.7"	NA	"R (>= 2.11.1)"	"utils, commonmark (>= 1.9.0), xfun (>= 0.38)"	NA	"knitr, rmarkdown (>= 2.18), yaml, RCurl"	NA	"MIT + file LICENSE"	NA	NA	NA	NA	"no"	"4.2.3"
-"Matrix"	"Matrix"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"1.6-0"	"recommended"	"R (>= 3.5.0), methods"	"grDevices, graphics, grid, lattice, stats, utils"	NA	"MASS, datasets, sfsmisc"	"SparseM, graph"	"GPL (>= 2) | file LICENCE"	NA	NA	NA	NA	"yes"	"4.2.3"
+"Matrix"	"Matrix"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"1.6-3"	"recommended"	"R (>= 3.5.0), methods"	"grDevices, graphics, grid, lattice, stats, utils"	NA	"MASS, datasets, sfsmisc"	"SparseM, graph"	"GPL (>= 2) | file LICENCE"	NA	NA	NA	NA	"yes"	"4.2.3"
 "MatrixModels"	"MatrixModels"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"0.5-2"	NA	"R (>= 3.6.0)"	"stats, methods, Matrix (>= 1.6-0)"	NA	NA	NA	"GPL (>= 2)"	NA	NA	NA	NA	"no"	"4.2.3"
 "matrixStats"	"matrixStats"	"C:/Users/ludec/AppData/Local/R/win-library/4.2"	"1.0.0"	NA	"R (>= 2.12.0)"	NA	NA	"base64enc, ggplot2, knitr, markdown, microbenchmark,
 R.devices, R.rsp"	NA	"Artistic-2.0"	NA	NA	NA	NA	"yes"	"4.2.3"
