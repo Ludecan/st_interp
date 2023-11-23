@@ -42,6 +42,19 @@ getTotalRAM_GB <- function() {
   return(memtot_gb)
 }
 
-getAvailableCores <- function(logicalCores=TRUE, maxCoresPerGB=Inf) {
-  return(min(detectCores(T, logical=logicalCores), trunc(getTotalRAM_GB() * maxCoresPerGB)))
+getAvailableCores <- function(
+    logicalCores=TRUE, 
+    maxCoresPerGB=Inf, 
+    unitsOfWork=NA_integer_, 
+    minUnitsOfWorkPerCore=16L
+) {
+  ramLimitedNCores <- min(
+    parallel::detectCores(T, logical=logicalCores),
+    trunc(getTotalRAM_GB() * maxCoresPerGB)
+  )
+  if (!is.na(unitsOfWork) && (unitsOfWork < minUnitsOfWorkPerCore * ramLimitedNCores)) {
+    return(1L)
+  } else {
+    return(ramLimitedNCores)
+  }
 }

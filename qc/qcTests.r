@@ -1439,12 +1439,10 @@ testEspacialPrecipitacion <- function(
     # but it works ok for both the cases where there is a single temporal observation (in which 
     # it's usually a lot faster to run in 1 core), and also where there's a long period of time
     # (where the overhead is paid for by the speedup)
-    ramLimitedNCores <- getAvailableCores(maxCoresPerGB = 1)
-    if (ncol(valoresObservaciones) * nrow(valoresObservaciones) > ramLimitedNCores * 16) {
-      nCoresAUsar <- min(ramLimitedNCores, ncol(valoresObservaciones))
-    } else {
-      nCoresAUsar <- 1
-    }
+    nCoresAUsar <- getAvailableCores(
+      maxCoresPerGB=1, 
+      unitsOfWork=ncol(valoresObservaciones) * nrow(valoresObservaciones)
+    )
   }
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
@@ -1528,7 +1526,10 @@ testMaxToMeanRatios <- function(valoresObservaciones, minMaxVal=20, maxRatio=30,
   }
   
   if (nCoresAUsar <= 0) { 
-    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), ncol(valoresObservaciones))
+    nCoresAUsar <- getAvailableCores(
+      maxCoresPerGB=1, 
+      unitsOfWork=ncol(valoresObservaciones) * nrow(valoresObservaciones)
+    )
   }
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
