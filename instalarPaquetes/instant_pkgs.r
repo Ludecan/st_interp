@@ -111,8 +111,12 @@ write_packages_to_file <- function(pkgs) {
 }
 
 instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, type=type, doCargarPaquetes=TRUE) {
-  if (length(pkgs) > 0 && interactive()) {
-    if (options("instant_pkgs_write_packages_to_file")[[1]]) {
+  if (length(pkgs) > 0) {
+    instant_pkgs_write_packages_to_file <- (
+      !is.null(options("instant_pkgs_write_packages_to_file")[[1]]) && 
+        options("instant_pkgs_write_packages_to_file")[[1]]
+    )
+    if (instant_pkgs_write_packages_to_file && interactive()) {
       write_packages_to_file(pkgs)
     }
     

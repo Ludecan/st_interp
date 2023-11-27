@@ -31,7 +31,7 @@ if (requireNamespace('parallel', quietly = TRUE)) { MD_MaxNCores <- 4
 } else { MD_MaxNCores <- 1 }
 # palfaro @ 2017-01-09
 # create a RCurl handle which will be reused between connections to enable http keepalives
-MD_curlHandle <- getCurlHandle()
+MD_curlHandle <- RCurl::getCurlHandle()
 
 modisProducts <- function() {
   .ModisLPxxx <- NULL
@@ -282,7 +282,7 @@ getNativeTemporalResolution <- function(product) {
       # using clusterEvalQ
       clusterEvalQ(cl, expr = { 
         require('RCurl')
-        MD_curlHandle <- getCurlHandle() })
+        MD_curlHandle <- RCurl::getCurlHandle() })
       Modislist <- parLapplyLB(cl=cl, X=dirs, fun=getModisName, productURL=x, h=h, v=v, opt=opt, serverErrorsPattern=serverErrorsPattern, forceReDownload=forceReDownload)
       stopCluster(cl)
     } else {
@@ -438,7 +438,7 @@ getNativeTemporalResolution <- function(product) {
     # using clusterEvalQ
     clusterEvalQ(cl, expr = { 
       require('RCurl')
-      MD_curlHandle <- getCurlHandle() })
+      MD_curlHandle <- RCurl::getCurlHandle() })
     clusterExport(cl=cl, varlist=c(".downloadHTTP"), envir=environment())
     res <- parLapplyLB(cl=cl, X = 1:nrow(plainModisList), fun = getFile, plainModisList=plainModisList, opt=opt, forceReDownload=forceReDownload)
     stopCluster(cl)

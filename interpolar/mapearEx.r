@@ -37,9 +37,10 @@ if (is.null(script.dir.mapearEx)) { script.dir.mapearEx <- ''
 source(paste0(script.dir.mapearEx, '../pathUtils/pathUtils.r'))
 source(paste0(script.dir.mapearEx, '../instalarPaquetes/instant_pkgs.r'))
 instant_pkgs(
-  c("sp", "RColorBrewer", "colorspace", "ggplot2", "rgeos", "maptools", "directlabels", "ggrepel", 
+  c("sp", "RColorBrewer", "colorspace", "ggplot2", "rgeos", "directlabels", "ggrepel", 
     "ragg", "mapproj")
 )
+#"maptools", 
 
 paletasInvertidas <- c('Spectral', 'RdBu', 'RdYlBu', 'RdYlGn')
 
@@ -523,15 +524,16 @@ aplicarOpcionesAMapa <- function(
     colorResalto=rgb(255, 0, 0, maxColorValue=255), tamanioResalto=0.8, widthPx
 ) {
   if (!is.null(shpBase)) {
-    if (!rgeos::gIsValid(shpBase)) shpBase <- gBuffer(shpBase, byid=TRUE, width=0)
+    if (!rgeos::gIsValid(shpBase)) shpBase <- as_Spatial(st_buffer(st_as_sf(shpBase), dist = 0))
     if ('SpatialPolygonsDataFrame' %in% class(shpBase)) {
       shpBase@data$id <- rownames(shpBase@data)
     } else {
       shpBase <- SpatialPolygonsDataFrame(Sr = shpBase, data = data.frame(id=1:length(shpBase)))
     }
     
-    shpF <- fortify(shpBase, region="id")
+    shpF <- fortify(geometry(shpBase), region="id")
     if (is.na(colorFillSHPBase)) {
+      # p + geom_sf(sf::st_as_sf(shpBase))
       p <- p + geom_path(data=shpF, mapping=aes(x=long, y=lat, group=group, z=NULL), color=rgb(96, 96, 96, maxColorValue=255))
     } else {
       p <- p + geom_polygon(data=shpF, mapping=aes(x=long, y=lat, group=group, z=NULL), color=rgb(96, 96, 96, maxColorValue=255), fill=colorFillSHPBase,
@@ -541,11 +543,11 @@ aplicarOpcionesAMapa <- function(
   
   if (!is.null(puntosAResaltar)) {
     minLargo <- min(diff(xyLims$xLim), diff(xyLims$yLim))
-    poligonosResalto <- gBuffer(spgeom = puntosAResaltar, byid = T, width = minLargo * 0.05)
-    # poligonosResalto <- gBuffer(spgeom = puntosAResaltar, byid = T, width = maxDist, quadsegs = 16)
+    #poligonosResalto <- gBuffer(spgeom = puntosAResaltar, byid = T, width = minLargo * 0.05)
+    poligonosResalto <- as_Spatial(st_buffer(st_as_sf(puntosAResaltar), dist = minLargo * 0.05))
     if ('SpatialPolygonsDataFrame' %in% class(poligonosResalto)) { poligonosResalto@data$id <- rownames(poligonosResalto@data)
     } else { poligonosResalto <- SpatialPolygonsDataFrame(Sr = poligonosResalto, data = data.frame(id=1:length(poligonosResalto))) }
-    shpF <- fortify(poligonosResalto, region="id")
+    shpF <- fortify(geometry(poligonosResalto), region="id")
     p <- p + geom_polygon(data=shpF, mapping=aes(x=long, y=lat, group=group, z=NULL), color=colorResalto, fill=NA, show.legend = FALSE, size=tamanioResalto)
   }
   
@@ -828,7 +830,7 @@ mapearPuntosGGPlot <- function(
     tamanioFuenteEjes=tamanioFuenteEjes * escalaGraficos, 
     tamanioFuenteTitulo=tamanioFuenteTitulo * escalaGraficos, titulo=titulo, subtitulo=subtitulo,
     colorFillSHPBase=colorFillSHPBase, puntosAResaltar=puntosAResaltar, 
-    tamanioResalto=tamanioResalto, widthPx = widthPx
+    tamanioResalto=tamanioResalto, widthPx=widthPx
   )
 
   if (dibujar) print(p)

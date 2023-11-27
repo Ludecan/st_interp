@@ -38,7 +38,7 @@ source(paste0(script.dir.descargadorEx, '../instalarPaquetes/instant_pkgs.r'))
 source(paste0(script.dir.descargadorEx, '../pathUtils/pathUtils.r'))
 instant_pkgs(c('RCurl', 'curl', 'parallel', 'digest', 'data.table', 'stringi', 'stringr', 'lubridate'))
 
-threadHandle <- getCurlHandle()
+threadHandle <- RCurl::getCurlHandle()
 
 getURLEx <- function(url) { return(getURL(url, curl=curlHandle, async=FALSE)) }
 
@@ -49,13 +49,13 @@ extraerEnlaces <- function(urls, patronEnlaces='href="[[:print:]]"', concatenarU
     cl <- makeCluster(getOption("cl.cores", maxNConexiones))
     clusterEvalQ(cl, expr = {
       require('RCurl')
-      curlHandle <- getCurlHandle()
+      curlHandle <- RCurl::getCurlHandle()
     })
     clusterExport(cl = cl, varlist = c('getURLEx'))
     textoshtmls <- parSapplyLB(cl=cl, X=urls, FUN = getURLEx)
     stopCluster(cl)    
   } else {
-    curlHandle <- getCurlHandle()
+    curlHandle <- RCurl::getCurlHandle()
     textoshtmls <- getURL(url = urls, async = FALSE, curl = curlHandle)
     rm(curlHandle)
   }
@@ -411,7 +411,7 @@ descargarArchivo <- function(
             
             if (!useCurl) {
               # Reset handle if there's any error
-              threadHandle <- getCurlHandle(.opts = curlOpts)
+              threadHandle <- RCurl::getCurlHandle(.opts = curlOpts)
             }
           } else { 
             do_download <- FALSE
@@ -514,7 +514,7 @@ descargarArchivos <- function(
           require('curl')
         } else {
           require('RCurl')
-          threadHandle <- getCurlHandle(.opts = curlOpts)
+          threadHandle <- RCurl::getCurlHandle(.opts = curlOpts)
         }
       })
       
@@ -526,7 +526,7 @@ descargarArchivos <- function(
       stopCluster(cl)
     } else {
       if (!useCurl) { 
-        assign("threadHandle", getCurlHandle(.opts=curlOpts), envir=.GlobalEnv)
+        assign("threadHandle", RCurl::getCurlHandle(.opts=curlOpts), envir=.GlobalEnv)
       }
       results <- sapply(
         X=seq_along(urls), FUN=descargarArchivo, urls=urls,
