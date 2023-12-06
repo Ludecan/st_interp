@@ -1434,7 +1434,15 @@ testEspacialPrecipitacion <- function(
   }
   
   if (nCoresAUsar <= 0) {
-    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), ncol(valoresObservaciones))
+    # This is a gross heuristic to prevent the overhead of spawning multiple processes if there
+    # isn't enough work to do for them. It's nowhere near an optimal version for all situations
+    # but it works ok for both the cases where there is a single temporal observation (in which 
+    # it's usually a lot faster to run in 1 core), and also where there's a long period of time
+    # (where the overhead is paid for by the speedup)
+    nCoresAUsar <- getAvailableCores(
+      maxCoresPerGB=1, 
+      unitsOfWork=ncol(valoresObservaciones) * nrow(valoresObservaciones)
+    )
   }
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
@@ -1518,7 +1526,10 @@ testMaxToMeanRatios <- function(valoresObservaciones, minMaxVal=20, maxRatio=30,
   }
   
   if (nCoresAUsar <= 0) { 
-    nCoresAUsar <- min(getAvailableCores(maxCoresPerGB = 1), ncol(valoresObservaciones))
+    nCoresAUsar <- getAvailableCores(
+      maxCoresPerGB=1, 
+      unitsOfWork=ncol(valoresObservaciones) * nrow(valoresObservaciones)
+    )
   }
   if (nCoresAUsar > 1) {
     cl <- makeCluster(getOption('cl.cores', nCoresAUsar))
@@ -1531,7 +1542,7 @@ testMaxToMeanRatios <- function(valoresObservaciones, minMaxVal=20, maxRatio=30,
     stopCluster(cl)    
   } else {
     test <- lapply(
-      X=1:nrow(valoresObservaciones), fun = testMaxToMeanRatios_i, 
+      X=1:nrow(valoresObservaciones), FUN = testMaxToMeanRatios_i, 
       valoresObservaciones=valoresObservaciones, minMaxVal=minMaxVal, maxRatio=maxRatio)
   }
   

@@ -492,7 +492,9 @@ cargarSHPYObtenerMascaraParaGrilla <- function(
     objCache <- list(pathSHP, proj4strSHP, grilla, spSinMascara, overrideP4str, encoding)
     pathCache <- getPathCache(
       objCache, dirEjecucion=paste0(dirname(pathSHP), '/'), 
-      prefijoNombreArchivoCache=paste0(nombreArchSinPathNiExtension(pathSHP), '_'))
+      prefijoNombreArchivoCache=paste0(nombreArchSinPathNiExtension(pathSHP), '_'),
+      subPathFuncionConBarra='cargarSHPYObtenerMascaraParaGrilla/'
+    )
     if (!file.exists(pathCache)) {
       shp <- cargarSHP(pathSHP, proj4strSHP, overrideP4str=overrideP4str, encoding=encoding)
       if (!identicalCRS(grilla, shp)) { shp <- spTransform(shp, grilla@proj4string) }
@@ -1886,7 +1888,11 @@ cachearRegresoresEstaticos <- function(
   
   # Regresores estáticos sobre coordenadas a interpolar
   source(paste0(script.dir.interpolarEx, '../cacheFunciones/cacheFunciones.r'))
-  pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros=list(coordsAInterpolar, version=2))
+  pathCacheDatosCoordsAInterpolar <- getPathCache(
+    objParametros=list(coordsAInterpolar, version=2), 
+    subPathFuncionConBarra='incorporarRegresoresEstaticos/',
+    prefijoNombreArchivoCache='datosCoordsAInterpolar_'
+  )
   if (recalculateIfAlreadyExists | 
       !file.exists(pathCacheDatosCoordsAInterpolar) | 
       file.info(pathCacheDatosCoordsAInterpolar)$size <= 0
@@ -1923,7 +1929,11 @@ cachearRegresoresEstaticos <- function(
   
   # Regresores estáticos sobre coordenadas de observaciones
   dfDatosCoordsObservaciones <- list()
-  pathCacheDatosCoordsObservaciones <- getPathCache(objParametros=list(coordsObservaciones, version=2))
+  pathCacheDatosCoordsObservaciones <- getPathCache(
+    objParametros=list(coordsObservaciones, version=2), 
+    subPathFuncionConBarra='incorporarRegresoresEstaticos/',
+    prefijoNombreArchivoCache='datosCoordsObservaciones_'
+  )
   if (
     recalculateIfAlreadyExists |
     !file.exists(pathCacheDatosCoordsObservaciones) | 
@@ -1982,8 +1992,16 @@ incorporarRegresoresEstaticos <- function(
   
   geomCoordsInterp <- geometry(coordsAInterpolar)
   geomCoordsObs <- geometry(coordsObservaciones)
-  pathCacheDatosCoordsAInterpolar <- getPathCache(objParametros=list(geomCoordsInterp, version=2))
-  pathCacheDatosCoordsObservaciones <- getPathCache(objParametros=list(geomCoordsObs, version=2))
+  pathCacheDatosCoordsAInterpolar <- getPathCache(
+    objParametros=list(geomCoordsInterp, version=2), 
+    subPathFuncionConBarra='incorporarRegresoresEstaticos/',
+    prefijoNombreArchivoCache='datosCoordsAInterpolar_'
+  )
+  pathCacheDatosCoordsObservaciones <- getPathCache(
+    objParametros=list(geomCoordsObs, version=2), 
+    subPathFuncionConBarra='incorporarRegresoresEstaticos/',
+    prefijoNombreArchivoCache='datosCoordsObservaciones_'
+  )
   if (
     !file.exists(pathCacheDatosCoordsAInterpolar) | 
     !file.exists(pathCacheDatosCoordsObservaciones) | 

@@ -124,11 +124,11 @@ leerSeriesXLSX <- function(
   truncated=5, tzFechas='UTC', headerDatos=T, fileEncoding='', 
   na.strings=-1111
 ) {
-  dfEstaciones <- read.xlsx(xlsxFile = pathArchivoDatos, sheet = hojaEstaciones, 
+  dfEstaciones <- openxlsx::read.xlsx(xlsxFile = pathArchivoDatos, sheet = hojaEstaciones, 
                             cols = colsEstaciones, colNames = headerEstaciones)
   dfEstaciones <- setIdsEstaciones(dfEstaciones, colId = colId)
 
-  dfDatos <- read.xlsx(xlsxFile = pathArchivoDatos, sheet = hojaDatos, colNames = headerDatos)
+  dfDatos <- openxlsx::read.xlsx(xlsxFile = pathArchivoDatos, sheet = hojaDatos, colNames = headerDatos)
   dfDatos <- limpiarDatos(dfDatos = dfDatos, dfEstaciones = dfEstaciones, colIdEstaciones = colId, 
                           header = headerDatos, overrideHeader = headerDatos, 
                           formatoFechas = formatoFechas, truncated = truncated, tzFechas = tzFechas)

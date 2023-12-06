@@ -91,8 +91,35 @@ checkInstallPackages <- function(pkgs, minVersions) {
   return(bPaquetesAInstalar)
 }
 
-instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, doCargarPaquetes=TRUE) {
+write_packages_to_file <- function(pkgs) {
+  file_path <- "required_packages.txt"
+  
+  # Check if the file exists
+  if (!file.exists(file_path)) {
+    # If the file doesn't exist, create it and write all unique package names
+    writeLines(sort(unique(pkgs)), file_path)
+  } else {
+    # If the file exists, read existing package names
+    existing_packages <- readLines(file_path)
+    
+    # Identify unique package names not already in the file
+    new_packages <- unique(sort(c(pkgs, existing_packages)))
+    
+    # Append the new package names to the file
+    writeLines(new_packages, file_path)
+  }
+}
+
+instant_pkgs <- function(pkgs, minVersions=rep(NA_character_, length(pkgs)), silent=TRUE, type=type, doCargarPaquetes=TRUE) {
   if (length(pkgs) > 0) {
+    instant_pkgs_write_packages_to_file <- (
+      !is.null(options("instant_pkgs_write_packages_to_file")[[1]]) && 
+        options("instant_pkgs_write_packages_to_file")[[1]]
+    )
+    if (instant_pkgs_write_packages_to_file && interactive()) {
+      write_packages_to_file(pkgs)
+    }
+    
     bPaquetesAInstalar <- checkInstallPackages(pkgs, minVersions)
     paquetesAInstalar <- pkgs[bPaquetesAInstalar]
 
@@ -210,9 +237,10 @@ if (!exists('installedPackagesChecked') && file.exists(minPkgVersionsPath)) {
 installedPackagesChecked <- TRUE
 
 createMinPackageVersions <- function() {
-  packages <-installed.packages()
+  packages <- installed.packages()
   write.table(x = packages, file = minPkgVersionsPath, sep='\t', row.names = T, col.names = T, 
               fileEncoding = 'UTF-8')
 }
 
 # renv::snapshot(type="all")
+# 
